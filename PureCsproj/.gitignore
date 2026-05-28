@@ -1,0 +1,21 @@
+# PureCsproj — 附加纯 C# 验证工程
+# 纳入版本控制：Readme、sln/csproj、Program/Shim 源码、refs/README.txt
+
+# dotnet 编译产物与中间文件
+**/bin/
+**/obj/
+
+# 本机 Unity 托管 DLL（说明文档保留）
+**/refs/*
+!**/refs/README.txt
+
+# IDE 本地配置
+.idea/
+.vs/
+*.user
+*.suo
+*.DotSettings.user
+
+# 系统临时文件
+.DS_Store
+Thumbs.db

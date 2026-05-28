@@ -1,0 +1,37 @@
+# Perforce 忽略规则（需设置环境变量 P4IGNORE 指向本文件，例如：P4IGNORE=p4ignore.txt）
+# 与 .gitignore 中 Assets/StreamingAssets/yoo/ 对齐：不提交 Yoo 资源构建产物
+
+Assets/StreamingAssets/yoo
+Assets/StreamingAssets/yoo/**
+**/HotfixDll/*.bytes
+**/HotfixDll/*.bytes.meta
+**/.idea
+**/.vs
+**/Build/Android
+**/Build/Project
+**/Bundles
+**/Library
+**/Logs
+**/obj
+**/Sandbox
+**/Temp
+**/UserSettings
+*.csproj
+*.sln
+**/**.dwlt
+**/HybridCLRData
+**/HybridCLRData/*
+intermediate
+saved
+**.xlsx
+**.config
+Config.ini
+excel_plugin/excel_plugin
+Application Files
+log
+*gbteditor/assets/config.json
+**/Assets/StreamingAssets/BuildinFiles
+**/Assets/StreamingAssets
+**/.git
+**/Assets/HotAssets/HotUpdateDll
+**/Assets/HotAssets/PatchedAOTDLL

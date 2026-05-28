@@ -1,0 +1,37 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+# Unity 自动生成的目录（核心忽略项）
+Library/
+Temp/
+obj/
+Logs/
+UserSettings/
+
+# Unity 编译产物和项目文件
+*.csproj
+*.sln
+*.sln.DotSettings.user
+*.dll
+*.pdb
+*.mdb
+
+# Unity 构建输出
+Build/
+Builds/
+Bundles/
+
+# Unity 包缓存（通常不需要索引）
+Library/PackageCache/
+
+# HybridCLR 相关数据（如果不需要索引）
+HybridCLRData/
+
+# 日志和临时文件
+*.log
+*.tmp
+*.cache
+
+# 数据库和索引文件
+*.db
+*.db.st
+*.index

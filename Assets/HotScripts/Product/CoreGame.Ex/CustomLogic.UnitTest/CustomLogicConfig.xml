@@ -1,0 +1,73 @@
+<ConfigSystem>
+	<CustomLogicConfig>
+
+    <ConfigItem type="CustomLogic">
+        <ID>10000</ID>
+        <Tips>测试0</Tips>
+        <Node type="LogBhv" LogStr="CustomLogic 10000 开始"/>
+        <Node type="LogBhv" LogStr="CustomLogic 10000 Start"/>
+        <Node type="ConditionBranchBhv">
+            <Condition type="TimeOutCnd" time="30"/>
+            <TrueBhv type="FTDelayBhv" TimeLen="3.25"/>
+        </Node>
+    </ConfigItem>
+    
+    <ConfigItem type="CustomLogic">
+        <ID>10001</ID>
+        <Tips>测试1</Tips>
+        <Node type="SequenceBhv">
+            <Node type="FTDelayBhv" TimeLen="10"/>
+            <Node type="LogBhv" LogStr="haha -1"/>
+            <Node type="FTDelayBhv" TimeLen="10"/>
+            <Node type="LogBhv" LogStr="haha -2"/>
+        </Node>
+        <Node type="SequenceBhv" LoopCnt="3">
+            <Node type="LogBhv" LogStr="Repeat +1"/>
+            <Node type="FTDelayBhv" TimeLen="2"/>
+        </Node>
+    </ConfigItem>
+
+    <ConfigItem type="CustomLogic">
+      <ID>10002</ID>
+      <Tips>测试2</Tips>
+      <Node type="SequenceBhv">
+        <Node type="FTDelayBhv" TimeLen="3"/>
+        <Node type="LogBhv" LogStr="10002 -1"/>
+        <Node type="FTDelayBhv" TimeLen="3"/>
+        <Node type="LogBhv" LogStr="10002 -2"/>
+      </Node>
+    </ConfigItem>
+
+    <ConfigItem type="CustomLogic">
+        <ID>10003</ID>
+        <Tips>测试3</Tips>
+        <Node type="LogicTemplete" LogicID="10001"/>
+        <Node type="ParallelBhv">
+            <Node type="LogBhv" LogStr="10003 1"/>
+            <Node type="SequenceBhv">
+                <Node type="LogBhv" LogStr="10003 2"/>
+                <Node type="FTDelayBhv" TimeLen="2"/>
+            </Node>
+        </Node>
+    </ConfigItem>
+
+    <ConfigItem type="CustomLogic">
+      <ID>90001</ID>
+      <Node type="LogicTemplete" LogicID="90003"/>
+      <Node type="LogBhv" LogStr="模板引用1"/>
+    </ConfigItem>
+    
+    <ConfigItem type="CustomLogic">
+      <ID>90002</ID>
+      <Node type="LogicTemplete" LogicID="90001"/>
+      <Node type="LogBhv" LogStr="模板引用2"/>
+    </ConfigItem>
+    
+    <ConfigItem type="CustomLogic">
+      <ID>90003</ID>
+      <Node type="LogicTemplete" LogicID="90002"/>
+      <Node type="LogBhv" LogStr="模板引用3"/>
+    </ConfigItem>
+
+    </CustomLogicConfig>
+</ConfigSystem>
