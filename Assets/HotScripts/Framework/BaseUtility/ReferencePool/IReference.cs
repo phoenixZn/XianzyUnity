@@ -1,4 +1,4 @@
-namespace HotUpdate
+namespace Xease
 {
     /// <summary>
     /// 引用接口。

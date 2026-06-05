@@ -1,6 +1,6 @@
 using Entitas;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public delegate bool ComponentHandleCommand(LogicEntity entity, EntityCommand cmd);
 

@@ -1,6 +1,6 @@
 
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// CustomLogic相关一些调试、辅助代码

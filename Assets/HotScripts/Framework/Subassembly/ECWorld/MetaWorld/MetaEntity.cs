@@ -1,7 +1,7 @@
 using System;
 using Entitas;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public partial class MetaEntity : Entity
     {
@@ -80,7 +80,7 @@ namespace HotUpdate.CoreGame
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"MetaComponent PostInitialize catch Exception:{e}");
+                G.LogError($"MetaComponent PostInitialize catch Exception:{e}");
             }
         }
         protected void SafeDisposeOnRemove(IComponentDispose dispose)
@@ -91,7 +91,7 @@ namespace HotUpdate.CoreGame
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"MetaComponent DisposeOnRemove catch Exception:{e}");
+                G.LogError($"MetaComponent DisposeOnRemove catch Exception:{e}");
             }
         }
     }

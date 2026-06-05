@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// Xml解析的一些辅助

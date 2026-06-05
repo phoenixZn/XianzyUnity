@@ -1,4 +1,4 @@
-﻿namespace HotUpdate
+﻿namespace Xease
 {
     public static partial class G
     {
@@ -12,6 +12,7 @@
         {
             get { return _valueEventSvc; }
         }
+        
         protected void AddService_ValueEvent()
         {
             G.Log("AddService_ValueEvent");

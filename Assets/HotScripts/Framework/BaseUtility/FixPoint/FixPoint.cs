@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace HotUpdate.FP
+namespace Xease.FP
 {
 /*
  * FIXPOINT_IMPLICT_SUPPORTING_FLOAT：隐式支持浮点数

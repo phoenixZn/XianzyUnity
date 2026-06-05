@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-namespace HotUpdate.FP
+namespace Xease.FP
 {
     /*
      * 实现基于Unity：左手系，Y轴指向天空

@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public static partial class NodeConfigTypeRegistry
     {

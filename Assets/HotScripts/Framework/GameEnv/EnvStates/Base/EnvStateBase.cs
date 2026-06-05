@@ -1,6 +1,5 @@
-namespace HotUpdate
+namespace Xease
 {
-
     public partial class EnvStateID
     {
     }
@@ -10,8 +9,8 @@ namespace HotUpdate
         protected EnvStateManager _stateMgr;
         protected string _nextStateID;
         public string StateID { get; private set; }
-        
-        private int _gatedReconnectTimerId = 0; //为啥这里能有这个？待干掉
+
+        public EnvTransferWorks TransferWorks { get; protected set; }
 
         public virtual void Init(EnvStateManager stateMgr, string stateID)
         {
@@ -20,20 +19,15 @@ namespace HotUpdate
             _nextStateID = null;
         }
 
-        /// <summary>
-        /// 主要讲解work的含义
-        /// 这部分work是上一个状态无法处理的工作，总结出来以后，交付给下一个状态用的
-        /// 举例：从GameState切换到BattleState，要先显示Loading（旋转的镂空界面），这个时候不能把主界面关闭，需要等待资源加载完成。
-        /// </summary>
-        /// <param name="work"></param>
-        public virtual void Enter(EnvTransferWorks work)
+
+        public virtual void Enter(EnvStateBase fromState)
         {
         }
         
 
-
-        public virtual void Leave()
+        public virtual void Leave(EnvStateBase toState)
         {
+            CreateTransferWork();
             _nextStateID = null;
         }
 
@@ -42,7 +36,7 @@ namespace HotUpdate
         /// </summary>
         public virtual void OnDestroy()
         {
-            Leave();
+            
         }
         
         public virtual void Update(float dt)
@@ -65,9 +59,9 @@ namespace HotUpdate
             return false;
         }
 
-        public virtual EnvTransferWorks CreateTransferWork()
+        public virtual void CreateTransferWork()
         {
-            return null;
+            TransferWorks = null;
         }
 
         public virtual EnvTransferWorks FilterWorks(EnvTransferWorks work)

@@ -1,5 +1,5 @@
 
-namespace HotUpdate.FP
+namespace Xease.FP
 {
     public class TimerSchedulerFP<TContext>
     {

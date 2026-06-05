@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class NodeCfgList<T> : List<T> where T : class, ICustomNodeCfg
     {

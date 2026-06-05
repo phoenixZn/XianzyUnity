@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Xease
 {
-    
     public class ValueEventService : IValueEventService
     {
         // 双重存储结构
@@ -11,7 +10,7 @@ namespace Xease
         
         //////////////////////////////////////////////////////////////////////////
         /// IService
-        public void Reset()
+        public void Shutdown()
         {
             _typedHandlers.Clear();
         }

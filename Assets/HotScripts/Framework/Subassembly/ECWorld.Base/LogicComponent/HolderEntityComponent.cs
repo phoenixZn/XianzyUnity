@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //本Entity被主人Entity所持有
     public class HolderEntityComponent : LogicComponent

@@ -2,7 +2,7 @@ using Entitas;
 using System;
 using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class EntityIndexEnum<TEntity, TKey> : AbstractEntityIndex<TEntity, TKey> where TEntity : class, IEntity where TKey : Enum
     {

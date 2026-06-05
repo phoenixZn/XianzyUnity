@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     public interface IModifyValue<T>
     {

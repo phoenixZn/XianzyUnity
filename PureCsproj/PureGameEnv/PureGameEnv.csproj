@@ -9,7 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>PureGameEnv</AssemblyName>
-    <DefineConstants>CONSOLE_CLIENT;$(DefineConstants)</DefineConstants>
+    <DefineConstants>XEASE_UNITY;CONSOLE_CLIENT;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

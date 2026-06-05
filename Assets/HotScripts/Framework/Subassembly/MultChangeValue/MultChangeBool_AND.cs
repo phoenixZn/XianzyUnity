@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     //////////////////////////////////////////////////////////////////////////
     //可能同时被多个独立模块修改的bool, 只要有一个为false，当前值为false

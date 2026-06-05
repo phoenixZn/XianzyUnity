@@ -1,4 +1,4 @@
-namespace HotUpdate
+namespace Xease
 {
     //当前值是所有改动中的最小值
     public class MultChangeFloat_MIN : MultChangeValue<float>

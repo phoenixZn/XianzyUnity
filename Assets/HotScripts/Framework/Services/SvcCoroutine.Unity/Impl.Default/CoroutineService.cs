@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace HotUpdate
+namespace Xease
 {
     public interface ICoroutine
     {
@@ -12,7 +12,7 @@ namespace HotUpdate
     //////////////////////////////////////////////////////////////////////////
     internal class CoroutineService : ICoroutineService, ICoroutine
     {
-        public void Reset()
+        public void Shutdown()
         {
         }
 

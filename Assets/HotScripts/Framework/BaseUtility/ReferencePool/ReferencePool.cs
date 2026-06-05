@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     /// <summary>
     /// 引用池。

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     using Nodes = List<ICustomNodeCfg>;
 

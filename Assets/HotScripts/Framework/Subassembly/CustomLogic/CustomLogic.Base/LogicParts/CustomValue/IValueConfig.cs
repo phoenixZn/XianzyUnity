@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public interface IValueConfig<T>
     {

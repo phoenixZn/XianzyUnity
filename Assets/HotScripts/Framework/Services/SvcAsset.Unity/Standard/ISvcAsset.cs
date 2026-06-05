@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using YooAsset;
 
-namespace HotUpdate
+namespace Xease
 {
 
     //////////////////////////////////////////////////////////////////////////

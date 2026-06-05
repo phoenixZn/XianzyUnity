@@ -1,4 +1,4 @@
-namespace HotUpdate
+namespace Xease
 {
     public delegate void GEnvLogAction(string info);
     //注入的游戏环境初始参数
@@ -6,6 +6,8 @@ namespace HotUpdate
     {
         private static void EmptyLog(string info) { }
         public GEnvLogAction LogError = EmptyLog;
+        public GEnvLogAction LogWarning = EmptyLog;
         public GEnvLogAction LogInfo = EmptyLog;
+        public int EnvBaseSeed = 1;
     }
 }

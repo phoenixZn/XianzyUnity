@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class TransformComponent : LogicComponent
     {

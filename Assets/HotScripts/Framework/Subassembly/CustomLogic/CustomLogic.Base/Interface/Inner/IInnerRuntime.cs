@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// 系统内部 运行时接口：

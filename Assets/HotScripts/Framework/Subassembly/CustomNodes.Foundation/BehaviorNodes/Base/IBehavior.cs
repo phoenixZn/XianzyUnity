@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //////////////////////////////////////////////////////////////////////////
     // 自定义行为逻辑运行接口

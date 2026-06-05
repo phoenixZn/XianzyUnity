@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// 静态配置

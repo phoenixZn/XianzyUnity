@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace HotUpdate
+namespace Xease
 {
     /// <summary>
     /// 引用池信息。

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     /// <summary>
     /// Env State沟通指令

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     public static partial class ReferencePool
     {

@@ -1,7 +1,7 @@
 using Entitas;
 using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public sealed class SysCommandSend : ReactiveSystem<LogicEntity>
     {

@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //配置接口
     public interface ICustomNodeCfg

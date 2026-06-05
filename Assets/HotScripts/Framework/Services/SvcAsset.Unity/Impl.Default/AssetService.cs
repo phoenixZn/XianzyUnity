@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using YooAsset;
 
-namespace HotUpdate
+namespace Xease
 {
     //////////////////////////////////////////////////////////////////////////
     // Service：资源管理
@@ -19,7 +19,7 @@ namespace HotUpdate
 
         //////////////////////////////////////////////////////////////////////////
         /// IService
-        public void Reset()
+        public void Shutdown()
         {
             Release();
         }

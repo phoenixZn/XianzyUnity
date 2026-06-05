@@ -4,7 +4,7 @@ using Entitas;
 // 非标准，非必须，仅提供便捷
 
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //////////////////////////////////////////////////////////////////////////
     public class ECWorldSystem

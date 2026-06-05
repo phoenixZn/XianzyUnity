@@ -9,7 +9,7 @@ using System.Collections.Generic;
 ////////////////////////////////////////////////////////////////////////// 
 
 
-namespace HotUpdate
+namespace Xease
 {
     public interface IEnvTick
     {
@@ -21,7 +21,7 @@ namespace HotUpdate
     /// </summary>
     public interface IService
     {
-        void Reset();
+        void Shutdown();
     }
     
     //////////////////////////////////////////////////////////////////////////

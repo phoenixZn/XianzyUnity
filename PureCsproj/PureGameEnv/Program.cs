@@ -9,7 +9,7 @@ namespace PureGameEnv
         private static void Main(string[] args)
         {
             Console.WriteLine("PureGameEnv: smoke build / run.");
-            _ = typeof(HotUpdate.GEnv);
+            _ = typeof(Xease.GEnv);
             if (args.Length > 0)
             {
                 Console.WriteLine(string.Join(" ", args));

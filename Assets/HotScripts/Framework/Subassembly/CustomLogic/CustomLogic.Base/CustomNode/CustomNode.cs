@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 //CustomLogic中的节点概念，用于组织逻辑对象的结构关联
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //逻辑内流通，接口性质的上下文结构，（不应被修改）
     public struct CustomNodeContext

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Entitas;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public interface ILateUpdateSystem : ISystem
     {

@@ -1,7 +1,7 @@
 using Entitas;
 using System;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public partial class MetaWorld : Context<MetaEntity>
     {

@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public static partial class NodeConfigTypeRegistry
     {
@@ -38,7 +38,12 @@ namespace HotUpdate.CoreGame
         {
             base.InitializeNode(cfg, context);
             mCfg = cfg as RandomChanceCndCfg;
+#if CONSOLE_CLIENT
+            mRandNum = G.Random.RandFloat(0f, 100f);
+#else
             mRandNum = UnityEngine.Random.Range(0f, 100f);
+#endif
+            
         }
 
         public override void Destroy()

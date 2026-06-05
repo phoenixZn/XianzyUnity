@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class EntityCustomLogicGenInfo : ICustomLogicGenInfo
     {

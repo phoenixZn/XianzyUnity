@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// 兼容常量、黑板变量 等多种格式化配置方式

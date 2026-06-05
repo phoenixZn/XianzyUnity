@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public interface IWorldCreationInfo
     {
@@ -13,8 +13,10 @@ namespace HotUpdate.CoreGame
     public abstract class ECWorlds
     {
         protected List<IContext> _worldList = new List<IContext>();
-        protected ECSystems mRootSystem;
         protected IWorldCreationInfo _creationInfo;
+        
+        //系统入口
+        protected ECSystems _rootSystem;
 
         //逻辑世界（游戏实体）
         public LogicWorld LogicWorld { get; protected set; }
@@ -35,21 +37,21 @@ namespace HotUpdate.CoreGame
             CreateSystems();
 
             //初始化系统
-            if (mRootSystem != null)
+            if (_rootSystem != null)
             {
-                mRootSystem.ActivateReactiveSystems();
-                mRootSystem.Initialize();
+                _rootSystem.ActivateReactiveSystems();
+                _rootSystem.Initialize();
             }
         }
 
         public virtual void DestroyWorlds()
         {
-            if (mRootSystem != null)
+            if (_rootSystem != null)
             {
-                mRootSystem.TearDown();
-                mRootSystem.DeactivateReactiveSystems();
-                mRootSystem.ClearReactiveSystems();
-                mRootSystem = null;
+                _rootSystem.TearDown();
+                _rootSystem.DeactivateReactiveSystems();
+                _rootSystem.ClearReactiveSystems();
+                _rootSystem = null;
             }
 
             foreach (var item in _worldList)
@@ -60,28 +62,36 @@ namespace HotUpdate.CoreGame
             _worldList.Clear();
         }
 
+        public virtual void FixedUpdate(float deltaTime, float unscaledDeltaTime)
+        {
+            if (_rootSystem != null)
+            {
+                _rootSystem.Execute();
+            }
+        }
+        
         public virtual void Update(float deltaTime, float unscaledDeltaTime)
         {
-            if (mRootSystem != null)
+            if (_rootSystem != null)
             {
-                mRootSystem.Execute();
-                mRootSystem.Cleanup();
+                _rootSystem.Execute();
             }
         }
 
         public virtual void LateUpdate()
         {
-            if (mRootSystem != null)
+            if (_rootSystem != null)
             {
-                mRootSystem.LateUpdate();
+                _rootSystem.LateUpdate();
+                _rootSystem.Cleanup();
             }
         }
 
         public virtual void Gizmos()
         {
-            if (mRootSystem != null)
+            if (_rootSystem != null)
             {
-                mRootSystem.Gizmos();
+                _rootSystem.Gizmos();
             }
         }
 

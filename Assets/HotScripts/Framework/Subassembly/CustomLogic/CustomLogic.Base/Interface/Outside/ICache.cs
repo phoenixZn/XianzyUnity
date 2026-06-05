@@ -4,7 +4,7 @@
 // 项目在自己的工程目录中扩展 （这里只是示例）
 //////////////////////////////////////////////////////////////////////////
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     ////包含独立特效, 需要Cache
     //public interface ICacheFX

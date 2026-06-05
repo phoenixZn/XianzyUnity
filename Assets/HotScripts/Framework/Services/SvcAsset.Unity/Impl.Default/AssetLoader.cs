@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using YooAsset;
 
-namespace HotUpdate
+namespace Xease
 {
     public class AssetLoader : IAssetLoader
     {

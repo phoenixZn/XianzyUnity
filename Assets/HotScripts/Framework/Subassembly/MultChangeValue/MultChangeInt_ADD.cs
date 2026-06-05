@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     public class MultChangeInt_ADD : MultChangeValue<int>
     {

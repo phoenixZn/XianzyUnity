@@ -1,7 +1,7 @@
 using System;
 using Entitas;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public partial class LogicEntity : Entity
     {
@@ -78,7 +78,7 @@ namespace HotUpdate.CoreGame
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"LogicComponent PostInitialize catch Exception:{e}");
+                G.LogError($"LogicComponent PostInitialize catch Exception:{e}");
             }
         }
         
@@ -90,7 +90,7 @@ namespace HotUpdate.CoreGame
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"LogicComponent DisposeOnRemove catch Exception:{e}");
+                G.LogError($"LogicComponent DisposeOnRemove catch Exception:{e}");
             }
         }
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HotUpdate.FP
+namespace Xease.FP
 {
     public struct Vector3FP : IEquatable<Vector3FP>
     {

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Object = UnityEngine.Object;
 
-namespace HotUpdate
+namespace Xease
 {
     public class CoroutineCompletedHandler : UnityEvent<bool>
     {

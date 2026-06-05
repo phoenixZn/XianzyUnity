@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     using Nodes = List<ICustomNodeCfg>;
     // using Logic = CustomLogicCfg;

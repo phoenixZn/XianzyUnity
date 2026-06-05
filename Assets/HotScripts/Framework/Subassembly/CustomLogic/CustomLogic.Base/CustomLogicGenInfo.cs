@@ -5,7 +5,7 @@
 *  业务扩展可以新加一个 CustomLogicGenInfo 的继承类
 *********************************************************************/
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// 运行时初始化信息（不应被修改）

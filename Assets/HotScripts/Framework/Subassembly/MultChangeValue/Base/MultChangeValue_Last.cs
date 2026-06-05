@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     //////////////////////////////////////////////////////////////////////////
     //当前值以最后一次修改的为准

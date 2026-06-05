@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //这里区分的是阵营不是身份类别
     //比如魏国、蜀国是阵营，士兵、将军、文官是身份。 城池、武将是类别

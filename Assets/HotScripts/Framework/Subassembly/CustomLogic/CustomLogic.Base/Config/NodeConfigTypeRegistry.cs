@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     //分类没有特别重要的结构意义，多用于类型检查
     public enum NodeCategory

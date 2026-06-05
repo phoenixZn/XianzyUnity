@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate.FP
+namespace Xease.FP
 {
     public class HeapItem : System.IComparable
     {

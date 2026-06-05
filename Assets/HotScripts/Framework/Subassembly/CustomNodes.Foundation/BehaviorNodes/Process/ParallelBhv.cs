@@ -10,7 +10,7 @@ using System.Xml;
 ///   <Node type="PlayEffect" PlayOn="Enemy" EffectID="22" SetEffectName="Attacked" />
 /// </Node>
 /// </summary>
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public static partial class NodeConfigTypeRegistry
     {

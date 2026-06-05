@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
     public delegate void EnvLogAction(string info);
     
@@ -66,7 +66,7 @@ namespace HotUpdate
         {
             if (_currentStateRef != null)
             {
-                _currentStateRef.Leave();
+                _currentStateRef.Leave(null);
                 _currentStateRef.OnDestroy();
             }
             _currentStateRef = null;
@@ -81,21 +81,20 @@ namespace HotUpdate
             if (_currentStateRef == null)
                 return;
             
-            var lastID = _currentStateRef.StateID;
-            var nextID = _currentStateRef.CheckTransitions();
-            if (nextID == lastID)
+            var stateID = _currentStateRef.StateID;
+            var nextStateID = _currentStateRef.CheckTransitions();
+            if (nextStateID == stateID)
             {
                 return;
             }
 
-            var next = FindState(nextID);
-            if (next != null)
+            var nextState = FindState(nextStateID);
+            if (nextState != null)
             {
-                var ctx = _currentStateRef.CreateTransferWork();
-                _currentStateRef.Leave();
-                var last = _currentStateRef;
-                _currentStateRef = next;
-                _currentStateRef.Enter(ctx);
+                _currentStateRef.Leave(nextState);
+                var lastState = _currentStateRef;
+                _currentStateRef = nextState;
+                _currentStateRef.Enter(lastState);
             }
 
             _currentStateRef.Update(dt);
@@ -113,25 +112,24 @@ namespace HotUpdate
 
         //////////////////////////////////////////////////////////////////////////
 
-        public void ChangeEnvState(string goalStateID)
+        public void ChangeEnvState(string nextStateID)
         {
-            DevLog($"Core EnvStateManager.ChangeEnvState goalEnvState={goalStateID}");
+            DevLog($"Core EnvStateManager.ChangeEnvState goalEnvState={nextStateID}");
             
-            if (goalStateID == null)
+            if (nextStateID == null)
                 return;
             
-            var goalState = FindState(goalStateID);
-            if (goalState == null)
+            var nextState = FindState(nextStateID);
+            if (nextState == null)
             {
-                ErrorLog($"EnvStateManager TransToState mGoalState == null  goalStateID={goalStateID}");
+                ErrorLog($"EnvStateManager TransToState nextState == null  nextStateID={nextStateID}");
                 return;
             }
 
             var lastState = _currentStateRef;
-            EnvTransferWorks transferWorks = null;
             if (_currentStateRef != null)
             {
-                if (goalStateID == _currentStateRef.StateID)
+                if (nextStateID == _currentStateRef.StateID)
                 {
                     return;
                 }
@@ -140,13 +138,11 @@ namespace HotUpdate
                 {
                     return;
                 }
-
-                transferWorks = _currentStateRef.CreateTransferWork();
-                _currentStateRef.Leave();
+                _currentStateRef.Leave(nextState);
             }
 
-            _currentStateRef = goalState;
-            _currentStateRef.Enter(transferWorks);
+            _currentStateRef = nextState;
+            _currentStateRef.Enter(lastState);
         }
 
         private EnvStateBase FindState(string stateID)

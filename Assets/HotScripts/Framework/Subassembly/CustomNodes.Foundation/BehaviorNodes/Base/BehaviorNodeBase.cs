@@ -1,6 +1,6 @@
 using System;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public static partial class NodeConfigTypeRegistry
     {

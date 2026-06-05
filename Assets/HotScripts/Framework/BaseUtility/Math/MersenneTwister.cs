@@ -1,5 +1,5 @@
 
-namespace HotUpdate
+namespace Xease
 {
     public class MersenneTwister64
     {

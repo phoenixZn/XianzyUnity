@@ -1,6 +1,6 @@
 using Entitas;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class MetaComponent : IComponent, IComponentDispose
     {

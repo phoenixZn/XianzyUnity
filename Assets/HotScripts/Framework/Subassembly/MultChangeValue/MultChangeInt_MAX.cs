@@ -1,4 +1,4 @@
-namespace HotUpdate
+namespace Xease
 {
     public class MultChangeInt_MAX : MultChangeValue<int>
     {

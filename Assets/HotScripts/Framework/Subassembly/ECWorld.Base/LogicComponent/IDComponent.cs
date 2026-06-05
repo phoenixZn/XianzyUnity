@@ -1,4 +1,4 @@
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     public class IDComponent : LogicComponent
     {
@@ -20,7 +20,7 @@ namespace HotUpdate.CoreGame
             var index = LogicComponentsLookup.ComID;
             if (index < 0)
             {
-                UnityEngine.Debug.LogError("AddComID 未初始化的组件索引 LogicComponentsLookup.ComID");
+                G.LogError("AddComID 未初始化的组件索引 LogicComponentsLookup.ComID");
                 return;
             }
             var component = (IDComponent)CreateComponent(index, typeof(IDComponent));

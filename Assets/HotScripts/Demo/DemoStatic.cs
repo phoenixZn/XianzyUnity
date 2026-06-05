@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace HotUpdate
+namespace Xease
 {
     public static class DemoStatic
     {
@@ -11,7 +11,7 @@ namespace HotUpdate
         public static void DemoStart()
         {
             DemoKey = 860971;
-            Debug.Log("DemoStatic.DemoStart Run 1");
+            Debug.Log("DemoStatic.DemoStart Run 3");
         }
 
         public static void DemoStep1()

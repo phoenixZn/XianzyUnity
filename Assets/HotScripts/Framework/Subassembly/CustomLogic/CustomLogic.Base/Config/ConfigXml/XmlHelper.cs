@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
-namespace HotUpdate.CoreGame
+namespace Xease.CoreGame
 {
     /// <summary>
     /// Xml解析的一些辅助
@@ -24,7 +24,7 @@ namespace HotUpdate.CoreGame
             return stream;
         }
 
-#if ConsoleClient
+#if CONSOLE_CLIENT
         public static StreamReader XmlResToStreamReader(string resPath)
         {
             FileStream file = new FileStream(resPath, FileMode.Open, FileAccess.Read);

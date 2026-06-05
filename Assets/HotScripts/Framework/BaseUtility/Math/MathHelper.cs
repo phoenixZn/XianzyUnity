@@ -4,7 +4,7 @@
 
 using System;
 
-namespace HotUpdate
+namespace Xease
 {
     /// <summary>
     /// Contains commonly used precalculated values and mathematical operations.

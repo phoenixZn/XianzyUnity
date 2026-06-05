@@ -2,7 +2,7 @@ using UnityEngine;
 
 
 
-namespace HotUpdate
+namespace Xease
 {
     public partial class GameEntry : MonoBehaviour
     {
@@ -18,7 +18,9 @@ namespace HotUpdate
                 var param = new GEnvParam()
                 {
                     LogInfo = Debug.Log,
+                    LogWarning = Debug.LogWarning,
                     LogError = Debug.LogError,
+                    EnvBaseSeed = Time.frameCount,
                 };
                 GEnv.InitGameEnvInstance(new UnityGameEnv(param));
             }
@@ -27,7 +29,7 @@ namespace HotUpdate
         void OnDestroy()
         {
             Debug.Log("销毁游戏环境 GEnv");
-            GEnv.Inst?.Shutdown();
+            GEnv.Inst?.DestroyEnv();
         }
     
         //////////////////////////////////////////////////////////////////////////
@@ -35,25 +37,26 @@ namespace HotUpdate
 
         public void FixedUpdate()
         {
+            GEnv.Inst.EnvFixUpdate();
         }
 
         public void Update()
         {
-            GEnv.Inst.Update(Time.deltaTime, Time.unscaledDeltaTime);
+            GEnv.Inst.EnvUpdate();
         }
 
         public void LateUpdate()
         {
-            GEnv.Inst.LateUpdate();
-        }
-
-        public void OnApplicationQuit()
-        {
+            GEnv.Inst.EnvLateUpdate();
         }
 
         public void OnDrawGizmos()
         {
-            GEnv.Inst?.DrawGizmos();
+            GEnv.Inst?.EnvDrawGizmos();
+        }
+        
+        public void OnApplicationQuit()
+        {
         }
     }
 }

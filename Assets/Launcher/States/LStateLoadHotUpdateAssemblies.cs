@@ -105,7 +105,7 @@ namespace Launcher
                 
                 Assembly assembly = Assembly.Load(dllData);
                 _contextRef.LogInfo($"xCore: LState 加载热更新Dll:{dllName}");
-                CallAssemblyStaticMethod(assembly, "HotUpdate.DemoStatic", "DemoStart");
+                CallAssemblyStaticMethod(assembly, "Xease.DemoStatic", "DemoStart");
             }
 
             _isSuccess = true;

@@ -1,4 +1,4 @@
-namespace HotUpdate.FP
+namespace Xease.FP
 {
 partial struct FixPoint {
     public static readonly long[] Atan2Table = new[] {
