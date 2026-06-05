@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HotUpdate
+namespace Xease
 {
-
-
-
+    
     public class ValueEventService : IValueEventService
     {
         // 双重存储结构
@@ -53,7 +51,7 @@ namespace HotUpdate
             bool r = handlers.Add(handler);
             if (!r)
             {
-                KLogger.LogError("AddHandler Error");
+                G.LogError("AddHandler Error");
             }
         }
         
