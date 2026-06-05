@@ -23,11 +23,12 @@ namespace Xease
         protected override void Inner_CreateServices()
         {
             base.Inner_CreateServices();
-            AddService_TickTime();
-            AddService_Random(Param.EnvBaseSeed);
-            AddService_ValueEvent();
-            AddService_Coroutine();
-            AddService_Asset();
+            
+            Services.AddService_TickTime();
+            Services.AddService_Random(Param.EnvBaseSeed);
+            Services.AddService_ValueEvent();
+            Services.AddService_Coroutine();
+            Services.AddService_Asset();
         }
 
         protected override void Inner_CreateModules()
@@ -41,8 +42,8 @@ namespace Xease
             types = types.Where(t => t.GetCustomAttribute<SkipModuleAutoRegisterAttribute>() == null);
             
             //初始化:
-            _modules.Init(types);
-            _modules.Start();
+            Modules.Init(types);
+            Modules.Start();
         }
 
         protected override void Inner_CreateManagers()

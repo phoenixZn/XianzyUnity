@@ -1,6 +1,6 @@
 ﻿namespace Xease
 {
-    [SkipModuleAutoRegister]
+    //[SkipModuleAutoRegister]
     public class ModDemo : Module
     {
         public ModDemo()

@@ -1,20 +1,20 @@
-﻿namespace Xease
+namespace Xease
 {
     public static partial class G
     {
-        public static ICoroutineService Coroutines => GEnv.Inst.CoroutineSvc;
+        public static ICoroutineService Coroutines => GEnv.Inst.Services.CoroutineSvc;
     }
     
-    public partial class GEnv
+    public partial class ServicesProvider
     {
         //////////////////////////////////////////////////////////////////////////
         // Service：协程
         protected ICoroutineService _coroutineSvc;
-        internal ICoroutineService CoroutineSvc
+        public ICoroutineService CoroutineSvc
         {
             get { return _coroutineSvc; }
         }
-        protected void AddService_Coroutine()
+        public void AddService_Coroutine()
         {
             G.Log("AddService_Coroutine");
             AddService(new CoroutineService(), out _coroutineSvc);

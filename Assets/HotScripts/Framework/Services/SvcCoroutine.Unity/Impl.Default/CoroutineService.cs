@@ -95,11 +95,11 @@ namespace Xease
     {
         public static ICoroutineHandler StartCoroutine(this ICoroutine owner, IEnumerator coroutine)
         {
-            return GEnv.Inst.CoroutineSvc.StartCoroutine(owner, coroutine);
+            return G.Coroutines.StartCoroutine(owner, coroutine);
         }
         public static void StopAllCoroutines(this ICoroutine owner)
         {
-            GEnv.Inst.CoroutineSvc.StopOwnerCoroutines(owner);
+            G.Coroutines.StopOwnerCoroutines(owner);
         }
     }
 }

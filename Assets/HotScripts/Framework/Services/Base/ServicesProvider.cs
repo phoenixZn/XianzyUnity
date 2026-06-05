@@ -2,7 +2,7 @@
 
 namespace Xease
 {
-    public class ServicesProvider
+    public partial class ServicesProvider
     {
         //框架性服务
         protected List<IService> _services = new();

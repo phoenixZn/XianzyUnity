@@ -2,18 +2,18 @@
 {
     public static partial class G
     {
-        public static IValueEventService ValueEvent => GEnv.Inst.ValueEvent;
+        public static IValueEventService ValueEvent => GEnv.Inst.Services.ValueEventSvc;
     }
     
-    public partial class GEnv
+    public partial class ServicesProvider
     {
         protected IValueEventService _valueEventSvc;
-        public IValueEventService ValueEvent
+        public IValueEventService ValueEventSvc
         {
             get { return _valueEventSvc; }
         }
         
-        protected void AddService_ValueEvent()
+        public void AddService_ValueEvent()
         {
             G.Log("AddService_ValueEvent");
             var svc = new ValueEventService();
