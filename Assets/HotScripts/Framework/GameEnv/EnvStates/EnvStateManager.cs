@@ -28,19 +28,11 @@ namespace Xease
                 return _currentStateRef.StateID;
             }
         }
-
-        //////////////////////////////////////////////////////////////////////////
-        /// 外部定义Log方式
-        private static void EmptyLog(string info) { }
-        public EnvLogAction ErrorLog { get; protected set; }
-        public EnvLogAction DevLog { get; protected set; }
-
+        
         
         //////////////////////////////////////////////////////////////////////////
-        public EnvStateManager(EnvLogAction errorLog, EnvLogAction devLog)
+        public EnvStateManager()
         {
-            ErrorLog = errorLog ?? EmptyLog;
-            DevLog = devLog ?? EmptyLog;
         }
         
         public void Initialize(Dictionary<string, EnvStateBase> states, string dfaultStateID)
@@ -48,7 +40,7 @@ namespace Xease
             _states = states;
             if (_currentStateRef != null)
             {
-                ErrorLog("EnvStateManager.Initialize _currentStateRef != null");
+                G.LogError("EnvStateManager.Initialize _currentStateRef != null");
                 _currentStateRef = null;
             }
             
@@ -58,7 +50,7 @@ namespace Xease
             }
             else
             {
-                ErrorLog($"EnvStateManager.Initialize states not contains dfaultState: {dfaultStateID}");
+                G.LogError($"EnvStateManager.Initialize states not contains dfaultState: {dfaultStateID}");
             }
         }
 
@@ -114,7 +106,7 @@ namespace Xease
 
         public void ChangeEnvState(string nextStateID)
         {
-            DevLog($"Core EnvStateManager.ChangeEnvState goalEnvState={nextStateID}");
+            G.Log($"Core EnvStateManager.ChangeEnvState goalEnvState={nextStateID}");
             
             if (nextStateID == null)
                 return;
@@ -122,7 +114,7 @@ namespace Xease
             var nextState = FindState(nextStateID);
             if (nextState == null)
             {
-                ErrorLog($"EnvStateManager TransToState nextState == null  nextStateID={nextStateID}");
+                G.LogError($"EnvStateManager TransToState nextState == null  nextStateID={nextStateID}");
                 return;
             }
 

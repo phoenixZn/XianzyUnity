@@ -14,6 +14,7 @@ namespace Xease
         public static GEnvLogAction LogError => GEnv.Inst.Param.LogError;
         public static GEnvLogAction LogWarning => GEnv.Inst.Param.LogWarning;
         public static GEnvLogAction Log  => GEnv.Inst.Param.LogInfo;
+        public static bool IsDev = true;
     }
     
     //////////////////////////////////////////////////////////////////////////
@@ -38,6 +39,7 @@ namespace Xease
         public ModuleManager Modules { get; protected set; }
 
         //Layer3：其他自由管理器： （框架无限制，无依赖，项目随意）
+        public EnvStateManager EnvStateMng { get; protected set; }
         // ......
 
         protected EnvDriver _driver { get; set; }
