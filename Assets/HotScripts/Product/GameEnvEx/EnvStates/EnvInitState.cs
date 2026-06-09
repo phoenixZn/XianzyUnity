@@ -14,12 +14,7 @@ namespace Xease
             G.Log("Core EnvInitState Leave");
             base.Leave(toState);
         }
-        
-        public override void EnvUpdate(float dt, float dt_unscaled)
-        {
-            base.EnvUpdate(dt, dt_unscaled);
-        }
-        
+
         public override string CheckTransitions()
         {
             return EnvStateID.ES_Login;

@@ -4,7 +4,7 @@ namespace Xease
     {
     }
     
-    public class EnvStateBase : IEnvUpdate
+    public class EnvStateBase
     {
         protected EnvStateManager _stateMgr;
         protected string _nextStateID;
@@ -22,13 +22,13 @@ namespace Xease
 
         public virtual void Enter(EnvStateBase fromState)
         {
-            G.Log($"EnvState [{StateID}] : Enter");
+            G.Log($"EnvState.Enter [{fromState?.StateID}] -> [{StateID}]");
         }
         
 
         public virtual void Leave(EnvStateBase toState)
         {
-            G.Log($"EnvState [{StateID}] : Leave");
+            G.Log($"EnvState.Leave [{StateID}]");
             CreateTransferWork();
             _nextStateID = null;
         }
@@ -40,11 +40,7 @@ namespace Xease
         {
             
         }
-        
-        public virtual void EnvUpdate(float dt, float dt_unscaled)
-        {
-        }
-        
+
         public virtual string CheckTransitions()
         {
             return _nextStateID;
