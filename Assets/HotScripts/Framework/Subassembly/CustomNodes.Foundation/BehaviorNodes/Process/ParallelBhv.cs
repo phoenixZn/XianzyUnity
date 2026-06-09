@@ -120,7 +120,7 @@ namespace Xease.CoreGame
 
         protected override float OnUpdate(float dt)
         {
-            CLHelper.Assert(mNodeList != null);
+            CLogger.LogAssert(mNodeList != null);
             if (mNodeList == null)
                 return dt;
 

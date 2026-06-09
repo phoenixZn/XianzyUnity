@@ -36,10 +36,10 @@ namespace Xease.CoreGame
         public override bool ParseFromXml(XmlNode xmlNode)
         {
             var str = XmlHelper.GetAttribute(xmlNode, "ClassName");
-            CLHelper.Assert(!string.IsNullOrEmpty(str));
+            CLogger.LogAssert(!string.IsNullOrEmpty(str));
             ClassName = str;
             var funcStr = XmlHelper.GetAttribute(xmlNode, "FuncName");
-            CLHelper.Assert(!string.IsNullOrEmpty(funcStr));
+            CLogger.LogAssert(!string.IsNullOrEmpty(funcStr));
             FuncName = funcStr;
 
             return base.ParseFromXml(xmlNode);

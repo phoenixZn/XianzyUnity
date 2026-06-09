@@ -35,7 +35,7 @@ namespace Xease.CoreGame
         public bool ParseFromXml(XmlNode xmlNode)
         {
             var str = XmlHelper.GetAttribute(xmlNode, "TimeLen");
-            CLHelper.Assert(!string.IsNullOrEmpty(str));
+            CLogger.LogAssert(!string.IsNullOrEmpty(str));
             TimeLen = new FloatCfg(0);
             return TimeLen.ParseByFormatString(str);
         }

@@ -127,7 +127,7 @@ namespace Xease.CoreGame
             {
                 ICustomNodeCfg bhvCfg = theCfg.SubCfgList[i];
                 var subbhv = mContext.Factory.CreateCustomNode(bhvCfg, context) as BehaviorNodeBase;
-                if (!CLHelper.Assert(subbhv != null))
+                if (!CLogger.LogAssert(subbhv != null))
                     continue;
                 mBehaviorSeq.Add(subbhv);
                 subbhv.Deactivate();

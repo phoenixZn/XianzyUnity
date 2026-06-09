@@ -81,7 +81,7 @@ namespace Xease.CoreGame
                 return theLogic;
             }
 
-            CLHelper.LogError(this, $"CustomNode.GetOwnerLogic logic({mContext.Logic.GetType()}) is not {typeof(T)}");
+            this.LogError($"CustomNode.GetOwnerLogic logic({mContext.Logic.GetType()}) is not {typeof(T)}");
             return null;
         }
 
@@ -94,7 +94,7 @@ namespace Xease.CoreGame
 
             if (logError)
             {
-                CLHelper.LogError(this, $"CustomNode.GetGenInfo genInfo({mContext.GenInfo.GetType()}) is not {typeof(T)}");
+                this.LogError($"CustomNode.GetGenInfo genInfo({mContext.GenInfo.GetType()}) is not {typeof(T)}");
             }
 
             return null;

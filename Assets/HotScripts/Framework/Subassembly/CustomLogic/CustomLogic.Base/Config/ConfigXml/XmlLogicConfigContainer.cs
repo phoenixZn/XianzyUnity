@@ -41,15 +41,15 @@ namespace Xease.CoreGame
             XmlDocument xml = XmlHelper.LoadXmlDocFromResPath(xmlPath);
             if (xml == null)
             {
-                CLHelper.Assert(false, "CustomLogicConfigMng  Cant Find Xml File: " + xmlPath);
+                CLogger.LogAssert(false, "CustomLogicConfigMng  Cant Find Xml File: " + xmlPath);
                 return false;
             }
 
             //逐个解析 各个配置
             XmlNode root = xml.SelectSingleNode("ConfigSystem");
-            CLHelper.Assert(root != null);
+            CLogger.LogAssert(root != null);
             root = root.SelectSingleNode("CustomLogicConfig");
-            CLHelper.Assert(root != null);
+            CLogger.LogAssert(root != null);
             XmlNodeList cfgNodeList = root.SelectNodes("ConfigItem");
             foreach (XmlElement cfgNode in cfgNodeList)
             {

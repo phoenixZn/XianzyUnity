@@ -35,7 +35,7 @@ namespace Xease.CoreGame
         {
             //Resources.Load 用于非正式代码的调试
             UnityEngine.TextAsset str = UnityEngine.Resources.Load(resPath, typeof(UnityEngine.TextAsset)) as UnityEngine.TextAsset;
-            CLHelper.Assert(str != null, "XmlHelper GetTextAsset == null resPath:" + resPath);
+            CLogger.LogAssert(str != null, "XmlHelper GetTextAsset == null resPath:" + resPath);
             return str;
         }
 
@@ -87,7 +87,7 @@ namespace Xease.CoreGame
             if (baseNode == null)
             {
                 CLogger.LogError("NodeInnerTextToEnumValue  Cant Find Node: " + nodeName);
-                CLHelper.AssertBreak();
+                CLogger.AssertBreak();
                 outValue = default(TEnum);
                 return;
             }
@@ -95,7 +95,7 @@ namespace Xease.CoreGame
             if (!XmlHelper.StrToEnumValue(baseNode.InnerText, out outValue))
             {
                 CLogger.LogError("NodeInnerTextToEnumValue ParseError  InnerText:" + baseNode.InnerText);
-                CLHelper.AssertBreak();
+                CLogger.AssertBreak();
             }
         }
 
@@ -105,7 +105,7 @@ namespace Xease.CoreGame
             if (subNode == null)
             {
                 CLogger.LogError("SubNodeInnerText  Cant Find Node: " + subNodeName);
-                CLHelper.AssertBreak();
+                CLogger.AssertBreak();
                 return "";
             }
 
@@ -118,7 +118,7 @@ namespace Xease.CoreGame
             if (eleNode == null)
             {
                 CLogger.LogError("GetAttribute  Cant as XmlElement: " + node.Name);
-                CLHelper.AssertBreak();
+                CLogger.AssertBreak();
                 return "";
             }
 

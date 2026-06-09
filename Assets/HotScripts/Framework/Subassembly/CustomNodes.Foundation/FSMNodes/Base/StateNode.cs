@@ -45,7 +45,7 @@ namespace Xease.CoreGame
         public virtual bool ParseFromXml(XmlNode xmlNode)
         {
             StateID = XmlHelper.GetAttribute(xmlNode, "StateID");
-            if (!CLHelper.Assert(StateID != null, "StateNodeCfg StateID == null"))
+            if (!CLogger.LogAssert(StateID != null, "StateNodeCfg StateID == null"))
             {
                 return false;
             }
@@ -85,7 +85,7 @@ namespace Xease.CoreGame
                 {
                     ICustomNodeCfg bhvCfg = theCfg.Transitions[i];
                     var transNode = mContext.Factory.CreateCustomNode(bhvCfg, context) as StateTransitionNode;
-                    if (!CLHelper.Assert(transNode != null))
+                    if (!CLogger.LogAssert(transNode != null))
                         continue;
                     mTransitions.Add(transNode);
                 }

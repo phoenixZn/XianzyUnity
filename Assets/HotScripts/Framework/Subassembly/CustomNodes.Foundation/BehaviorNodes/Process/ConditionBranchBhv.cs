@@ -45,24 +45,24 @@ namespace Xease.CoreGame
             TrueBhvCfg = CLHelper.CreateNodeCfg(xmlNode.SelectSingleNode("TrueBhv"));
             FalseBhvCfg = CLHelper.CreateNodeCfg(xmlNode.SelectSingleNode("FalseBhv"));
 
-            if (!CLHelper.Assert(TrueBhvCfg != null || FalseBhvCfg != null))
+            if (!CLogger.LogAssert(TrueBhvCfg != null || FalseBhvCfg != null))
             {
                 return false;
             }
 
             var categoryCnd = NodeConfigTypeRegistry.GetNodeCfgCategory(CndCfg.GetType());
-            CLHelper.Assert(categoryCnd == NodeCategory.Cnd);
+            CLogger.LogAssert(categoryCnd == NodeCategory.Cnd);
 
             if (TrueBhvCfg != null)
             {
                 var categoryBhv1 = NodeConfigTypeRegistry.GetNodeCfgCategory(TrueBhvCfg.GetType());
-                CLHelper.Assert(categoryBhv1 == NodeCategory.Bhv);
+                CLogger.LogAssert(categoryBhv1 == NodeCategory.Bhv);
             }
 
             if (FalseBhvCfg != null)
             {
                 var categoryBhv2 = NodeConfigTypeRegistry.GetNodeCfgCategory(FalseBhvCfg.GetType());
-                CLHelper.Assert(categoryBhv2 == NodeCategory.Bhv);
+                CLogger.LogAssert(categoryBhv2 == NodeCategory.Bhv);
             }
 
             CheckOnTick = XmlHelper.GetBool(xmlNode, "CheckOnTick");
@@ -104,8 +104,8 @@ namespace Xease.CoreGame
                 mFalseBhv.Deactivate();
             }
 
-            CLHelper.Assert(mCondition != null);
-            CLHelper.Assert(mTrueBhv != null || mFalseBhv != null);
+            CLogger.LogAssert(mCondition != null);
+            CLogger.LogAssert(mTrueBhv != null || mFalseBhv != null);
 
             mIsConditionReached = null;
             mCheckOnTick = theCfg.CheckOnTick;

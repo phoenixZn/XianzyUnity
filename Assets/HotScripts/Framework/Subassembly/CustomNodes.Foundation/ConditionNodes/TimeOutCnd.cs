@@ -21,7 +21,7 @@ namespace Xease.CoreGame
         public override bool ParseFromXml(XmlNode cndNode)
         {
             string time = XmlHelper.GetAttribute(cndNode, "time");
-            if (CLHelper.Assert(!string.IsNullOrEmpty(time)))
+            if (CLogger.LogAssert(!string.IsNullOrEmpty(time)))
             {
                 float.TryParse(time, out TimeLimit);
             }

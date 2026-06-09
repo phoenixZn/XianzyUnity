@@ -29,7 +29,7 @@ namespace Xease.CoreGame
         public bool ParseFromXml(XmlNode xmlNode)
         {
             var str = XmlHelper.GetAttribute(xmlNode, "LogStr");
-            CLHelper.Assert(!string.IsNullOrEmpty(str));
+            CLogger.LogAssert(!string.IsNullOrEmpty(str));
             LogStr = str;
             return true;
         }
@@ -46,7 +46,7 @@ namespace Xease.CoreGame
         {
             base.InitializeNode(cfg, context);
             var theCfg = cfg as LogBhvCfg;
-            CLHelper.Assert(theCfg != null);
+            CLogger.LogAssert(theCfg != null);
             m_LogStr = theCfg.LogStr;
         }
 
@@ -60,7 +60,7 @@ namespace Xease.CoreGame
         {
             if (m_LogStr == null)
                 return;
-            CLHelper.LogInfo(this, m_LogStr);
+            this.LogInfo(m_LogStr);
         }
     }
 }

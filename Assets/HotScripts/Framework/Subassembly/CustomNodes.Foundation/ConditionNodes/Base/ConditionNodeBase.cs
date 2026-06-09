@@ -27,8 +27,8 @@ namespace Xease.CoreGame
 
             if (this.CndCfgList.Count == 0)
             {
-                CLHelper.LogError(cndNode, "GroupCndCfg.ParseFromXml() CndCfgList.Count == 0");
-                CLHelper.AssertBreak();
+                cndNode.LogError("GroupCndCfg.ParseFromXml() CndCfgList.Count == 0");
+                CLogger.AssertBreak();
                 return false;
             }
 

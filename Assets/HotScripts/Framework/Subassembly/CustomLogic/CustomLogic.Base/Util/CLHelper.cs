@@ -1,19 +1,27 @@
-
+using System.Xml;
 
 namespace Xease.CoreGame
 {
     /// <summary>
     /// CustomLogic相关一些调试、辅助代码
     /// </summary>
+    //////////////////////////////////////////////////////////////////////////
     public static partial class CLHelper
     {
-        public static void AssertBreak()
+        public static bool IsNodeCanStop(this CustomNode node)
         {
-            CLogger.LogError("KaHotUpdate.CoreGameLogic Has ERROR! ");
-            //UnityEngine.Debug.Break();
+            if (node != null && node is INeedStopCheck check)
+            {
+                return check.CanStop();
+            }
+            return true;
         }
+    }
+    
 
-        public static bool Assert(bool condition, object logMsg = null)
+    public static partial class CLogger
+    {
+        public static bool LogAssert(bool condition, object logMsg = null)
         {
             if (condition)
                 return true;
@@ -25,36 +33,13 @@ namespace Xease.CoreGame
             AssertBreak();
             return false;
         }
-
-        /// Node Helper
-        public static void LogError(this CustomNode node, string logMsg)
-        {
-            int id = node.GenInfo.LogicConfigID;
-            CLogger.LogError($"LogicNodeError id={id} : {logMsg}");
-        }
-
-        public static void LogInfo(this CustomNode node, string logMsg)
-        {
-            int id = node.GenInfo.LogicConfigID;
-            CLogger.LogInfo($"Logic[ {id} ]({node.CreationIndex}): {logMsg}");
-        }
-
-        public static bool IsNodeCanStop(this CustomNode node)
-        {
-            if (node != null && node is INeedStopCheck check)
-            {
-                return check.CanStop();
-            }
-
-            return true;
-        }
-
-        public static void AssertNodeCfgCategory(ICustomNodeCfg nodeCfg, NodeCategory targetCategory, bool checkNull = true)
+        
+        public static void LogAssertNodeCategory(this ICustomNodeCfg nodeCfg, NodeCategory targetCategory, bool checkNull = true)
         {
             if (nodeCfg != null)
             {
                 var category = NodeConfigTypeRegistry.GetNodeCfgCategory(nodeCfg.GetType());
-                CLHelper.Assert(category == targetCategory);
+                CLogger.LogAssert(category == targetCategory);
             }
             else if (checkNull)
             {
@@ -62,8 +47,20 @@ namespace Xease.CoreGame
             }
         }
 
+        /// Node Helper
+        public static void LogError(this CustomNode node, string logMsg)
+        {
+            int id = node.GenInfo.LogicConfigID;
+            CLogger.LogError($"Logic[ {id} ]({node.CreationIndex}) : {logMsg}");
+        }
 
-
-
+        public static void LogInfo(this CustomNode node, string logMsg)
+        {
+            int id = node.GenInfo.LogicConfigID;
+            CLogger.LogInfo($"Logic[ {id} ]({node.CreationIndex}): {logMsg}");
+        }
+        
     }
+    
+
 }

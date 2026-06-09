@@ -40,13 +40,13 @@ namespace Xease.CoreGame
             TrueStateID = XmlHelper.GetAttribute(xmlNode, "TrueStateID");
             FalseStateID = XmlHelper.GetAttribute(xmlNode, "FalseStateID");
 
-            if (!CLHelper.Assert(!string.IsNullOrEmpty(TrueStateID) || !string.IsNullOrEmpty(FalseStateID)))
+            if (!CLogger.LogAssert(!string.IsNullOrEmpty(TrueStateID) || !string.IsNullOrEmpty(FalseStateID)))
             {
                 return false;
             }
 
             var categoryCnd = NodeConfigTypeRegistry.GetNodeCfgCategory(ConditionCfg.GetType());
-            if (!CLHelper.Assert(categoryCnd == NodeCategory.Cnd))
+            if (!CLogger.LogAssert(categoryCnd == NodeCategory.Cnd))
             {
                 return false;
             }

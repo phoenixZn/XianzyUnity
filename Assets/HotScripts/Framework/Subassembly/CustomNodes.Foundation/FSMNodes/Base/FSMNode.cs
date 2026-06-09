@@ -65,8 +65,8 @@ namespace Xease.CoreGame
 
             if (StateList.Count == 0)
             {
-                CLHelper.LogError(xmlNode, "FSMNodeCfg.ParseFromXml() StateList.Count == 0");
-                CLHelper.AssertBreak();
+                xmlNode.LogError("FSMNodeCfg.ParseFromXml() StateList.Count == 0");
+                CLogger.AssertBreak();
                 return false;
             }
 
@@ -145,7 +145,7 @@ namespace Xease.CoreGame
                 {
                     ICustomNodeCfg bhvCfg = theCfg.GlobalTransitions[i];
                     var transNode = mContext.Factory.CreateCustomNode(bhvCfg, context) as StateTransitionNode;
-                    if (!CLHelper.Assert(transNode != null))
+                    if (!CLogger.LogAssert(transNode != null))
                         continue;
                     mTransitions.Add(transNode);
                 }
@@ -153,7 +153,7 @@ namespace Xease.CoreGame
 
             mCfg = theCfg;
             mCurrentState = null;
-            CLHelper.Assert(mStates.Count > 0);
+            CLogger.LogAssert(mStates.Count > 0);
 
         }
 

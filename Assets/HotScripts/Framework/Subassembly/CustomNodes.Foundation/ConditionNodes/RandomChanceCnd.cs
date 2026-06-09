@@ -20,7 +20,7 @@ namespace Xease.CoreGame
         public override bool ParseFromXml(XmlNode cndNode)
         {
             string str = XmlHelper.GetAttribute(cndNode, "ProbPercent");
-            CLHelper.Assert(!string.IsNullOrEmpty(str));
+            CLogger.LogAssert(!string.IsNullOrEmpty(str));
             ProbPercent = float.Parse(str);
             return base.ParseFromXml(cndNode);
         }

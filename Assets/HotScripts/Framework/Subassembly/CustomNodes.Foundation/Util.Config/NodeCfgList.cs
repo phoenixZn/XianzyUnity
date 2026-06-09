@@ -14,14 +14,14 @@ namespace Xease.CoreGame
             foreach (XmlNode subNode in subNodeList)
             {
                 var nodeCfg = CLHelper.CreateNodeCfg(subNode) as T;
-                CLHelper.Assert(nodeCfg != null);
+                CLogger.LogAssert(nodeCfg != null);
                 this.Add(nodeCfg);
             }
 
             if (this.Count == 0)
             {
-                CLHelper.LogError(xmlNode, "NodeCfgList.ParseFromXml() CfgList.Count == 0");
-                CLHelper.AssertBreak();
+                xmlNode.LogError("NodeCfgList.ParseFromXml() CfgList.Count == 0");
+                CLogger.AssertBreak();
                 return false;
             }
 

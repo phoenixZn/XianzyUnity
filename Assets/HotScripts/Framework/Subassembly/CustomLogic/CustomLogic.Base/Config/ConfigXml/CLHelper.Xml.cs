@@ -1,24 +1,29 @@
-﻿using System.Xml;
+using System.Xml;
 
 namespace Xease.CoreGame
 {
-    public static partial class CLHelper
+    //////////////////////////////////////////////////////////////////////////
+    public static partial class CLogger
     {
-        /// XmlNode Helper
-        public static bool Assert(XmlNode cfgNode, bool condition, string logMsg = null)
+        public static bool LogAssert(XmlNode cfgNode, bool condition, string logMsg = null)
         {
             if (condition)
                 return true;
-            LogError(cfgNode, logMsg);
+            cfgNode.LogError(logMsg);
             return false;
         }
 
-        public static void LogError(XmlNode cfgNode, string logMsg)
+        public static void LogError(this XmlNode cfgNode, string logMsg)
         {
             int id = cfgNode.GetSingleNodeID();
             CLogger.LogError($"CLHelper XmlNode ParseError id={id} : {logMsg}");
         }
+    }
 
+    //////////////////////////////////////////////////////////////////////////
+    public static partial class CLHelper
+    {
+        /// XmlNode Helper
         public static int GetSingleNodeID(this XmlNode cfgNode)
         {
             XmlNode node = cfgNode;
@@ -49,7 +54,7 @@ namespace Xease.CoreGame
             XmlElement cusNode = node as XmlElement;
             if (cusNode == null)
             {
-                CLHelper.Assert(false, "CustomLogicConfig PraseNodeCfg ParseError  cusNode as XmlElement == null");
+                CLogger.LogAssert(false, "CustomLogicConfig PraseNodeCfg ParseError  cusNode as XmlElement == null");
                 return null;
             }
 
@@ -57,7 +62,7 @@ namespace Xease.CoreGame
             ICustomNodeCfg nodeCfg = NodeConfigTypeRegistry.CreateCustomNodeCfg(nodeTypeStr);
             if (nodeCfg == null)
             {
-                CLHelper.Assert(false, "NodeConfigTypeRegistry.CreateCustomNodeCfg == null  nodeTypeStr = " + nodeTypeStr);
+                CLogger.LogAssert(false, "NodeConfigTypeRegistry.CreateCustomNodeCfg == null  nodeTypeStr = " + nodeTypeStr);
                 return null;
             }
 
@@ -66,11 +71,11 @@ namespace Xease.CoreGame
             {
                 if (!xmlNodeCfg.ParseFromXml(node))
                 {
-                    CLHelper.LogError(node, nodeTypeStr);
+                    node.LogError(nodeTypeStr);
                 }
             }
 
-            CLHelper.Assert(nodeCfg != null);
+            CLogger.LogAssert(nodeCfg != null);
             return nodeCfg;
         }
     }

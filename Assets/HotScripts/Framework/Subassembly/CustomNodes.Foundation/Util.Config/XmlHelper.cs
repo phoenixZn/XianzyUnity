@@ -18,13 +18,13 @@ namespace Xease.CoreGame
             foreach (XmlNode subNode in subNodeList)
             {
                 T nodeCfg = CLHelper.CreateNodeCfg(subNode) as T;
-                CLHelper.Assert(nodeCfg != null);
+                CLogger.LogAssert(nodeCfg != null);
                 cfgList.Add(nodeCfg);
             }
 
             if (cfgList.Count == 0)
             {
-                CLHelper.AssertBreak();
+                CLogger.AssertBreak();
             }
 
             return cfgList;

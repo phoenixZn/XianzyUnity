@@ -29,8 +29,8 @@ namespace Xease.CoreGame
             Bhv = CLHelper.CreateNodeCfg(xmlNode.SelectSingleNode("Bhv"));
             ExitBhv = CLHelper.CreateNodeCfg(xmlNode.SelectSingleNode("ExitBhv"));
 
-            CLHelper.AssertNodeCfgCategory(Bhv, NodeCategory.Bhv, false);
-            CLHelper.AssertNodeCfgCategory(ExitBhv, NodeCategory.Bhv, false);
+            Bhv.LogAssertNodeCategory(NodeCategory.Bhv, false);
+            ExitBhv.LogAssertNodeCategory(NodeCategory.Bhv, false);
 
             return base.ParseFromXml(xmlNode);
         }

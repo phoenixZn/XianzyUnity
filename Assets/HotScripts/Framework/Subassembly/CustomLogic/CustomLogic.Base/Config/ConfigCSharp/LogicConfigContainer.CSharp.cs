@@ -306,7 +306,7 @@ namespace Xease.CoreGame
             return new DelegateBhvCfg((CustomNode node) =>
             {
                 var v = node.GetVar<T>(varID);
-                CLHelper.LogInfo(node, $"LogVar varID={varID}, v={v}");
+                node.LogInfo($"LogVar varID={varID}, v={v}");
             });
         }
         
@@ -316,7 +316,7 @@ namespace Xease.CoreGame
             return new DelegateBhvCfg((CustomNode node) =>
             {
                 var v = node.GetVar<T>(varID);
-                CLHelper.LogInfo(node, $"{prefix} LogVar varID={varID}, v={v}");
+                node.LogInfo($"{prefix} LogVar varID={varID}, v={v}");
             });
         }
     }

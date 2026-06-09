@@ -42,14 +42,14 @@ namespace Xease.CoreGame
             var cfgContainerName = genInfo.ConfigContainerName;
             if (!_configContainerDic.TryGetValue(cfgContainerName, out var cfgContainer))
             {
-                CLHelper.Assert(false, $"CreateCustomLogic ConfigContainer = null, cfgContainerName={cfgContainerName}");
+                CLogger.LogAssert(false, $"CreateCustomLogic ConfigContainer = null, cfgContainerName={cfgContainerName}");
                 return null;
             }
 
             var config = cfgContainer.GetCustomLogicCfg(genInfo.LogicConfigID);
             if (config == null)
             {
-                CLHelper.Assert(false, $"CreateCustomLogic Cant Find Config : ConfigID={genInfo.LogicConfigID}, cfgContainerName={cfgContainerName}");
+                CLogger.LogAssert(false, $"CreateCustomLogic Cant Find Config : ConfigID={genInfo.LogicConfigID}, cfgContainerName={cfgContainerName}");
                 return null;
             }
 
@@ -61,7 +61,7 @@ namespace Xease.CoreGame
         {
             if (config == null)
             {
-                CLHelper.Assert(false, "CreateCustomLogic config == null");
+                CLogger.LogAssert(false, "CreateCustomLogic config == null");
                 return null;
             }
 

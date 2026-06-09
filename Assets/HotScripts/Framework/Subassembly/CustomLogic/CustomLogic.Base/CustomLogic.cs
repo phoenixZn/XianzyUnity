@@ -123,8 +123,8 @@ namespace Xease.CoreGame
                 }
                 catch (System.Exception e)
                 {
-                    CLHelper.LogError(customNode, $"FillCustomLogicCfg Failed, config ID:{this.ID}, index:{index}");
-                    CLHelper.LogError(customNode, e.ToString());
+                    customNode.LogError($"FillCustomLogicCfg Failed, config ID:{this.ID}, index:{index}");
+                    customNode.LogError(e.ToString());
                     return false;
                 }
                 ++index;

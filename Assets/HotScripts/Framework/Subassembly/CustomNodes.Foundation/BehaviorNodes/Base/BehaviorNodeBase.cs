@@ -13,7 +13,7 @@ namespace Xease.CoreGame
 
         public NoneParamBhvCfg(System.Type bhvType)
         {
-            CLHelper.Assert(bhvType.IsSubclassOf(typeof(BehaviorNodeBase)));
+            CLogger.LogAssert(bhvType.IsSubclassOf(typeof(BehaviorNodeBase)));
             BhvType = bhvType;
         }
 
@@ -73,7 +73,7 @@ namespace Xease.CoreGame
             mCfg = cfg as T;
             if (mCfg == null)
             {
-                CLHelper.LogError(this, $"BehaviorNode mCfg == null node={this}, T={typeof(T)}");
+                this.LogError($"BehaviorNode mCfg == null node={this}, T={typeof(T)}");
             }
         }
 
