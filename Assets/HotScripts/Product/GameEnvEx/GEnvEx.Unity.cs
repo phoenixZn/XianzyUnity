@@ -48,6 +48,14 @@ namespace Xease
 
         protected override void Inner_CreateManagers()
         {
+            EnvStateMng = new EnvStateManager();
+            Dictionary<string, EnvStateBase> states = new()
+            {
+                [EnvStateID.ES_EnvInit] = new EnvInitState(),
+                [EnvStateID.ES_Login] = new EnvLoginState(),
+                [EnvStateID.ES_Main] = new EnvMainState(),
+            };
+            EnvStateMng.Initialize(states, EnvStateID.ES_EnvInit);
         }
         
     }

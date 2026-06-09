@@ -11,14 +11,13 @@ namespace Xease
         
         public override void Leave(EnvStateBase toState)
         {
-            if(G.IsDev)
-                G.Log("Core EnvInitState Leave");
+            G.Log("Core EnvInitState Leave");
             base.Leave(toState);
         }
         
-        public override void Update(float dt)
+        public override void EnvUpdate(float dt, float dt_unscaled)
         {
-            base.Update(dt);
+            base.EnvUpdate(dt, dt_unscaled);
         }
         
         public override string CheckTransitions()

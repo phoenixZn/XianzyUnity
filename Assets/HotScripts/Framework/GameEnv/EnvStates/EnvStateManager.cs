@@ -9,7 +9,7 @@ namespace Xease
     // 当前状态只有一个，如果有需要延迟处理的leave事务，可以交给下一个状态代为处理
     // eg: StateA: "这些我打算清理掉了，你要么？不要我就动手了！“,  StateB : “我看看，哦，这个资源我有用，我拿走了，回头我处理就行，其余你接着处理吧” 
 
-    public partial class EnvStateManager
+    public partial class EnvStateManager : IEnvUpdate
     {
         protected Dictionary<string, EnvStateBase> _states = new();
         
@@ -28,6 +28,8 @@ namespace Xease
                 return _currentStateRef.StateID;
             }
         }
+
+        public EnvDriver OuterDriver { get; } = new EnvDriver("EnvStates");
         
         
         //////////////////////////////////////////////////////////////////////////
@@ -38,11 +40,17 @@ namespace Xease
         public void Initialize(Dictionary<string, EnvStateBase> states, string dfaultStateID)
         {
             _states = states;
+            foreach (var kv in states)
+            {
+                kv.Value.Init(this, kv.Key);
+            }
             if (_currentStateRef != null)
             {
                 G.LogError("EnvStateManager.Initialize _currentStateRef != null");
                 _currentStateRef = null;
             }
+
+            OuterDriver.BindEnvActions(this);
             
             if (states.ContainsKey(dfaultStateID))
             {
@@ -58,14 +66,18 @@ namespace Xease
         {
             if (_currentStateRef != null)
             {
+                UnbindCurrentState(_currentStateRef);
                 _currentStateRef.Leave(null);
                 _currentStateRef.OnDestroy();
             }
             _currentStateRef = null;
+
+            OuterDriver.UnBindEnvActions(this);
+            OuterDriver.ClearAllBind();
         }
 
         //////////////////////////////////////////////////////////////////////////
-        public virtual void Update(float dt)
+        public virtual void EnvUpdate(float dt, float dt_unscaled)
         {
             if (_states.Count == 0)
                 return;
@@ -83,23 +95,13 @@ namespace Xease
             var nextState = FindState(nextStateID);
             if (nextState != null)
             {
+                UnbindCurrentState(_currentStateRef);
                 _currentStateRef.Leave(nextState);
                 var lastState = _currentStateRef;
                 _currentStateRef = nextState;
                 _currentStateRef.Enter(lastState);
+                BindCurrentState(_currentStateRef);
             }
-
-            _currentStateRef.Update(dt);
-        }
-
-        public virtual void LateUpdate()
-        {
-            if (_currentStateRef == null)
-            {
-                return;
-            }
-
-            _currentStateRef.LateUpdate();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -130,11 +132,13 @@ namespace Xease
                 {
                     return;
                 }
+                UnbindCurrentState(_currentStateRef);
                 _currentStateRef.Leave(nextState);
             }
 
             _currentStateRef = nextState;
             _currentStateRef.Enter(lastState);
+            BindCurrentState(_currentStateRef);
         }
 
         private EnvStateBase FindState(string stateID)
@@ -150,6 +154,18 @@ namespace Xease
             }
 
             return null;
+        }
+
+        private void BindCurrentState(EnvStateBase state)
+        {
+            if (state != null)
+                OuterDriver.BindEnvActions(state);
+        }
+
+        private void UnbindCurrentState(EnvStateBase state)
+        {
+            if (state != null)
+                OuterDriver.UnBindEnvActions(state);
         }
 
         //////////////////////////////////////////////////////////////////////////
