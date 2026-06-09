@@ -37,17 +37,17 @@ namespace Xease
 
         public void FixedUpdate()
         {
-            GEnv.Inst.EnvFixUpdate();
+            GEnv.Inst?.EnvFixUpdate();
         }
 
         public void Update()
         {
-            GEnv.Inst.EnvUpdate();
+            GEnv.Inst?.EnvUpdate();
         }
 
         public void LateUpdate()
         {
-            GEnv.Inst.EnvLateUpdate();
+            GEnv.Inst?.EnvLateUpdate();
         }
 
         public void OnDrawGizmos()
@@ -55,8 +55,26 @@ namespace Xease
             GEnv.Inst?.EnvDrawGizmos();
         }
         
+        void OnGUI()
+        {
+            GEnv.Inst?.OnEnvGUI();
+        }
+        
+        void OnApplicationPause(bool pause)
+        {
+            GEnv.Inst?.OnEnvApplicationPause(pause);
+        }
+
+        void OnApplicationFocus(bool focus)
+        {
+            GEnv.Inst?.OnEnvApplicationFocus(focus);
+        }
+        
         public void OnApplicationQuit()
         {
         }
+
+
+
     }
 }

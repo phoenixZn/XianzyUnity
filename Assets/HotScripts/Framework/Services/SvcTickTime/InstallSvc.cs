@@ -20,7 +20,7 @@ namespace Xease
         
         public void AddService_TickTime()
         {
-            G.Log("AddService_TickTime 1");
+            G.Log("AddService_TickTime");
 #if CONSOLE_CLIENT
             var svc = new TimeService_Console();
 # else

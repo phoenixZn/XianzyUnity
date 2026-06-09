@@ -39,6 +39,8 @@ namespace Xease
         private bool IsStarted => _state >= State.Started;
         private bool IsShutdown => _state == State.Shutdown;
 
+        public EnvDriver OuterDriver { get; } = new EnvDriver("Modules");
+
         public ModuleManager()
         {
         }
@@ -138,6 +140,8 @@ namespace Xease
             {
                 module.Start();
             }
+
+            OuterDriver.BindEnvActions(module);
         }
 
         public void Unregister(IEnumerable<Type> types)
@@ -165,6 +169,8 @@ namespace Xease
                 G.LogWarning($"[ModuleManager] {type} does not registered");
                 return;
             }
+
+            OuterDriver.UnBindEnvActions(module);
 
             if (IsInited)
             {
@@ -209,6 +215,12 @@ namespace Xease
         {
             if (IsShutdown)
                 return;
+
+            for (int i = 0; i < moduleList.Count; ++i)
+            {
+                OuterDriver.UnBindEnvActions(moduleList[i]);
+            }
+            OuterDriver.ClearAllBind();
 
             Broadcast(m =>
             {
