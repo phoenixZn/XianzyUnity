@@ -21,29 +21,32 @@ namespace Xease
     /// 游戏全局环境: GameGlobalEnv
     /// * 纯逻辑中心，和Unity没有直接关联、依赖。
     //////////////////////////////////////////////////////////////////////////
-    public interface IGameEnv
+    public partial class GEnv
     {
-    }
-    
-    public partial class GEnv : IGameEnv
-    {
+        //唯一单例持有GEnv子类对象
         protected static GEnv sInstance = null;
         public static GEnv Inst => sInstance;
 
+        //全局环境 初始化参数:
         public GEnvParam Param { get; }
-
-        //Layer1：框架性服务： （受到跨项目接口约束，偏底层、独立工作。 对外基本无依赖，有依赖也会在初始化时醒目的注入。过去通常被实现为单例的高内聚部件）
-        public ServicesProvider Services { get; protected set; }
-
-        //Layer2：模块管理器： （高层逻辑模块、偏数据、偏业务、偏项目特化、协同工作、可以依赖其他Service、Module。对外依赖不受框架管理）
-        public ModuleManager Modules { get; protected set; }
-
-        //Layer3：其他自由管理器： （框架无限制，无依赖，项目随意）
-        public EnvStateManager EnvStateMng { get; protected set; }
-        // ......
-
+        
+        //全局环境 标准驱动:
         protected EnvDriver _driver { get; set; }
 
+        
+        //全局环境 结构：
+        //////////////////////////////////////////////////////////////////////////
+        
+        //Layer1：框架性服务： （具有严格的接口约束，偏底层、偏独立。 对外基本无依赖，有依赖也会在初始化时醒目的注入。过去通常被实现为单例的高内聚部件, 跨项目使用）
+        public ServicesProvider Services { get; protected set; }
+
+        //Layer2：模块管理器： （高层业务逻辑模块、偏数据、偏具体业务、偏项目特化、可以依赖其他Service、Module）
+        public ModuleManager Modules { get; protected set; }
+
+        //Layer3：其他自由管理器： （框架无限制，无依赖约束，随项目喜好）
+        public EnvStateManager EnvStateMng { get; protected set; }
+        // ......
+        
         
         protected GEnv(GEnvParam param)
         {
@@ -73,9 +76,6 @@ namespace Xease
 
         public virtual void DestroyEnv()
         {
-            _driver?.UnBindEnvActions(Modules?.OuterDriver);
-            _driver?.UnBindEnvActions(Services?.OuterDriver);
-            _driver?.UnBindEnvActions(EnvStateMng?.CurStateDriver);
             _driver.ClearAllBind();
 
             EnvStateMng?.Destroy();
@@ -126,9 +126,9 @@ namespace Xease
         /// 扩展:
         protected virtual void Inner_InitializeEnv()
         {
-            Inner_CreateServices(); //项目子类/扩展初始化 Services
-            Inner_CreateModules();  //项目子类/扩展初始化 Modules
-            Inner_CreateManagers(); //项目子类/扩展初始化 Managers
+            Inner_CreateServices(); //初始化 Services
+            Inner_CreateModules();  //初始化 Modules
+            Inner_CreateManagers(); //初始化 Managers
             if (Services == null)
             {
                 G.LogError("Inner_InitializeEnv _services == null");
@@ -138,10 +138,10 @@ namespace Xease
                 G.LogError("Inner_InitializeEnv _modules == null");
             }
 
-            LinkEnvActions();
+            LinkEnvDriver();
         }
 
-        protected virtual void LinkEnvActions()
+        protected virtual void LinkEnvDriver()
         {
             _driver = new EnvDriver("GEnv");
             _driver.BindEnvActions(Modules?.OuterDriver);
@@ -150,6 +150,8 @@ namespace Xease
             _driver.BindEnvActions(EnvStateMng?.CurStateDriver);
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// 项目子类可扩展
         protected virtual void Inner_CreateServices()
         {
             Param.LogInfo("[Core]: Env Services 初始化");
