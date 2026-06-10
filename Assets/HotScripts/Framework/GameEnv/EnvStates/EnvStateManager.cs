@@ -29,7 +29,7 @@ namespace Xease
             }
         }
 
-        public EnvDriver OuterDriver { get; } = new EnvDriver("EnvStates");
+        public EnvDriver CurStateDriver { get; } = new EnvDriver("EnvStates");
         
         
         //////////////////////////////////////////////////////////////////////////
@@ -48,9 +48,8 @@ namespace Xease
             {
                 G.LogError("EnvStateManager.Initialize _currentStateRef != null");
                 _currentStateRef = null;
+                CurStateDriver.ClearAllBind();
             }
-
-            OuterDriver.BindEnvActions(this);
             
             if (states.ContainsKey(dfaultStateID))
             {
@@ -66,14 +65,11 @@ namespace Xease
         {
             if (_currentStateRef != null)
             {
-                UnbindCurrentState(_currentStateRef);
                 _currentStateRef.Leave(null);
                 _currentStateRef.OnDestroy();
             }
             _currentStateRef = null;
-
-            OuterDriver.UnBindEnvActions(this);
-            OuterDriver.ClearAllBind();
+            CurStateDriver.ClearAllBind();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -95,12 +91,7 @@ namespace Xease
             var nextState = FindState(nextStateID);
             if (nextState != null)
             {
-                UnbindCurrentState(_currentStateRef);
-                _currentStateRef.Leave(nextState);
-                var lastState = _currentStateRef;
-                _currentStateRef = nextState;
-                _currentStateRef.Enter(lastState);
-                BindCurrentState(_currentStateRef);
+                EnterNextState(nextState);
             }
         }
 
@@ -119,26 +110,20 @@ namespace Xease
                 G.LogError($"EnvStateManager TransToState nextState == null  nextStateID={nextStateID}");
                 return;
             }
-
-            var lastState = _currentStateRef;
+            
             if (_currentStateRef != null)
             {
                 if (nextStateID == _currentStateRef.StateID)
                 {
                     return;
                 }
-
                 if (_currentStateRef.CantInterrupt())
                 {
                     return;
                 }
-                UnbindCurrentState(_currentStateRef);
-                _currentStateRef.Leave(nextState);
             }
 
-            _currentStateRef = nextState;
-            _currentStateRef.Enter(lastState);
-            BindCurrentState(_currentStateRef);
+            EnterNextState(nextState);
         }
 
         private EnvStateBase FindState(string stateID)
@@ -156,17 +141,19 @@ namespace Xease
             return null;
         }
 
-        private void BindCurrentState(EnvStateBase state)
+        
+        private void EnterNextState(EnvStateBase nextState)
         {
-            if (state != null)
-                OuterDriver.BindEnvActions(state);
+            if (nextState == null)
+                return;
+            _currentStateRef?.Leave(nextState);
+            var lastState = _currentStateRef;
+            _currentStateRef = nextState;
+            _currentStateRef.Enter(lastState);
+            CurStateDriver.ClearAllBind();
+            CurStateDriver.BindEnvActions(_currentStateRef);
         }
-
-        private void UnbindCurrentState(EnvStateBase state)
-        {
-            if (state != null)
-                OuterDriver.UnBindEnvActions(state);
-        }
+        
 
         //////////////////////////////////////////////////////////////////////////
         /// 跨状态的黑板标识

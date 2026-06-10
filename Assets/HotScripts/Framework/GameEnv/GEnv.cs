@@ -75,7 +75,7 @@ namespace Xease
         {
             _driver?.UnBindEnvActions(Modules?.OuterDriver);
             _driver?.UnBindEnvActions(Services?.OuterDriver);
-            _driver?.UnBindEnvActions(EnvStateMng?.OuterDriver);
+            _driver?.UnBindEnvActions(EnvStateMng?.CurStateDriver);
             _driver.ClearAllBind();
 
             EnvStateMng?.Destroy();
@@ -146,7 +146,8 @@ namespace Xease
             _driver = new EnvDriver("GEnv");
             _driver.BindEnvActions(Modules?.OuterDriver);
             _driver.BindEnvActions(Services?.OuterDriver);
-            _driver.BindEnvActions(EnvStateMng?.OuterDriver);
+            _driver.BindEnvActions(EnvStateMng);
+            _driver.BindEnvActions(EnvStateMng?.CurStateDriver);
         }
 
         protected virtual void Inner_CreateServices()

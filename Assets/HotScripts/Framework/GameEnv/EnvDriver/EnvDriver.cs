@@ -41,21 +41,22 @@ namespace Xease
     
     //////////////////////////////////////////////////////////////////////////
     /// 整合 EnvDriver:
-    public class EnvDriver : IEnvFixedUpdate, IEnvUpdate, IEnvLateUpdate, IEnvAppPause, IEnvAppFocus, IEnvDrawGizmos, IEnvOnGUI
+    public partial class EnvDriver : IEnvFixedUpdate, IEnvUpdate, IEnvLateUpdate, IEnvAppPause, IEnvAppFocus, IEnvDrawGizmos, IEnvOnGUI
     {
         protected Action<float, float> ActionFixedUpdate;
         protected Action<float, float> ActionUpdate;
         protected Action<float, float> ActionLateUpdate;
-        protected Action<bool> ApplicationPause;
-        protected Action<bool> ApplicationFocus;
+        protected Action<bool> ActionApplicationPause;
+        protected Action<bool> ActionApplicationFocus;
         protected Action ActionOnDrawGizmos;
         protected Action ActionOnGUI;
 
         public string GroupName { get; protected set; }
-
+        
         public EnvDriver(string groupName)
         {
             GroupName = groupName;
+            InitProfilerMarkers(groupName);
         }
 
         public void BindEnvActions(object obj)
@@ -69,9 +70,9 @@ namespace Xease
             if (obj is IEnvLateUpdate lateUpdate)
                 ActionLateUpdate += lateUpdate.EnvLateUpdate;
             if (obj is IEnvAppPause applicationPause)
-                ApplicationPause += applicationPause.OnEnvApplicationPause;
+                ActionApplicationPause += applicationPause.OnEnvApplicationPause;
             if (obj is IEnvAppFocus applicationFocus)
-                ApplicationFocus += applicationFocus.OnEnvApplicationFocus;
+                ActionApplicationFocus += applicationFocus.OnEnvApplicationFocus;
             if (obj is IEnvDrawGizmos drawGizmos)
                 ActionOnDrawGizmos += drawGizmos.EnvDrawGizmos;
             if (obj is IEnvOnGUI onGUI)
@@ -80,6 +81,8 @@ namespace Xease
         
         public void UnBindEnvActions(object obj)
         {
+            if (obj == null)
+                return;
             if (obj is IEnvFixedUpdate fixedUpdate)
                 ActionFixedUpdate -= fixedUpdate.EnvFixedUpdate;
             if (obj is IEnvUpdate update)
@@ -87,9 +90,9 @@ namespace Xease
             if (obj is IEnvLateUpdate lateUpdate)
                 ActionLateUpdate -= lateUpdate.EnvLateUpdate;
             if (obj is IEnvAppPause applicationPause)
-                ApplicationPause -= applicationPause.OnEnvApplicationPause;
+                ActionApplicationPause -= applicationPause.OnEnvApplicationPause;
             if (obj is IEnvAppFocus applicationFocus)
-                ApplicationFocus -= applicationFocus.OnEnvApplicationFocus;
+                ActionApplicationFocus -= applicationFocus.OnEnvApplicationFocus;
             if (obj is IEnvDrawGizmos drawGizmos)
                 ActionOnDrawGizmos -= drawGizmos.EnvDrawGizmos;
             if (obj is IEnvOnGUI onGUI)
@@ -101,8 +104,8 @@ namespace Xease
             ActionFixedUpdate = null;
             ActionUpdate = null;
             ActionLateUpdate = null;
-            ApplicationPause = null;
-            ApplicationFocus = null;
+            ActionApplicationPause = null;
+            ActionApplicationFocus = null;
             ActionOnDrawGizmos = null;
             ActionOnGUI = null;
         }
@@ -110,17 +113,47 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         public void EnvFixedUpdate(float dt, float dt_unscaled)
         {
-            ActionFixedUpdate?.Invoke(dt, dt_unscaled);
+            if (ActionFixedUpdate == null) return;
+            var profiling = EnableProfiler;
+            if (profiling) ProfileEnvFixedUpdateBegin();
+            try
+            {
+                ActionFixedUpdate.Invoke(dt, dt_unscaled);
+            }
+            finally
+            {
+                if (profiling) ProfileEnvFixedUpdateEnd();
+            }
         }
 
         public void EnvUpdate(float dt, float dt_unscaled)
         {
-            ActionUpdate?.Invoke(dt, dt_unscaled);
+            if (ActionUpdate == null) return;
+            var profiling = EnableProfiler;
+            if (profiling) ProfileEnvUpdateBegin();
+            try
+            {
+                ActionUpdate.Invoke(dt, dt_unscaled);
+            }
+            finally
+            {
+                if (profiling) ProfileEnvUpdateEnd();
+            }
         }
 
         public void EnvLateUpdate(float dt, float dt_unscaled)
         {
-            ActionLateUpdate?.Invoke(dt, dt_unscaled);
+            if (ActionLateUpdate == null) return;
+            var profiling = EnableProfiler;
+            if (profiling) ProfileEnvLateUpdateBegin();
+            try
+            {
+                ActionLateUpdate.Invoke(dt, dt_unscaled);
+            }
+            finally
+            {
+                if (profiling) ProfileEnvLateUpdateEnd();
+            }
         }
 
         public void EnvDrawGizmos()
@@ -130,18 +163,30 @@ namespace Xease
         
         public void OnEnvApplicationPause(bool pause)
         {
-            ApplicationPause?.Invoke(pause);
+            ActionApplicationPause?.Invoke(pause);
         }
         
         public void OnEnvApplicationFocus(bool focus)
         {
-            ApplicationFocus?.Invoke(focus);
+            ActionApplicationFocus?.Invoke(focus);
         }
 
         public void OnEnvGUI()
         {
             ActionOnGUI?.Invoke();
         }
+        
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// Profiler :
+        public static bool EnableProfiler = true;
+        partial void InitProfilerMarkers(string groupName);
+        partial void ProfileEnvFixedUpdateBegin();
+        partial void ProfileEnvFixedUpdateEnd();
+        partial void ProfileEnvUpdateBegin();
+        partial void ProfileEnvUpdateEnd();
+        partial void ProfileEnvLateUpdateBegin();
+        partial void ProfileEnvLateUpdateEnd();
         
     }
 }

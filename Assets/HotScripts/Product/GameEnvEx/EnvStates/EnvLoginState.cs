@@ -30,14 +30,11 @@ namespace Xease
             // 开始一个垂直布局组，自动居中或放在左上角（取决于需求）
             GUILayout.BeginArea(new Rect(300, 800, 300, 200));
             GUILayout.BeginVertical("box"); // 带边框的垂直组
-            
-
             // 创建一个按钮，如果被点击就增加计数
             if (GUILayout.Button("登陆"))
             {
                 _nextStateID = EnvStateID.ES_Main;
             }
-
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
