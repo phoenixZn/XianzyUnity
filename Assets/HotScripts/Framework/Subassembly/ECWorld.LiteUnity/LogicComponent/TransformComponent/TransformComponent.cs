@@ -7,10 +7,9 @@ namespace Xease.CoreGame
         public Vector3 position { get; private set; }
         public Quaternion rotation { get; private set; }
         public Vector3 scale { get; private set; }
-
-        public Vector3 localFaceDir { get; set; } = Vector3.right;
-
-        public Vector3 FaceDir => rotation * localFaceDir;
+        
+        public Vector3 localFaceDirection { get; private set;} = Vector3.right;
+        public Vector3 WorldFaceDir => rotation * localFaceDirection;
         
         
         public void Init(Vector3 position, Quaternion rotation, Vector3 scale)
@@ -47,6 +46,11 @@ namespace Xease.CoreGame
             }
         }
         
+        public void SetLocalFaceDirection(Vector3 direction)
+        {
+            localFaceDirection = direction;
+            _owner.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -117,17 +121,16 @@ namespace Xease.CoreGame
                 entity.SetComTransform(Vector3.zero, quaternion, Vector3.one);
         }
         
-        public static void SetDir(this LogicEntity entity, Vector3 dir)
+        public static void SetFaceDir(this LogicEntity entity, Vector3 direction)
         {
             if (entity == null)
                 return;
-            if (dir.sqrMagnitude < 1e-10f)
+            if (direction.sqrMagnitude < 1e-10f)
                 return;
             if (!entity.hasComTransform)
                 entity.SetComTransform(Vector3.zero, Quaternion.identity, Vector3.one);
             var comTransform = entity.comTransform;
-            var worldFace = comTransform.rotation * comTransform.localFaceDir;
-            comTransform.SetRotation(Quaternion.FromToRotation(worldFace, dir) * comTransform.rotation);
+            comTransform.SetRotation(Quaternion.FromToRotation(comTransform.WorldFaceDir, direction) * comTransform.rotation);
         }
     }
     
