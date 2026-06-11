@@ -216,36 +216,7 @@ namespace Xease.CoreGame
 
         protected void Inner_CreateStateNode(CustomNodeContext context, StateNodeCfg stateNodeCfg)
         {
-            // var stateNode = mContext.NodeFactory.CreateCustomNode(stateNodeCfg, context) as StateNode;
-            // if (stateNode == null)
-            // {
-            //     return;
-            // }
-            // stateNode.Deactivate();
-            // var stateID = stateNode.StateID;
-            // if (_states.TryGetValue(stateID, out var exist_state_node))
-            // {
-            //     KaLog.LogInfo($"FSM 替换已有的State stateID={stateID}");
-            //     mContext.NodeFactory.DestroyCustomNode(exist_state_node);
-            //     _states[stateID] = stateNode;
-            // }
-            // else
-            // {
-            //     KaLog.LogInfo($"FSM 添加State stateID={stateID}");
-            //     _states[stateID] = stateNode;
-            // }
-
             var stateID = stateNodeCfg.StateID;
-            // if (tempStateCfgs.TryGetValue(stateID, out var exist_state_node))
-            // {
-            //     KaLog.LogInfo($"FSM 替换已有的State stateID={stateID}");
-            //     tempStateCfgs[stateID] = stateNodeCfg;
-            // }
-            // else
-            // {
-            //     KaLog.LogInfo($"FSM 添加State stateID={stateID}");
-            //     tempStateCfgs.Add(stateID, stateNodeCfg);
-            // }
             tempStateCfgs[stateID] = stateNodeCfg;
         }
 

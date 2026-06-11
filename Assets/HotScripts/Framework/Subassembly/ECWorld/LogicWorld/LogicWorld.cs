@@ -5,7 +5,8 @@ namespace Xease.CoreGame
 {
     public partial class LogicWorld : Context<LogicEntity>
     {
-        public LogicWorld(ContextInfo contextInfo, int totalComponents, Func<LogicEntity> entityFactory, int startCreationIndex = 0, Func<IEntity, IAERC> aercFactory = null) : base(totalComponents, startCreationIndex, contextInfo, aercFactory, entityFactory)
+        public LogicWorld(ContextInfo contextInfo, int totalComponents, Func<LogicEntity> entityFactory, int startCreationIndex = 0, Func<IEntity, IAERC> aercFactory = null) 
+            : base(totalComponents, startCreationIndex, contextInfo, aercFactory, entityFactory)
         {
             OnEntityCreated += EntityCreated;
             OnEntityDestroyed += EntityDestroyed;

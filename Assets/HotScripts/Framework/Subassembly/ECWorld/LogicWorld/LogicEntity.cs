@@ -78,7 +78,7 @@ namespace Xease.CoreGame
             }
             catch (Exception e)
             {
-                G.LogError($"LogicComponent PostInitialize catch Exception:{e}");
+                WLogger.LogError($"LogicComponent PostInitialize catch Exception:{e}");
             }
         }
         
@@ -90,7 +90,7 @@ namespace Xease.CoreGame
             }
             catch (Exception e)
             {
-                G.LogError($"LogicComponent DisposeOnRemove catch Exception:{e}");
+                WLogger.LogError($"LogicComponent DisposeOnRemove catch Exception:{e}");
             }
         }
 

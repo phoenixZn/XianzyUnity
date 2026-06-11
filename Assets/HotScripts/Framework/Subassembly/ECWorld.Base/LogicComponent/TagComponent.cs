@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Entitas;
+
 namespace Xease.CoreGame
 {
     public class TagComponent : LogicComponent
@@ -26,6 +29,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public TagComponent comTag
@@ -79,7 +83,25 @@ namespace Xease.CoreGame
             return component.HasTags(tags);
         }
     }
+    
+    
+    public static partial class WorldExtension
+    {
 
+        //////////////////////////////////////////////////////////////////////////
+        /// EntityIndex: ComTag
+        public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, uint tag)
+        {
+            return world.GetEntityIndex<TagComponent, EntityIndex<LogicEntity, uint>>().GetEntities(tag);
+        }
+        
+        public static HashSet<LogicEntity> GetEntitiesWithComOwnerEntity(this LogicWorld world, long ownerEntityID)
+        {
+            return world.GetEntityIndex<HolderEntityComponent, EntityIndex<LogicEntity, long>>().GetEntities(ownerEntityID);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComTagIndex = new(typeof(TagComponent));

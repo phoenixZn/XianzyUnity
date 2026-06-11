@@ -20,7 +20,8 @@ namespace Xease.CoreGame
             }
         }
 
-        public MetaWorld(ContextInfo contextInfo, int totalComponents, Func<MetaEntity> entityFactory, int startCreationIndex = 0, Func<IEntity, IAERC> aercFactory = null) : base(totalComponents, startCreationIndex, contextInfo, aercFactory, entityFactory)
+        public MetaWorld(ContextInfo contextInfo, int totalComponents, Func<MetaEntity> entityFactory, int startCreationIndex = 0, Func<IEntity, IAERC> aercFactory = null) 
+            : base(totalComponents, startCreationIndex, contextInfo, aercFactory, entityFactory)
         {
             OnEntityCreated += EntityCreated;
             OnEntityDestroyed += EntityDestroyed;

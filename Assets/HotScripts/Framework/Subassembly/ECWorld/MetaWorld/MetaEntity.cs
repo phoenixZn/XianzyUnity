@@ -80,7 +80,7 @@ namespace Xease.CoreGame
             }
             catch (Exception e)
             {
-                G.LogError($"MetaComponent PostInitialize catch Exception:{e}");
+                WLogger.LogError($"MetaComponent PostInitialize catch Exception:{e}");
             }
         }
         protected void SafeDisposeOnRemove(IComponentDispose dispose)
@@ -91,7 +91,7 @@ namespace Xease.CoreGame
             }
             catch (Exception e)
             {
-                G.LogError($"MetaComponent DisposeOnRemove catch Exception:{e}");
+                WLogger.LogError($"MetaComponent DisposeOnRemove catch Exception:{e}");
             }
         }
     }

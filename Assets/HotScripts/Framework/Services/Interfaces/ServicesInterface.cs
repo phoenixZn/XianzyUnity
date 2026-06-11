@@ -11,11 +11,6 @@ using System.Collections.Generic;
 
 namespace Xease
 {
-    public interface IEnvTick
-    {
-        void Update(float deltaTime, float unscaledDeltaTime);
-    }
-    
     /// <summary>
     /// 底层服务抽象，和具体业务无关。是可以独立存在的服务供应者
     /// </summary>

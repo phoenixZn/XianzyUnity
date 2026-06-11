@@ -31,11 +31,11 @@ namespace Xease.CoreGame
         {
             _worlds = worlds;
         }
-        protected abstract override ICollector<MetaEntity> GetTrigger(IContext<MetaEntity> context);
-        
-        protected abstract override bool Filter(MetaEntity entity);
-        
-        protected abstract override void Execute(List<MetaEntity> entities);
+        // protected abstract override ICollector<MetaEntity> GetTrigger(IContext<MetaEntity> context);
+        //
+        // protected abstract override bool Filter(MetaEntity entity);
+        //
+        // protected abstract override void Execute(List<MetaEntity> entities);
     }
 
     

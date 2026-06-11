@@ -1,3 +1,5 @@
+using Entitas;
+
 namespace Xease.CoreGame
 {
     public class IDComponent : LogicComponent
@@ -10,6 +12,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public IDComponent comID { get { return (IDComponent)GetComponent(LogicComponentsLookup.ComID); } }
@@ -20,14 +23,14 @@ namespace Xease.CoreGame
             var index = LogicComponentsLookup.ComID;
             if (index < 0)
             {
-                G.LogError("AddComID 未初始化的组件索引 LogicComponentsLookup.ComID");
+                WLogger.LogError("AddComID 未初始化的组件索引 LogicComponentsLookup.ComID");
                 return;
             }
             var component = (IDComponent)CreateComponent(index, typeof(IDComponent));
             component.Init(newId);
             AddComponent(index, component);
         }
-
+        
         public long ID
         {
             get
@@ -40,12 +43,44 @@ namespace Xease.CoreGame
             }
         } 
     }
+    
+    //////////////////////////////////////////////////////////////////////////
+    /// EntityIndex: ComID
+    public static partial class WorldExtension
+    {
+        public static void AddEntityIndex_ComID(this LogicWorld world)
+        {
+            var index = new PrimaryEntityIndex<LogicEntity, long>(
+                "EntityIndex_ID",
+                world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComID)),
+                (e, c) => ((IDComponent) c).id);
+            world.AddEntityIndex(index);
+        }
 
+        public static LogicEntity GetEntityWithComID(this LogicWorld world, long id)
+        {
+            var index = world.GetEntityIndex("EntityIndex_ID") as PrimaryEntityIndex<LogicEntity, long>;
+            if (index == null)
+            {
+                return null;
+            }
+            return index.GetEntity(id);
+        }
 
+        public static LogicEntity GetEntity(this LogicWorld world, long id)
+        {
+            return world.GetEntityWithComID(id);
+        }
+    }
+    
+
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComIDIndex = new (typeof(IDComponent));
         public static int ComID => _ComIDIndex.Index;
     }
+
+
 
 }

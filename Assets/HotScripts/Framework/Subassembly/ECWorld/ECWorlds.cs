@@ -7,31 +7,31 @@ namespace Xease.CoreGame
 {
     public interface IWorldCreationInfo
     {
-        int ModeLogicID { get; }
+        string WorldName { get; }
     }
 
     public abstract class ECWorlds
     {
-        protected List<IContext> _worldList = new List<IContext>();
         protected IWorldCreationInfo _creationInfo;
         
         //系统入口
-        protected ECSystems _rootSystem;
+        protected Systems _rootSystem;
 
         //逻辑世界（游戏实体）
         public LogicWorld LogicWorld { get; protected set; }
-
+        
         //抽象世界（World组件）
         public MetaWorld MetaWorld { get; protected set; }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// 构造、销毁
         public virtual void InitWorlds(IWorldCreationInfo creationInfo)
         {
             _creationInfo = creationInfo;
 
             //构造世界
-            _worldList.Clear();
-            CreateLogicWorld();
             CreateMetaWorld();
+            CreateLogicWorld();
 
             //构造系统
             CreateSystems();
@@ -54,47 +54,24 @@ namespace Xease.CoreGame
                 _rootSystem = null;
             }
 
-            foreach (var item in _worldList)
-            {
-                item.Reset();
-            }
-
-            _worldList.Clear();
+            LogicWorld.Reset();
+            MetaWorld.Reset();
         }
 
-        public virtual void FixedUpdate(float deltaTime, float unscaledDeltaTime)
+        //////////////////////////////////////////////////////////////////////////
+        /// 驱动:
+        public virtual void Execute()
         {
             if (_rootSystem != null)
             {
                 _rootSystem.Execute();
-            }
-        }
-        
-        public virtual void Update(float deltaTime, float unscaledDeltaTime)
-        {
-            if (_rootSystem != null)
-            {
-                _rootSystem.Execute();
-            }
-        }
-
-        public virtual void LateUpdate()
-        {
-            if (_rootSystem != null)
-            {
-                _rootSystem.LateUpdate();
                 _rootSystem.Cleanup();
             }
         }
 
-        public virtual void Gizmos()
-        {
-            if (_rootSystem != null)
-            {
-                _rootSystem.Gizmos();
-            }
-        }
-
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// 内部初始化:
         protected virtual void RebuildComponentLookUp(Type lookupType, List<ComponentTypeIndex> typeIndexList, out List<Type> cmptTypes, out List<string> cmptNames)
         {
             FieldInfo[] fieldInfos = lookupType.GetFields(BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
@@ -124,7 +101,7 @@ namespace Xease.CoreGame
                 {
                     var cmptType = staticFieldInst.CmptType;
                     var cmptTypeName = cmptType.Name;
-                    //Debug.Log($"重设组件Index，CmptIndex：{staticFieldInst.Index} -> {i}，cmptTypeName={cmptTypeName}");
+                    WLogger.Log($"重设组件Index，CmptIndex：{staticFieldInst.Index} -> {i}，cmptTypeName={cmptTypeName}");
                     staticFieldInst.Index = i;
                     typeIndexList.Add(staticFieldInst);
                     cmptTypes.Add(cmptType);
@@ -132,11 +109,13 @@ namespace Xease.CoreGame
                 }
                 else
                 {
-                    //Debug.LogError("RebuildComponentLookUp staticFieldInst == null");
+                    WLogger.LogError("RebuildComponentLookUp staticFieldInst == null");
                 }
             }
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// 扩展:
         protected abstract void CreateSystems();
 
 
@@ -152,7 +131,6 @@ namespace Xease.CoreGame
             RebuildComponentLookUp(typeof(LogicComponentsLookup), LogicComponentsLookup.TypeIndexList, out var cmptTypes, out var cmptNames);
             var contextInfo = new ContextInfo("LogicWorld", cmptNames.ToArray(), cmptTypes.ToArray());
             LogicWorld = new LogicWorld(contextInfo, cmptTypes.Count, GetLogicEntityFactory(), 1, (entity) => new UnsafeAERC());
-            _worldList.Add(LogicWorld);
         }
 
         //扩展可以使用MetaEntity子类
@@ -167,12 +145,27 @@ namespace Xease.CoreGame
             RebuildComponentLookUp(typeof(MetaComponentsLookup), MetaComponentsLookup.TypeIndexList, out var cmptTypes, out var cmptNames);
             var contextInfo = new ContextInfo("MetaWorld", cmptNames.ToArray(), cmptTypes.ToArray());
             MetaWorld = new MetaWorld(contextInfo, cmptTypes.Count, GetMetaEntityFactory(), 12300001);
-            _worldList.Add(MetaWorld);
         }
 
         public T GetCreationInfo<T>() where T : IWorldCreationInfo
         {
             return (T)_creationInfo;
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        public static bool operator !(ECWorlds world)
+        {
+            return world == null;
+        }
+
+        public static bool operator true(ECWorlds world)
+        {
+            return world != null;
+        }
+
+        public static bool operator false(ECWorlds world)
+        {
+            return world == null;
         }
     }
 }
