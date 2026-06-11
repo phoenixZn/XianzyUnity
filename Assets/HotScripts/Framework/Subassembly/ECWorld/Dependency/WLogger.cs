@@ -2,6 +2,7 @@ namespace Xease.CoreGame
 {
     public static partial class WLogger
     {
+        public static bool IsDev { get; set; } = true;
 #if CONSOLE_CLIENT
 
         public static void Log(string info)

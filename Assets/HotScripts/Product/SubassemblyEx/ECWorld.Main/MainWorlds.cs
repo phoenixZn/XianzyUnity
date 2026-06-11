@@ -2,33 +2,8 @@
 
 namespace Xease.CoreGame
 {
-    public class LiteUnityWorlds : ECWorlds
+    public class MainWorlds : LiteUnityWorlds
     {
-        protected UnityStyleSystems _rootSystemUnity;
-        
-        //////////////////////////////////////////////////////////////////////////
-        /// 驱动 Ex:
-        public virtual void FixedUpdate(float fdt, float fdt_unscaled)
-        {
-            _rootSystemUnity?.FixedUpdate(fdt, fdt_unscaled);
-        }
-        
-        public virtual void Update(float dt, float dt_unscaled)
-        {
-            _rootSystemUnity?.Update(dt, dt_unscaled);
-        }
-
-        public virtual void LateUpdate(float dt, float dt_unscaled)
-        {
-            _rootSystemUnity?.LateUpdate(dt, dt_unscaled);
-        }
-
-        public virtual void OnGizmos()
-        {
-            _rootSystemUnity?.OnGizmos();
-        }
-        
-        
         protected override void CreateSystems()
         {
             var systems = new UnityStyleSystems();
