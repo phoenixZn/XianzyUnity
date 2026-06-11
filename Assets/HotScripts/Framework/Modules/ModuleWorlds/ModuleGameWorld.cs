@@ -60,7 +60,7 @@ namespace Xease
         }
 
         //////////////////////////////////////////////////////////////////////////
-        public void CreateGameWorld(IWorldCreationInfo creationInfo)
+        public void CreateGameWorld(WorldCreationInfo creationInfo)
         {
             DestroyGameWorld();
             _mainWorld = new LiteUnityWorlds();

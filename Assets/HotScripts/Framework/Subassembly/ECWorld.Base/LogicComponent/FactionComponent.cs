@@ -31,36 +31,35 @@ namespace Xease.CoreGame
         {
             get { return HasComponent(LogicComponentsLookup.ComFaction); }
         }
-        
-        public void ReplaceComFaction(EFaction faction)
-        {
-            var index = LogicComponentsLookup.ComFaction;
-            if (!hasComTag)
-            {
-                var component = (FactionComponent)CreateComponent(index, typeof(FactionComponent));
-                component.Init(faction);
-                AddComponent(index, component);
-            }
-            else
-            {
-                var component = (FactionComponent)GetComponent(index);
-                component.Init(faction);
-                ReplaceComponent(index, component);
-            }
-        }
-        
+
         public EFaction Faction
         {
             get
             {
                 var index = LogicComponentsLookup.ComFaction;
-                if (!hasComTag)
+                if (!hasComFaction)
                 {
                     return EFaction.Invalid;
                 }
-
                 var component = (FactionComponent)GetComponent(index);
                 return component.Faction;
+            }
+            
+            set
+            {
+                var index = LogicComponentsLookup.ComFaction;
+                if (!hasComFaction)
+                {
+                    var component = (FactionComponent)CreateComponent(index, typeof(FactionComponent));
+                    component.Init(value);
+                    AddComponent(index, component);
+                }
+                else
+                {
+                    var component = (FactionComponent)GetComponent(index);
+                    component.Init(value);
+                    ReplaceComponent(index, component);
+                }
             }
         }
     }

@@ -50,9 +50,9 @@ namespace Xease.CoreGame
         {
             _worlds = worlds;
         }
-        protected abstract override ICollector<LogicEntity> GetTrigger(IContext<LogicEntity> context);
-        protected abstract override bool Filter(LogicEntity entity);
-        protected abstract override void Execute(List<LogicEntity> entities);
+        // protected abstract override ICollector<LogicEntity> GetTrigger(IContext<LogicEntity> context);
+        // protected abstract override bool Filter(LogicEntity entity);
+        // protected abstract override void Execute(List<LogicEntity> entities);
     }
     
     

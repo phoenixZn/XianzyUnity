@@ -6,7 +6,6 @@ namespace Xease.CoreGame
         //持有者
         public long HolderEntityID { get; set; }
 
-        
         public LogicEntity HolderEntity
         {
             get
@@ -31,16 +30,8 @@ namespace Xease.CoreGame
         {
             get { return HasComponent(LogicComponentsLookup.ComHolderEntity); }
         }
-
-        public void AddHolderEntity(long entityID)
-        {
-            var index = LogicComponentsLookup.ComHolderEntity;
-            var component = (HolderEntityComponent)CreateComponent(index, typeof(HolderEntityComponent));
-            component.HolderEntityID = entityID;
-            AddComponent(index, component);
-        }
-
-        public void ReplaceHolderEntity(long entityID)
+        
+        public void SetHolderEntity(long entityID)
         {
             var index = LogicComponentsLookup.ComHolderEntity;
             var component = (HolderEntityComponent)CreateComponent(index, typeof(HolderEntityComponent));

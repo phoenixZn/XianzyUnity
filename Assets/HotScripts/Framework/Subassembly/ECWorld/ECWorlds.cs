@@ -5,14 +5,14 @@ using System.Reflection;
 
 namespace Xease.CoreGame
 {
-    public interface IWorldCreationInfo
+    public partial class WorldCreationInfo
     {
         string WorldName { get; }
     }
 
     public abstract class ECWorlds
     {
-        protected IWorldCreationInfo _creationInfo;
+        protected WorldCreationInfo _creationInfo;
         
         //系统入口
         protected Systems _rootSystem;
@@ -25,7 +25,7 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         /// 构造、销毁
-        public virtual void InitWorlds(IWorldCreationInfo creationInfo)
+        public virtual void InitWorlds(WorldCreationInfo creationInfo)
         {
             _creationInfo = creationInfo;
 
@@ -147,7 +147,7 @@ namespace Xease.CoreGame
             MetaWorld = new MetaWorld(contextInfo, cmptTypes.Count, GetMetaEntityFactory(), 12300001);
         }
 
-        public T GetCreationInfo<T>() where T : IWorldCreationInfo
+        public T GetCreationInfo<T>() where T : WorldCreationInfo
         {
             return (T)_creationInfo;
         }
