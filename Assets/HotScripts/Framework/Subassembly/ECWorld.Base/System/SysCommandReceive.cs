@@ -5,11 +5,11 @@ namespace Xease.CoreGame
 {
     public sealed class SysCommandReceive : ReactiveSystem<LogicEntity>
     {
-        private ECWorlds _world;
+        private ECWorlds _worlds;
 
         public SysCommandReceive(ECWorlds world) : base(world.LogicWorld)
         {
-            _world = world;
+            _worlds = world;
         }
 
         protected override ICollector<LogicEntity> GetTrigger(IContext<LogicEntity> context)

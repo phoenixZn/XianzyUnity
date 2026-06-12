@@ -41,6 +41,14 @@
             SetUniqueComponent(index, component);
         }
         
+        public void RemoveComUniGameMode()
+        {
+            if (hasComUniGameMode)
+            {
+                UniqueEntity.RemoveComponent(MetaComponentsLookup.ComUniGameMode);    
+            }
+        }
+        
     }
 
     public static partial class MetaComponentsLookup

@@ -8,19 +8,22 @@ namespace Xease.CoreGame
             CLogger.LogError("AssertBreak: Logic Has Core ERROR! ");
         }
 
+        public static void Log(string info)
+        {
+        }
+
         public static void LogInfo(string info)
         {
-
         }
 
         public static void LogError(string info)
         {
-
         }
 
         public static void LogDebug(string info)
         {
         }
+        
 #else
         public static void AssertBreak()
         {
@@ -28,10 +31,16 @@ namespace Xease.CoreGame
             UnityEngine.Debug.Break();
         }
         
+        public static void Log(string info)
+        {
+            UnityEngine.Debug.Log(info);
+        }
+        
         public static void LogInfo(string info)
         {
             UnityEngine.Debug.Log(info);
         }
+        
         public static void LogError(string info)
         {
             UnityEngine.Debug.LogError(info);

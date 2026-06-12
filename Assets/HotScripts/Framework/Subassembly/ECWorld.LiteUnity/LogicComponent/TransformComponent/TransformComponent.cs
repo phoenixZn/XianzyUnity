@@ -24,7 +24,7 @@ namespace Xease.CoreGame
             if (position != newPos)
             {
                 position = newPos;
-                _owner.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
+                _hostEntity.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
             }
         }
         
@@ -33,7 +33,7 @@ namespace Xease.CoreGame
             if (rotation != newRot)
             {
                 rotation = newRot;
-                _owner.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
+                _hostEntity.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
             }
         }
 
@@ -42,14 +42,14 @@ namespace Xease.CoreGame
             if (scale != newScale)
             {
                 scale = newScale;
-                _owner.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
+                _hostEntity.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
             }
         }
         
         public void SetLocalFaceDirection(Vector3 direction)
         {
             localFaceDirection = direction;
-            _owner.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
+            _hostEntity.ReplaceComponent(LogicComponentsLookup.ComTransform, this);
         }
     }
 

@@ -4,10 +4,10 @@ namespace Xease.CoreGame
 {
     public delegate bool ComponentHandleCommand(LogicEntity entity, EntityCommand cmd);
 
-    public class EntityCommandSimpleDispatcher : IEntityCommandDispatcher
+    public class EntityCmdDispatcher_Simple : IEntityCommandDispatcher
     {
         protected event ComponentHandleCommand OnHandleCommand;
-        protected LogicEntity m_owner;
+        protected LogicEntity _owner;
 
         public virtual bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
         {
@@ -21,7 +21,7 @@ namespace Xease.CoreGame
 
         public virtual void BindOwner(LogicEntity owner)
         {
-            m_owner = owner;
+            _owner = owner;
             foreach (var component in owner.GetComponents())
             {
                 if (component is IEntityCommandHandler commandHandler)
@@ -36,9 +36,9 @@ namespace Xease.CoreGame
 
         public virtual void UnBindOwner()
         {
-            m_owner.OnComponentAdded -= _onComponentAdded;
-            m_owner.OnComponentRemoved -= _onComponentRemoved;
-            m_owner = null;
+            _owner.OnComponentAdded -= _onComponentAdded;
+            _owner.OnComponentRemoved -= _onComponentRemoved;
+            _owner = null;
             OnHandleCommand = null;
         }
 

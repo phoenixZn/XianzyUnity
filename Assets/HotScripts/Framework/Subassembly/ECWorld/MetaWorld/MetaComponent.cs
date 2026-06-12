@@ -4,17 +4,18 @@ namespace Xease.CoreGame
 {
     public class MetaComponent : IComponent, IComponentDispose
     {
-        private MetaEntity _owner;
-        public MetaEntity Owner => _owner;
+        private MetaEntity _hostEntity;
+        public MetaEntity HostEntity => _hostEntity;
+        //public MetaEntity Owner => _hostEntity; //适配旧名字
 
-        public virtual void PostInitialize(MetaEntity owner)
+        public virtual void PostInitialize(MetaEntity hostEntity)
         {
-            _owner = owner;
+            _hostEntity = hostEntity;
         }
 
         public virtual void DisposeOnRemove()
         {
-            _owner = null;
+            _hostEntity = null;
         }
 
         public static bool operator !(MetaComponent component)

@@ -2,46 +2,65 @@ using System.Collections.Generic;
 
 namespace Xease.CoreGame
 {
+    public interface IEntityCommandHandler
+    {
+        bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd);
+    }
+    
+    //值类型Cmd，外部自定义扩展
+    public partial struct EntityCommand
+    {
+        public int CmdType { get; set; }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     public sealed class CommandSenderComponent : LogicComponent
     {
-        private List<EntityCommand> m_sendQueue = new(4);
+        private List<EntityCommand> _sendQueue = new(4);
 
         public List<EntityCommand> SendQueue
         {
-            get { return m_sendQueue; }
-            set { m_sendQueue = value; }
+            get { return _sendQueue; }
+            set { _sendQueue = value; }
         }
 
-        private IEntityCommandPreHandler m_preHandler;
+        private IEntityCommandPreHandler _preHandler;
 
         public void Initialize(IEntityCommandPreHandler preHandler = null)
         {
-            m_preHandler = preHandler;
+            _preHandler = preHandler;
         }
 
         //预处理命令
         //常见的处理有：服务器确认前 先做预测性表现、RTS低级指令转高级指令、连续指令输入型出招表
         public void PreHandleCommand()
         {
-            if (m_preHandler == null)
+            if (_preHandler == null)
                 return;
 
-            for (int i = 0; i < m_sendQueue.Count; i++)
+            for (int i = 0; i < _sendQueue.Count; i++)
             {
-                var cmd = m_sendQueue[i];
-                m_preHandler.PreHandleCommand(_owner, cmd);
+                var cmd = _sendQueue[i];
+                _preHandler.PreHandleCommand(_hostEntity, cmd);
             }
+        }
+        
+        public bool PreHandleSilentlyAndImmediately(EntityCommand cmd)
+        {
+            if (_preHandler == null)
+                return false;
+            return _preHandler.PreHandleSilentlyAndImmediately(_hostEntity, cmd);
         }
 
         public override void DisposeOnRemove()
         {
-            m_preHandler = null;
-            m_sendQueue.Clear();
+            _preHandler = null;
+            _sendQueue.Clear();
             base.DisposeOnRemove();
         }
     }
 
-
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public CommandSenderComponent comCommandSender
@@ -67,6 +86,10 @@ namespace Xease.CoreGame
             if (!hasComCommandSender)
                 return;
             var index = LogicComponentsLookup.ComCommandSender;
+            if (comCommandSender.PreHandleSilentlyAndImmediately(cmd))
+            {
+                return;
+            }
             comCommandSender.SendQueue.Add(cmd);
             ReplaceComponent(index, comCommandSender);
         }

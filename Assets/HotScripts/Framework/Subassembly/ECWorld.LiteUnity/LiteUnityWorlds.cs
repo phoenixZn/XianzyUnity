@@ -35,10 +35,9 @@ namespace Xease.CoreGame
 
             // 初始化：
             //systems.Add(new SysGameplayInitialize(this));
-            //systems.Add(new SysGameModeInitialize(this));
-
+            
             // 规则：
-            //systems.Add(new SysGameModeUpdate(this));
+            systems.Add(new SysGameModeUpdate(this));
             //systems.Add(new SysDebugCoreGame(this));
             //systems.Add(new SysTimeScale(this));
 

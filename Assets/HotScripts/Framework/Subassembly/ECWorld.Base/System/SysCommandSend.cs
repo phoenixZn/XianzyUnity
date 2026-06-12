@@ -5,12 +5,12 @@ namespace Xease.CoreGame
 {
     public sealed class SysCommandSend : ReactiveSystem<LogicEntity>
     {
-        private ECWorlds _world;
+        private ECWorlds _worlds;
         //private INetworkService m_netService;
 
         public SysCommandSend(ECWorlds world) : base(world.LogicWorld)
         {
-            _world = world;
+            _worlds = world;
             //m_netService = m_world.Services.Network;
         }
 

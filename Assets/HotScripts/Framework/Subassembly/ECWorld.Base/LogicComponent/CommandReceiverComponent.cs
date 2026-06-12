@@ -4,47 +4,47 @@ namespace Xease.CoreGame
 {
     public sealed class CommandReceiverComponent : LogicComponent
     {
-        private List<EntityCommand> m_receiveQueue = new(4);
+        private List<EntityCommand> _receiveQueue = new(4);
 
         public List<EntityCommand> ReceiveQueue
         {
-            get { return m_receiveQueue; }
-            set { m_receiveQueue = value; }
+            get { return _receiveQueue; }
+            set { _receiveQueue = value; }
         }
 
-        private IEntityCommandDispatcher m_dispatcher;
+        private IEntityCommandDispatcher _dispatcher;
 
         public void Initialize(IEntityCommandDispatcher dispatcher)
         {
-            m_dispatcher = dispatcher;
+            _dispatcher = dispatcher;
         }
 
         public void Dispatch()
         {
-            foreach (var cmd in m_receiveQueue)
+            foreach (var cmd in _receiveQueue)
             {
-                m_dispatcher.HandleEntityCommand(_owner, cmd);
+                _dispatcher.HandleEntityCommand(_hostEntity, cmd);
             }
 
-            m_receiveQueue.Clear();
+            _receiveQueue.Clear();
         }
 
         public override void PostInitialize(LogicEntity owner)
         {
             base.PostInitialize(owner);
-            m_dispatcher.BindOwner(owner);
+            _dispatcher.BindOwner(owner);
         }
 
         public override void DisposeOnRemove()
         {
-            m_dispatcher.UnBindOwner();
-            m_dispatcher = null;
-            m_receiveQueue.Clear();
+            _dispatcher.UnBindOwner();
+            _dispatcher = null;
+            _receiveQueue.Clear();
             base.DisposeOnRemove();
         }
     }
 
-
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public CommandReceiverComponent comCommandReceiver
@@ -57,12 +57,10 @@ namespace Xease.CoreGame
             get { return HasComponent(LogicComponentsLookup.ComCommandReceiver); }
         }
 
-        public void AddComCommandReceiver(IEntityCommandDispatcher dispatcher = null)
+        public void AddComCommandReceiver(IEntityCommandDispatcher dispatcher)
         {
             var index = LogicComponentsLookup.ComCommandReceiver;
             var component = (CommandReceiverComponent)CreateComponent(index, typeof(CommandReceiverComponent));
-            if (dispatcher == null)
-                dispatcher = new EntityCommandSimpleDispatcher();
             component.Initialize(dispatcher);
             AddComponent(index, component);
         }

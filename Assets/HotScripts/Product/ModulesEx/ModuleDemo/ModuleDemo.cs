@@ -1,7 +1,7 @@
 ﻿
 namespace Xease
 {
-    //[SkipModuleAutoRegister]
+    [SkipModuleAutoRegister]
     public partial class ModuleDemo : Module, IEnvOnGUI
     {
         public ModuleDemo()

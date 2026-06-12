@@ -4,18 +4,18 @@ namespace Xease.CoreGame
 {
     public class LogicComponent : IComponent, IComponentDispose
     {
-        protected LogicEntity _owner;
+        protected LogicEntity _hostEntity;
+        public LogicEntity HostEntity  => _hostEntity;
+        //public LogicEntity Owner => _hostEntity; //适配旧名字
 
-        public LogicEntity Owner => _owner;
-
-        public virtual void PostInitialize(LogicEntity owner)
+        public virtual void PostInitialize(LogicEntity hostEntity)
         {
-            _owner = owner;
+            _hostEntity = hostEntity;
         }
 
         public virtual void DisposeOnRemove()
         {
-            _owner = null;
+            _hostEntity = null;
         }
 
         public static bool operator !(LogicComponent component)

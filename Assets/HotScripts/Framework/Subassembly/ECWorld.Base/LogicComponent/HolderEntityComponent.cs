@@ -10,11 +10,11 @@ namespace Xease.CoreGame
         {
             get
             {
-                if (_owner == null || _owner.OwnerWorld == null)
+                if (_hostEntity == null || _hostEntity.OwnerWorld == null)
                 {
                     return null;
                 }
-                return _owner.OwnerWorld.GetEntity(HolderEntityID);
+                return _hostEntity.OwnerWorld.GetEntity(HolderEntityID);
             }
         }
     }

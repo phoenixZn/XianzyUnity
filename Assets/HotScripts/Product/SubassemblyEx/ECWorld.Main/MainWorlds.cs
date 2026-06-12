@@ -9,8 +9,8 @@ namespace Xease.CoreGame
             var systems = new UnityStyleSystems();
 
             // 初始化：
-            //systems.Add(new SysGameplayInitialize(this));
-            //systems.Add(new SysGameModeInitialize(this));
+            systems.Add(new SysInitializeBasePack(this));
+            systems.Add(new SysGameplayInitialize_Main(this));
 
             // 规则：
             //systems.Add(new SysGameModeUpdate(this));

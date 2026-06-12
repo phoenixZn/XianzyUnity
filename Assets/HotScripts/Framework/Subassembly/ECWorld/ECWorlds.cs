@@ -12,22 +12,23 @@ namespace Xease.CoreGame
 
     public abstract class ECWorlds
     {
-        protected WorldCreationInfo _creationInfo;
-        
-        //系统入口
-        protected Systems _rootSystem;
+        //初始参数
+        public WorldCreationInfo CreationInfo { get; protected set; }
 
         //逻辑世界（游戏实体）
         public LogicWorld LogicWorld { get; protected set; }
         
         //抽象世界（World组件）
         public MetaWorld MetaWorld { get; protected set; }
+        
+        //系统入口
+        protected Systems _rootSystem;
 
         //////////////////////////////////////////////////////////////////////////
         /// 构造、销毁
         public virtual void InitWorlds(WorldCreationInfo creationInfo)
         {
-            _creationInfo = creationInfo;
+            CreationInfo = creationInfo;
 
             //构造世界
             CreateMetaWorld();
@@ -57,6 +58,7 @@ namespace Xease.CoreGame
             LogicWorld.Reset();
             MetaWorld.Reset();
         }
+        
 
         //////////////////////////////////////////////////////////////////////////
         /// 驱动:
@@ -69,6 +71,13 @@ namespace Xease.CoreGame
             }
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// CreationInfo
+        public T GetCreationInfo<T>() where T : class
+        {
+            return CreationInfo as T;
+        }
+        
         
         //////////////////////////////////////////////////////////////////////////
         /// 内部初始化:
@@ -145,11 +154,6 @@ namespace Xease.CoreGame
             RebuildComponentLookUp(typeof(MetaComponentsLookup), MetaComponentsLookup.TypeIndexList, out var cmptTypes, out var cmptNames);
             var contextInfo = new ContextInfo("MetaWorld", cmptNames.ToArray(), cmptTypes.ToArray());
             MetaWorld = new MetaWorld(contextInfo, cmptTypes.Count, GetMetaEntityFactory(), 12300001);
-        }
-
-        public T GetCreationInfo<T>() where T : WorldCreationInfo
-        {
-            return (T)_creationInfo;
         }
 
         //////////////////////////////////////////////////////////////////////////

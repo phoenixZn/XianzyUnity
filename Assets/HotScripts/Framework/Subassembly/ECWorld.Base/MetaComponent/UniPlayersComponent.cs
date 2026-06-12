@@ -12,31 +12,54 @@ namespace Xease.CoreGame
     //////////////////////////////////////////////////////////////////////////
     public class UniPlayersComponent : MetaComponent
     {
-        private List<InGamePlayerInfo> mPlayerInfoList = new();
-        public List<InGamePlayerInfo> PlayerInfoList => mPlayerInfoList;
-
-
-        private InGamePlayerInfo mLocalPlayerRef = null;
-        public InGamePlayerInfo LocalPlayerRef => mLocalPlayerRef;
-
-        public int PlayerCount => mPlayerInfoList.Count;
-
+        protected List<InGamePlayerInfo> _playerInfoList = new();
+        
+        public List<InGamePlayerInfo> PlayerInfoList => _playerInfoList;
+        public int PlayerCount => _playerInfoList.Count;
+        public InGamePlayerInfo LocalPlayerRef { get; protected set; }
+        
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// 
         public override void DisposeOnRemove()
         {
-            if (mPlayerInfoList == null)
-                mPlayerInfoList.Clear();
-            mLocalPlayerRef = null;
+            _playerInfoList?.Clear();
+            LocalPlayerRef = null;
         }
+        
+        public void Init(List<InGamePlayerInfo> playerInfoList)
+        {
+            if (playerInfoList == null)
+            {
+                return;
+            }
 
+            _playerInfoList = playerInfoList;
+            LocalPlayerRef = null;
+
+            for (int i = 0; i < _playerInfoList.Count; i++)
+            {
+                var info = _playerInfoList[i];
+                if (info.IsLocalPlayer)
+                {
+                    if (LocalPlayerRef != null)
+                    {
+                        WLogger.LogError($"Init exist_uid={LocalPlayerRef.PlayerID}, new_uid={info.PlayerID}");
+                    }
+                    LocalPlayerRef = info;
+                }
+            }
+        }
+        
+        //////////////////////////////////////////////////////////////////////////
         public InGamePlayerInfo GetPlayerInfo(long playerUid)
         {
-            if (mPlayerInfoList == null)
+            if (_playerInfoList == null)
             {
-                if (WLogger.IsDev)
-                    WLogger.LogError($"GetPlayerInfo mPlayerInfoList == null, playerUid={playerUid}");
+                WLogger.LogError($"GetPlayerInfo _playerInfoList == null, playerUid={playerUid}");
                 return null;
             }
-            foreach (var info in mPlayerInfoList)
+            foreach (var info in _playerInfoList)
             {
                 if (info.PlayerID == playerUid)
                 {
@@ -50,44 +73,18 @@ namespace Xease.CoreGame
 
         public InGamePlayerInfo GetPlayerInfoByIndex(int index)
         {
-            if (mPlayerInfoList == null)
+            if (_playerInfoList == null)
             {
-                if (WLogger.IsDev)
-                    WLogger.LogError($"GetPlayerInfo mPlayerInfoList == null, index={index}");
+                WLogger.LogError($"GetPlayerInfo _playerInfoList == null, index={index}");
                 return null;
             }
             if (index >= 0 && index < PlayerCount)
             {
-                return mPlayerInfoList[index];
+                return _playerInfoList[index];
             }
             if (WLogger.IsDev)
                 WLogger.LogError($"GetPlayerInfo return null; index={index}, PlayerCount={PlayerCount}");
             return null;
-        }
-        
-        public void InitPlayerInfoList(List<InGamePlayerInfo> playerInfoList)
-        {
-            if (playerInfoList == null)
-            {
-                return;
-            }
-
-            mPlayerInfoList = playerInfoList;
-            mLocalPlayerRef = null;
-
-            for (int i = 0; i < mPlayerInfoList.Count; i++)
-            {
-                var info = mPlayerInfoList[i];
-                if (info.IsLocalPlayer)
-                {
-                    if (mLocalPlayerRef != null)
-                    {
-                        WLogger.LogError($"InitPlayerInfoList exist_uid={mLocalPlayerRef.PlayerID}, new_uid={info.PlayerID}");
-                    }
-
-                    mLocalPlayerRef = info;
-                }
-            }
         }
     }
 
@@ -107,7 +104,7 @@ namespace Xease.CoreGame
         {
             var index = MetaComponentsLookup.ComUniPlayers;
             var component = (UniPlayersComponent)UniqueEntity.CreateComponent(index, typeof(UniPlayersComponent));
-            component.InitPlayerInfoList(playerInfoList);
+            component.Init(playerInfoList);
             SetUniqueComponent(index, component);
         }
     }
