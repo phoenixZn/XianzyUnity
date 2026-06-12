@@ -1,5 +1,8 @@
+using System;
+
 namespace Xease.CoreGame
 {
+    
     public static partial class CLogger
     {
 #if CONSOLE_CLIENT
@@ -29,6 +32,7 @@ namespace Xease.CoreGame
         {
             CLogger.LogError("AssertBreak: Logic Has Core ERROR! ");
             UnityEngine.Debug.Break();
+            
         }
         
         public static void Log(string info)
