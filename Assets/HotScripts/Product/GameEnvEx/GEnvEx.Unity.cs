@@ -60,7 +60,8 @@ namespace Xease
 
         protected override void Inner_CreateManagers()
         {
-            EnvStateMng = new EnvStateManager();
+            base.Inner_CreateManagers();
+            
             Dictionary<string, EnvStateBase> states = new()
             {
                 [EnvStateID.ES_EnvInit] = new EnvInitState(),

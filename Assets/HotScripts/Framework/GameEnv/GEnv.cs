@@ -166,7 +166,7 @@ namespace Xease
 
         protected virtual void Inner_CreateManagers()
         {
-
+            EnvStateMng = new EnvStateManager();
         }
         
         

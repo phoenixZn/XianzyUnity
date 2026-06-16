@@ -1,7 +1,5 @@
 using UnityEngine;
 
-
-
 namespace Xease
 {
     public partial class GameEntry : MonoBehaviour
@@ -12,19 +10,16 @@ namespace Xease
         
         void Start()
         {
-            if (GEnv.Inst == null)
+            if (GEnv.Inst != null)
             {
-                Debug.Log("初始化游戏环境 GEnv");
-                var param = new GEnvParam()
-                {
-                    LogInfo = Debug.Log,
-                    LogWarning = Debug.LogWarning,
-                    LogError = Debug.LogError,
-                    EnvBaseSeed = Time.frameCount,
-                };
-                GEnv.InitGameEnvInstance(new UnityGameEnv(param));
+                return;
             }
+            
+            //TryCreateGameEnv -> GEnv.InitGameEnvInstance(new XXXGEnv(param));
+            TryCreateGameEnv();
         }
+
+        partial void TryCreateGameEnv();
         
         void OnDestroy()
         {
