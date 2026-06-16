@@ -6,7 +6,7 @@ namespace Xease
     //GEnv 快捷访问静态类： 满足快捷访问的需求，留下未来重构的路径
     public static partial class G
     {
-        public static T GetModule<T>() where T : class, IModule
+        public static T Module<T>() where T : class, IModule
         {
             return GEnv.Inst.Modules.GetModule<T>();
         }

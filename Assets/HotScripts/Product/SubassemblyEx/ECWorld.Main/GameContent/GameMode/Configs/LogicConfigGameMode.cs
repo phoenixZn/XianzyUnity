@@ -5,12 +5,13 @@ namespace Xease.CoreGame
     using Nodes = List<ICustomNodeCfg>;
 
     
-    public class LogicConfigs_GameMode : LogicConfigBase
+    public partial class LogicConfigs_GameMode : LogicConfigBase
     {
         public LogicConfigs_GameMode(string name)
             : base(name, 20)
         {
             DefaultLogicType = typeof(CustomLogic);
+            //游戏模式: ID从 1000000 开始
             InitConfigs_Template();
         }
 
@@ -41,7 +42,7 @@ namespace Xease.CoreGame
                 {
                     CustomState("GST_Loading", Seq(new Nodes()
                     {
-                        Log("PVE Mode Loading"),
+                        BeginCall(node => G.Log("PVE Mode Loading")),
                     })),
                     
                     CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()

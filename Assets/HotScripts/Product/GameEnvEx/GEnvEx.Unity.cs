@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Xease.CoreGame;
+
 //using UnityEngine;
 
 namespace Xease
@@ -28,7 +30,17 @@ namespace Xease
             Services.AddService_Random(Param.EnvBaseSeed);
             Services.AddService_ValueEvent();
             Services.AddService_Coroutine();
+            Services.AddService_Input();
             Services.AddService_Asset();
+            var svcLogic = Services.AddService_CustomLogic();
+            svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
+            svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
+            svcLogic.AddConfigContainer(new LogicConfig_Skill(LogicContainerKey.LogicConfigs_Skill));
+            svcLogic.AddConfigContainer(new LogicConfig_EntityFSM(LogicContainerKey.LogicConfigs_EntityFSM));
+            svcLogic.AddConfigContainer(new LogicConfig_AI(LogicContainerKey.LogicConfigs_AI));
+            svcLogic.AddConfigContainer(new LogicConfig_Subobject(LogicContainerKey.LogicConfigs_Subobject));
+            svcLogic.AddConfigContainer(new LogicConfig_Buff(LogicContainerKey.LogicConfigs_Buff));
+            svcLogic.AddConfigContainer(new LogicConfig_Supply(LogicContainerKey.LogicConfigs_Supply));
         }
 
         protected override void Inner_CreateModules()

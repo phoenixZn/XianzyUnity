@@ -2,7 +2,7 @@
 
 namespace Xease.CoreGame
 {
-    public class LiteUnityWorlds : ECWorlds
+    public class LiteUnityWorlds : ECWorlds, IUnityStyleDriver
     {
         protected UnityStyleSystems _rootSystemUnity;
         
@@ -27,20 +27,24 @@ namespace Xease.CoreGame
         {
             _rootSystemUnity?.OnGizmos();
         }
-        
-        
+
+        public virtual void OnGUI()
+        {
+            _rootSystemUnity?.OnGUI();
+        }
+
+        //////////////////////////////////////////////////////////////////////////
         protected override void CreateSystems()
         {
             var systems = new UnityStyleSystems();
 
             // 初始化：
-            //systems.Add(new SysGameplayInitialize(this));
-            
+            systems.Add(new SysInitializeBasePack(this));
+            systems.Add(new SysInitializeLiteUnityPack(this));
+
             // 规则：
             systems.Add(new SysGameModeUpdate(this));
-            //systems.Add(new SysDebugCoreGame(this));
-            //systems.Add(new SysTimeScale(this));
-
+            
             // 输入：
             systems.Add(new SysCommandSend(this));
             systems.Add(new SysCommandReceive(this));
@@ -57,8 +61,8 @@ namespace Xease.CoreGame
             //systems.Add(new SysSubobject(this));
             //systems.Add(new SysBuff(this));
             
-            //systems.Add(new SysViewLoader(this));
-            //systems.Add(new SysSyncViewTransform(this));
+            systems.Add(new SysViewLoader(this));
+            systems.Add(new SysSyncViewTransform(this));
             //systems.Add(new SysSyncViewAnimator(this));
             //systems.Add(new SysLife(this));
             //systems.Add(new SysDeathProcess(this));

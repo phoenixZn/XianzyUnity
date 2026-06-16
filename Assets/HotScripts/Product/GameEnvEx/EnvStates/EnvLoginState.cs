@@ -4,6 +4,8 @@ namespace Xease
 {
     public class EnvLoginState : EnvStateBase, IEnvOnGUI, IEnvUpdate
     {
+
+
         public override void Enter(EnvStateBase fromState)
         {
             base.Enter(fromState);
@@ -25,17 +27,38 @@ namespace Xease
         }
 
         //////////////////////////////////////////////////////////////////////////
+        /// Test Code
+        const float ButtonWidth = 480f;
+        const float ButtonHeight = 112f;
+        const int ButtonFontSize = 48;
+        const float VerticalRatio = 3f / 5f; // 距顶部 3/5，即距底部约 2/5 屏高
+
+        static GUIStyle _loginButtonStyle;
+        static GUIStyle LoginButtonStyle
+        {
+            get
+            {
+                if (_loginButtonStyle != null)
+                    return _loginButtonStyle;
+
+                _loginButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    fontSize = ButtonFontSize,
+                    alignment = TextAnchor.MiddleCenter
+                };
+                return _loginButtonStyle;
+            }
+        }
+
         public void OnEnvGUI()
         {
-            // 开始一个垂直布局组，自动居中或放在左上角（取决于需求）
-            GUILayout.BeginArea(new Rect(300, 800, 300, 200));
-            GUILayout.BeginVertical("box"); // 带边框的垂直组
-            // 创建一个按钮，如果被点击就增加计数
-            if (GUILayout.Button("登陆"))
+            var x = (Screen.width - ButtonWidth) * 0.5f;
+            var y = Screen.height * VerticalRatio - ButtonHeight * 0.5f;
+            GUILayout.BeginArea(new Rect(x, y, ButtonWidth, ButtonHeight));
+            if (GUILayout.Button("登陆", LoginButtonStyle, GUILayout.Height(ButtonHeight)))
             {
                 _nextStateID = EnvStateID.ES_Main;
             }
-            GUILayout.EndVertical();
             GUILayout.EndArea();
         }
     }

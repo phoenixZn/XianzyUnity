@@ -7,7 +7,7 @@ using Entitas;
 namespace Xease.CoreGame
 {
     //////////////////////////////////////////////////////////////////////////
-    public class ECWorldSystem
+    public class ECWorldSystem : ISystem
     {
         protected ECWorlds _worlds;
         protected MetaWorld _metaWorld => _worlds.MetaWorld;

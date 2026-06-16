@@ -15,11 +15,12 @@ namespace Xease
             get { return _customLogicSvc; }
         }
         
-        public void AddService_CustomLogic()
+        public CustomLogicService AddService_CustomLogic()
         {
             G.Log("AddService_CustomLogic");
             var svc = new CustomLogicService();
             AddService(svc, out _customLogicSvc);
+            return svc;
         }
     }
 }

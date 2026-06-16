@@ -3,34 +3,43 @@ using Entitas;
 
 namespace Xease.CoreGame
 {
-        
-    public interface IFixedUpdateSystem : ISystem
+    public interface IFixedUpdateSystem
     {
         void FixedUpdate(float fdt, float fdt_unscaled);
     }
 
-    public interface IUpdateSystem : ISystem
+    public interface IUpdateSystem
     {
         void Update(float dt, float dt_unscaled);
     }
 
-    public interface ILateUpdateSystem : ISystem
+    public interface ILateUpdateSystem
     {
         void LateUpdate(float dt, float dt_unscaled);
     }
 
-    public interface IGizmosSystem : ISystem
+    public interface IGizmosSystem
     {
         void OnGizmos();
     }
+    public interface IUnityGUI
+    {
+        void OnGUI();
+    }
+     
     
+    public interface IUnityStyleDriver : IFixedUpdateSystem, IUpdateSystem, ILateUpdateSystem, IGizmosSystem, IUnityGUI
+    {
+    }
 
-    public class UnityStyleSystems : Systems, IUpdateSystem, IFixedUpdateSystem, ILateUpdateSystem, IGizmosSystem
+    //////////////////////////////////////////////////////////////////////////
+    public class UnityStyleSystems : Systems, IUnityStyleDriver
     {
         private readonly List<IFixedUpdateSystem> _fixedUpdateSystemList = new ();
         private readonly List<IUpdateSystem> _updateSystemList = new ();
         private readonly List<ILateUpdateSystem> _lateUpdateSystemList = new ();
         private readonly List<IGizmosSystem> _gizmosSystemList = new ();
+        private readonly List<IUnityGUI> _unityGUISystemList = new ();
         
         public override Systems Add(ISystem system)
         {
@@ -52,6 +61,11 @@ namespace Xease.CoreGame
             if (system is IGizmosSystem drawGizmosSystem)
             {
                 _gizmosSystemList.Add(drawGizmosSystem);
+            }
+            
+            if (system is IUnityGUI unityGUISystem)
+            {
+                _unityGUISystemList.Add(unityGUISystem);
             }
             
             return base.Add(system);
@@ -86,6 +100,14 @@ namespace Xease.CoreGame
             foreach (var item in _gizmosSystemList)
             {
                 item.OnGizmos();
+            }
+        }
+
+        public void OnGUI()
+        {
+            foreach (var item in _unityGUISystemList)
+            {
+                item.OnGUI();
             }
         }
     }

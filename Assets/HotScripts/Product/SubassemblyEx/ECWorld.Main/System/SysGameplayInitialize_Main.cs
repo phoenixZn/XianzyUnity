@@ -6,29 +6,37 @@ namespace Xease.CoreGame
     {
         public SysGameplayInitialize_Main(ECWorlds worlds) : base(worlds)
         {
+            
         }
         
         protected override void InitEntityIndex()
         {
-
+            G.Log("SysGameplayInitialize_Main InitEntityIndex");
         }
         
         protected override void AddMetaComponents()
         {
+            G.Log("SysGameplayInitialize_Main AddMetaComponents");
             AddMeta_GameMode();
         }
 
         protected override void RemoveMetaComponents()
         {
+            G.Log("SysGameplayInitialize_Main RemoveMetaComponents");
             _metaWorld.RemoveComUniGameMode();
         }
 
         //////////////////////////////////////////////////////////////////////////
         protected void AddMeta_GameMode()
         {
-            var gameModeParam = _worlds.GetCreationInfo<IGameModeParam>();
+            var modeParam = _worlds.GetCreationInfo<IGameModeParam>();
+            if (modeParam == null)
+            {
+                G.LogError("modeParam == null");
+            }
+            G.Log($"AddMeta_GameMode ModeLogicID={modeParam.ModeLogicID}");
             var genInfo = G.CustomLogic.NewGenInfo<ICustomLogicGenInfo>();
-            genInfo.LogicConfigID = gameModeParam.ModeLogicID;
+            genInfo.LogicConfigID = modeParam.ModeLogicID;
             genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameMode;
             //genInfo.PreEnv = varEnv;
             _metaWorld.SetComUniGameMode(genInfo);

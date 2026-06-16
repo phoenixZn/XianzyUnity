@@ -7,7 +7,12 @@ namespace Xease.CoreGame
 {
     public partial class WorldCreationInfo
     {
-        string WorldName { get; }
+        public string WorldName { get; }
+
+        protected WorldCreationInfo(string worldName)
+        {
+            WorldName = worldName;
+        }
     }
 
     public abstract class ECWorlds
