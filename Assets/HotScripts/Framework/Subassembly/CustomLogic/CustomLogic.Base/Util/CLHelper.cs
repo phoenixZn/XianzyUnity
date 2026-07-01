@@ -60,6 +60,12 @@ namespace Xease.CoreGame
             CLogger.LogInfo($"Logic[ {id} ]({node.CreationIndex}): {logMsg}");
         }
         
+        public static void Log(this CustomNode node, string logMsg)
+        {
+            int id = node.GenInfo.LogicConfigID;
+            CLogger.LogInfo($"Logic[ {id} ]({node.CreationIndex}): {logMsg}");
+        }
+        
     }
     
 

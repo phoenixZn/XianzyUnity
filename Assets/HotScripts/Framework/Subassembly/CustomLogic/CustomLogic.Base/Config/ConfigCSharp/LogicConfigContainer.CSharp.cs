@@ -319,6 +319,25 @@ namespace Xease.CoreGame
                 node.LogInfo($"{prefix} LogVar varID={varID}, v={v}");
             });
         }
+        
+        //支持每个 LogicConfigContainer 单独控制 LogDebug 开关
+        public bool IsLogDebugActive { get; set; } = true;
+        private void NoneLog(CustomNode node){}
+        public DelegateBhvCfg LogDebug(NodeParamAction func)
+        {
+            if (IsLogDebugActive)
+            {
+                return new DelegateBhvCfg(func);
+            }
+            return new DelegateBhvCfg(NoneLog);
+        }
+        
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DelegateBhvCfg Log(NodeParamAction func)
+        {
+            return new DelegateBhvCfg(func);
+        }
     }
     
 }
