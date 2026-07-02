@@ -37,10 +37,10 @@ public class DemoHotRoot : MonoBehaviour
 
     void RefreshUiText()
     {
-        var gamePackage = YooAssets.GetPackage("PackDemoAsset");
-        var scriptPackage = YooAssets.GetPackage("PackMainScript");
+        var asetPackage = YooAssets.GetPackage(AppConfig.DefaultAssetPackageName);
+        var scriptPackage = YooAssets.GetPackage(AppConfig.MainScriptRawPackageName);
         uiText.text =
-            $"Demo:{DemoStatic.DemoKey} CurrentVersion： AssetVer:{gamePackage.GetPackageVersion()}, ScriptVer:{scriptPackage.GetPackageVersion()}";
+            $"Demo:{DemoStatic.DemoKey} CurrentVersion： AssetVer:{asetPackage.GetPackageVersion()}, ScriptVer:{scriptPackage.GetPackageVersion()}";
     }
 
     public void CallTestByBuildHelper()

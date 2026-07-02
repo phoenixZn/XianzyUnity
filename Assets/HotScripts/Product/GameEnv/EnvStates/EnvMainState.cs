@@ -14,8 +14,8 @@ namespace Xease
     {
         public override void Enter(EnvStateBase fromState)
         {
-            var modMainWorld = G.Module<ModuleMainWorld>();
             base.Enter(fromState);
+            var modMainWorld = G.Module<ModuleMainWorld>();
             if (modMainWorld?.MainWorld == null)
             {
                 var worldInfo = new MainWorldCreationInfo()

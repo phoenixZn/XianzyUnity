@@ -2,8 +2,30 @@ using UnityEngine;
 
 namespace Xease
 {
+    [AddComponentMenu("")]
     public partial class GameEntry : MonoBehaviour
     {
+        
+        static int sGameEntryInitAcc = 0;
+        public static GameEntry GameEntryInit()  //主要供AOT程序集，反射调用
+        {
+            Debug.Log($"GameEntryInit InitAcc={++sGameEntryInitAcc}");
+            if (!Application.isPlaying)
+            {
+                return null;
+            }
+            // 先查找是否已存在
+            var _instance = FindObjectOfType<GameEntry>();
+            if (_instance == null)
+            {
+                GameObject go = new GameObject("[GameEntry]");
+                _instance = go.AddComponent<GameEntry>();
+                DontDestroyOnLoad(go);
+            }
+            return _instance;
+        }
+        
+        
         void Awake()
         {
         }

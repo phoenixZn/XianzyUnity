@@ -320,7 +320,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11490438, guid: db5d0fefcdf2e7147bf2c565adeb51d6, type: 3}
       propertyPath: m_BlockingMask.m_Bits
-      value: 4294967295
+      value: 55
       objectReference: {fileID: 0}
     - target: {fileID: 22400762, guid: db5d0fefcdf2e7147bf2c565adeb51d6, type: 3}
       propertyPath: m_AnchoredPosition.y

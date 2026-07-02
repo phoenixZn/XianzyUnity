@@ -4,22 +4,14 @@ namespace Launcher
 {
     public class SceneEventDefine
     {
-        public class ChangeToHomeScene : IEventMessage
+        public class StartGame : IEventMessage
         {
             public static void SendEventMessage()
             {
-                var msg = new ChangeToHomeScene();
+                var msg = new StartGame();
                 UniEvent.SendMessage(msg);
             }
         }
 
-        public class ChangeToBattleScene : IEventMessage
-        {
-            public static void SendEventMessage()
-            {
-                var msg = new ChangeToBattleScene();
-                UniEvent.SendMessage(msg);
-            }
-        }
     }
 }

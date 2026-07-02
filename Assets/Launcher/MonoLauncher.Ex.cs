@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using Newtonsoft.Json;
 using UniFramework.Event;
 using YooAsset;
@@ -41,8 +42,7 @@ namespace Launcher
             _eventGroup.AddListener<UserEventDefine.UserTryUpdatePackageManifest>(OnHandleStateEvent);
             _eventGroup.AddListener<UserEventDefine.UserTryDownloadWebFiles>(OnHandleStateEvent);
             
-            _eventGroup.AddListener<SceneEventDefine.ChangeToHomeScene>(OnHandleEventMessageEx);
-            _eventGroup.AddListener<SceneEventDefine.ChangeToBattleScene>(OnHandleEventMessageEx);
+            _eventGroup.AddListener<SceneEventDefine.StartGame>(OnHandleEventStartGame);
         }
 
         private void OnDisable()
@@ -158,14 +158,14 @@ namespace Launcher
             }
         }
 
-        private void OnHandleEventMessageEx(IEventMessage message)
+        private void OnHandleEventStartGame(IEventMessage message)
         {
-            if (message is SceneEventDefine.ChangeToHomeScene)
+            if (message is SceneEventDefine.StartGame)
             {
-                YooAssets.LoadSceneAsync("DemoHotScene");
+
             }
         }
-        
+
         // 注意：包完成的逻辑在 LStateEndPatch 的 CheckTransitions 中处理
         // 通过状态机的自动转换机制，无需在Update中添加额外逻辑
     }

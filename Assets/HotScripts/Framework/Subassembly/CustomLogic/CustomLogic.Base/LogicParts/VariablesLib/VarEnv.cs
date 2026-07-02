@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -5,26 +6,45 @@ namespace Xease.CoreGame
 {
     public interface IVariables
     {
-        bool HasVar(string ID);
+        bool HasVar(string id);
         bool ClearVar(string key);
         void Clear();
         void CopyTo(VarEnv env, bool skipSameKey = true, bool logSameKey = true);
+        // 非必要慎用
+        void ForeachCollect(Action<string, object> onCollect);
+    }
+
+    /// <summary>
+    /// 友元标记接口：持有该凭证的对象可直接读取 VarEnv / VariablesImp 内部字典
+    /// </summary>
+    public interface IVarEnvFriend
+    {
     }
 
     public class VariablesImp<T> : IVariables
     {
-        protected Dictionary<string, T> mVarDic = new Dictionary<string, T>(4);
-
-        public void WriteVar(string ID, T value)
+        protected Dictionary<string, T> _varDic = new Dictionary<string, T>(4);
+        
+        /// <summary>
+        /// 供 IVarEnvFriend 友元获取桶内字典；无效时返回 null。
+        /// </summary>
+        public Dictionary<string, T> GetRawDictionary(IVarEnvFriend vfriend)
         {
-            mVarDic[ID] = value;
+            if (vfriend != null)
+                return _varDic;
+            return null;
+        }
+        
+        public void WriteVar(string id, T value)
+        {
+            _varDic[id] = value;
         }
 
-        public bool ReadVar(string ID, out T getV)
+        public bool ReadVar(string id, out T getV)
         {
-            if (mVarDic.ContainsKey(ID))
+            if (_varDic.ContainsKey(id))
             {
-                getV = mVarDic[ID];
+                getV = _varDic[id];
                 return true;
             }
 
@@ -32,24 +52,24 @@ namespace Xease.CoreGame
             return false;
         }
 
-        public bool HasVar(string ID)
+        public bool HasVar(string id)
         {
-            return mVarDic.ContainsKey(ID);
+            return _varDic.ContainsKey(id);
         }
 
         public bool ClearVar(string key)
         {
-            return mVarDic.Remove(key);
+            return _varDic.Remove(key);
         }
 
         public void Clear()
         {
-            mVarDic.Clear();
+            _varDic.Clear();
         }
 
         public void CopyTo(VarEnv env, bool skipSameKey = true, bool logSameKey = true)
         {
-            foreach (var kv in mVarDic)
+            foreach (var kv in _varDic)
             {
                 var key = kv.Key;
                 var value = kv.Value;
@@ -69,22 +89,40 @@ namespace Xease.CoreGame
                 env.WriteVar(key, value);
             }
         }
+
+        public void ForeachCollect(Action<string, object> onCollect)
+        {
+            foreach (var kv in _varDic)
+            {
+                onCollect(kv.Key, kv.Value);
+            }
+        }
     }
 
     //Variables Env
-    public class VarEnv : ICanRecycle
+    public partial class VarEnv : ICanRecycle
     {
-        private Dictionary<System.Type, IVariables> mVarTypeDic;
+        private Dictionary<System.Type, IVariables> _varTypeDic;
 
-        private static int s_index = 0;
+        /// <summary>
+        /// 供 IVarEnvFriend 友元获取类型分桶字典；无效时返回 null。
+        /// </summary>
+        public Dictionary<System.Type, IVariables> GetRawDictionary(IVarEnvFriend vfriend)
+        {
+            if (vfriend != null)
+                return _varTypeDic;
+            return null;
+        }
+
+        private static int _index = 0;
         private int _createIdx = 0;
 
         public bool IsInPool { get; private set; } = false;
 
         public VarEnv()
         {
-            _createIdx = ++s_index;
-            mVarTypeDic = new Dictionary<System.Type, IVariables>(5);
+            _createIdx = ++_index;
+            _varTypeDic = new Dictionary<System.Type, IVariables>(5);
         }
         
 
@@ -102,22 +140,22 @@ namespace Xease.CoreGame
 
         public void AddVarType<T>(System.Type type)
         {
-            if (!mVarTypeDic.ContainsKey(type))
-                mVarTypeDic.Add(type, new VariablesImp<T>());
+            if (!_varTypeDic.ContainsKey(type))
+                _varTypeDic.Add(type, new VariablesImp<T>());
         }
 
         private VariablesImp<T> GetVariables<T>(bool autoAdd = false)
         {
             var type = typeof(T);
-            if (mVarTypeDic.ContainsKey(type))
+            if (_varTypeDic.ContainsKey(type))
             {
-                return mVarTypeDic[type] as VariablesImp<T>;
+                return _varTypeDic[type] as VariablesImp<T>;
             }
 
             if (autoAdd)
             {
                 var variables = new VariablesImp<T>();
-                mVarTypeDic.Add(typeof(T), variables);
+                _varTypeDic.Add(typeof(T), variables);
                 return variables;
             }
 
@@ -225,7 +263,7 @@ namespace Xease.CoreGame
 
         public void Clear()
         {
-            foreach (var kv in mVarTypeDic)
+            foreach (var kv in _varTypeDic)
             {
                 kv.Value.Clear();
             }
@@ -233,26 +271,40 @@ namespace Xease.CoreGame
 
         public void CopyTo(in VarEnv env)
         {
-            foreach (var item in mVarTypeDic)
+            foreach (var item in _varTypeDic)
             {
                 var variables = item.Value;
                 variables.CopyTo(env);
             }
         }
 
-        public T CopyTo<T>(in VarEnv env, string key, string newKey = null, bool logError = true)
+        public bool CopyTo<T>(in VarEnv env, string key, bool logError = true)
         {
+            if (env.HasVar<T>(key))
+                return false;
             if (ReadVar<T>(key, out var value))
             {
                 env.WriteVar<T>(key, value);
-                return value;
+                return true;
             }
-            else if (logError)
+            if (logError)
             {
                 CLogger.LogError($"复制黑板时，没有找到变量! key={key}, valueType={typeof(T)}");
             }
-
-            return default;
+            return false;
+        }
+        
+        public bool CopyTo<T>(in VarEnv env, string key, string newKey)
+        {
+            if (env.HasVar<T>(newKey))
+                return false;
+            if (ReadVar<T>(key, out var value))
+            {
+                env.WriteVar<T>(newKey, value);
+                return true;
+            }
+            CLogger.LogError($"复制黑板时，没有找到变量! key={key}, newKey={newKey}, valueType={typeof(T)}");
+            return false;
         }
     }
 }

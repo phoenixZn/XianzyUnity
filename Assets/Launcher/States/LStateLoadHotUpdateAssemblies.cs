@@ -80,7 +80,7 @@ namespace Launcher
                 _isCompleted = true;
                 return;
             }
-
+            
             var dllNames = JsonConvert.DeserializeObject<List<string>>(data);
             foreach (var dllName in dllNames)
             {
@@ -101,11 +101,8 @@ namespace Launcher
                     return;
                 }
                 
-                CheckAlreadyLoadedAssembly("HotUpdate");
-                
-                Assembly assembly = Assembly.Load(dllData);
-                _contextRef.LogInfo($"xCore: LState 加载热更新Dll:{dllName}");
-                CallAssemblyStaticMethod(assembly, "Xease.DemoStatic", "DemoStart");
+                LoadAssembly(dllName, dllData);
+                dataHandle.Release();
             }
 
             _isSuccess = true;
@@ -113,34 +110,24 @@ namespace Launcher
             _isCompleted = true;
         }
 
-        private static void CheckAlreadyLoadedAssembly(string assemblyName)
+        private void LoadAssembly(string dllName, byte[] dllData)
         {
-#if !UNITY_EDITOR
+            var playMode = (EPlayMode)_contextRef.GetBlackboardValue(LSVKey.LSV_PlayMode, EPlayMode.EditorSimulateMode);
+            if (playMode == EPlayMode.EditorSimulateMode)
+            {
+                _contextRef.LogInfo($"xCore: LState EditorSimulateMode 下跳过 LoadAssembly:{dllName}");
+                return;
+            }
             var alreadyLoaded = AppDomain.CurrentDomain.GetAssemblies()
-                .Any(a => string.Equals(a.GetName().Name, assemblyName, StringComparison.Ordinal));
+                .Any(a => string.Equals(a.GetName().Name, dllName, StringComparison.Ordinal));
             if (alreadyLoaded)
             {
-                Debug.LogError($"CheckAlreadyLoadedAssembly alreadyLoaded {assemblyName}");
+                _contextRef.LogError($"LoadAssembly alreadyLoaded {dllName}");
             }
-#endif                
+            Assembly assembly = Assembly.Load(dllData);
+            _contextRef.LogInfo($"xCore: LState 加载热更新Dll:{dllName}");
         }
 
-        public void CallAssemblyStaticMethod(Assembly assembly, string typeName, string methodName)
-        {
-            var type = assembly.GetType(typeName);
-            if (type == null)
-            {
-                Debug.LogError($"CallAssemblyStaticMethod assembly.GetType({typeName}) == null");
-                return;
-            }
-            var methodInfo = type.GetMethod(methodName);
-            if (methodInfo == null)
-            {
-                Debug.LogError($"CallAssemblyStaticMethod methodInfo == null, typeName={typeName}, methodName={methodName}");
-                return;
-            }
-            var param = new object[methodInfo.GetParameters().Length];
-            methodInfo.Invoke(null, param);
-        }
+
     }
 }
