@@ -87,17 +87,25 @@ namespace Xease.CoreGame
     
     public static partial class WorldExtension
     {
+        public static void AddEntityIndex_ComTag(this LogicWorld world)
+        {
+            var index = new EntityIndex<LogicEntity, uint>(
+                "EntityIndex_Tag",
+                world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComTag)),
+                (e, c) => ((TagComponent)c).Tags);
+            world.AddEntityIndex(index);
+        }
 
         //////////////////////////////////////////////////////////////////////////
         /// EntityIndex: ComTag
         public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, uint tag)
         {
-            return world.GetEntityIndex<TagComponent, EntityIndex<LogicEntity, uint>>().GetEntities(tag);
-        }
-        
-        public static HashSet<LogicEntity> GetEntitiesWithComOwnerEntity(this LogicWorld world, long ownerEntityID)
-        {
-            return world.GetEntityIndex<HolderEntityComponent, EntityIndex<LogicEntity, long>>().GetEntities(ownerEntityID);
+            var index = world.GetEntityIndex("EntityIndex_Tag") as EntityIndex<LogicEntity, uint>;
+            if (index == null)
+            {
+                return null;
+            }
+            return index.GetEntities(tag);
         }
     }
 

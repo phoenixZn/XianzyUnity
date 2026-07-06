@@ -1,6 +1,4 @@
-﻿using Entitas;
-
-namespace Xease.CoreGame
+﻿namespace Xease.CoreGame
 {
     public class SysInitializeBasePack : InitializeSystem
     {
@@ -11,9 +9,9 @@ namespace Xease.CoreGame
         protected override void InitEntityIndex()
         {
             _logicWorld.AddEntityIndex_ComID();
-            _logicWorld.AddEntityIndex(new EntityIndex<LogicEntity, EFaction>(typeof(FactionComponent).Name, _logicWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComFaction)), (e, c) => ((FactionComponent)c).Faction));
-            _logicWorld.AddEntityIndex(new EntityIndex<LogicEntity, long>(typeof(HolderEntityComponent).Name, _logicWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComHolderEntity)), (e, c) => ((HolderEntityComponent)c).HolderEntityID));
-            _logicWorld.AddEntityIndex(new EntityIndex<LogicEntity, uint>(typeof(TagComponent).Name, _logicWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComTag)), (e, c) => ((TagComponent)c).Tags));
+            _logicWorld.AddEntityIndex_ComFaction();
+            _logicWorld.AddEntityIndex_ComHolderEntity();
+            _logicWorld.AddEntityIndex_ComTag();
         }
         protected override void AddMetaComponents()
         {

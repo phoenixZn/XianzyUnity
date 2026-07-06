@@ -55,7 +55,7 @@ namespace Xease
             var x = (Screen.width - ButtonWidth) * 0.5f;
             var y = Screen.height * VerticalRatio - ButtonHeight * 0.5f;
             GUILayout.BeginArea(new Rect(x, y, ButtonWidth, ButtonHeight));
-            if (GUILayout.Button("登陆", LoginButtonStyle, GUILayout.Height(ButtonHeight)))
+            if (GUILayout.Button("开始", LoginButtonStyle, GUILayout.Height(ButtonHeight)))
             {
                 _nextStateID = EnvStateID.ES_Main;
             }
