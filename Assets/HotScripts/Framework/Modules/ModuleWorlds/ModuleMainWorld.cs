@@ -73,7 +73,11 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         public void CreateGameWorld<T>(WorldCreationInfo creationInfo) where T : ECWorlds
         {
-            DestroyGameWorld();
+            if (_mainWorld != null)
+            {
+                G.LogError("CreateGameWorld 发现已有 _mainWorld != null, 强制执行清理");
+                DestroyGameWorld();    
+            }
             _mainWorld = Activator.CreateInstance(typeof(T)) as T;
             _worldDriverEx = _mainWorld as IUnityStyleDriver;
             _mainWorld.InitWorlds(creationInfo);

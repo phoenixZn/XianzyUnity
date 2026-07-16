@@ -85,7 +85,7 @@ namespace Xease.CoreGame
             return null;
         }
 
-        public T GetGenInfo<T>(bool logError = true) where T : ICustomLogicGenInfo
+        public T GetGenInfo<T>(bool logError = true) where T : class
         {
             if (mContext.GenInfo is T theGenInfo)
             {

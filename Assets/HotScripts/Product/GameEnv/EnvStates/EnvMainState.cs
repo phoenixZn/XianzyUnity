@@ -2,14 +2,7 @@ using Xease.CoreGame;
 
 namespace Xease
 {
-    public class MainWorldCreationInfo : WorldCreationInfo, IGameModeParam
-    {
-        public MainWorldCreationInfo() : base("Main")
-        {
-        }
-        public int ModeLogicID { get; set; }
-    }
-
+    
     public class EnvMainState : EnvStateBase, IEnvUpdate
     {
         public override void Enter(EnvStateBase fromState)

@@ -18,10 +18,9 @@ namespace Xease.CoreGame
         private void InitConfigs_Template()
         {
             //////////////////////////////////////////////////////////////////////////
-            //Pve模式规则逻辑节点 （散装）
+            //Main模式规则逻辑节点 （散装）
             AddConfig(1100000, new Nodes()
             {
-                //章节玩法规则
                 // Bhv<InitPlayerStatusBhv>(),
                 // Bhv<HandleStartBattleTimeBhv>(),
                 // new ChapterPlayerKillEnemyCntCtrlCfg(),
@@ -34,7 +33,7 @@ namespace Xease.CoreGame
             });
             
             //////////////////////////////////////////////////////////////////////////
-            //PVE模式标准状态机 模版:
+            //Main模式标准状态机 模版:
             AddConfig(1100001, new Nodes()
             {
                 //Log("LogicConfig_GameMode：直接使用PVE模式的标准状态 1100001 "),
@@ -42,17 +41,17 @@ namespace Xease.CoreGame
                 {
                     CustomState("GST_Loading", Seq(new Nodes()
                     {
-                        BeginCall(node => G.Log("PVE Mode Loading")),
+                        LogDebug(n => n.Log("Main Mode Loading")),
                     })),
                     
                     CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()
                     {
-                        Log("PVE Mode GST_Playing"),
+                        LogDebug(n => n.Log("Main Mode Playing")),
                     })),
                     
                     CustomState("GST_Pause", Seq(new Nodes()
                     {
-                        Log("PVE Mode 游戏暂停"),
+                        LogDebug(n => n.Log("Main Mode Pause")),
                     })),
                     
                 }),

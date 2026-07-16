@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Entitas;
 
@@ -26,6 +27,73 @@ namespace Xease.CoreGame
         public bool HasTags(uint tags)
         {
             return (Tags & tags) != 0;
+        }
+
+        /// <summary>
+        /// 将 Tags 中每个置位掩码拆分为独立的 int key（如 0b1010 → [2, 8]）。
+        /// </summary>
+        public int[] GetTagKeys()
+        {
+            return GetTagKeys(Tags);
+        }
+
+        /// <summary>
+        /// 将 Tags 中每个置位拆分为位索引数组（如 0b1010 → [1, 3]）。
+        /// </summary>
+        public int[] GetTagIndexArray()
+        {
+            return GetTagIndexArray(Tags);
+        }
+
+        /// <summary>
+        /// 将位掩码中每个置位掩码拆分为独立的 int key。
+        /// </summary>
+        public static int[] GetTagKeys(uint tags)
+        {
+            if (tags == 0)
+                return Array.Empty<int>();
+
+            var keys = new int[PopCount(tags)];
+            var idx = 0;
+            while (tags != 0)
+            {
+                var flag = tags & (uint)-(int)tags;
+                keys[idx++] = (int)flag;
+                tags &= ~flag;
+            }
+            return keys;
+        }
+
+        /// <summary>
+        /// 将位掩码中每个置位拆分为位索引。
+        /// </summary>
+        public static int[] GetTagIndexArray(uint tags)
+        {
+            if (tags == 0)
+                return Array.Empty<int>();
+
+            var keys = new int[PopCount(tags)];
+            var idx = 0;
+            for (int i = 0; i < 32; i++)
+            {
+                if ((tags & (1u << i)) != 0)
+                    keys[idx++] = i;
+            }
+            return keys;
+        }
+
+        /// <summary>
+        /// 统计 uint 中置位个数（population count）。
+        /// </summary>
+        public static int PopCount(uint value)
+        {
+            var count = 0;
+            while (value != 0)
+            {
+                count++;
+                value &= value - 1;
+            }
+            return count;
         }
     }
 
@@ -89,18 +157,24 @@ namespace Xease.CoreGame
     {
         public static void AddEntityIndex_ComTag(this LogicWorld world)
         {
-            var index = new EntityIndex<LogicEntity, uint>(
+            var index = new TagEntityIndex<LogicEntity>(
                 "EntityIndex_Tag",
                 world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComTag)),
-                (e, c) => ((TagComponent)c).Tags);
+                (e, c) =>
+                {
+                    var component = c != null
+                        ? (TagComponent)c
+                        : e.comTag;
+                    return component.Tags;
+                });
             world.AddEntityIndex(index);
         }
 
         //////////////////////////////////////////////////////////////////////////
         /// EntityIndex: ComTag
-        public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, uint tag)
+        public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, int tag)
         {
-            var index = world.GetEntityIndex("EntityIndex_Tag") as EntityIndex<LogicEntity, uint>;
+            var index = world.GetEntityIndex("EntityIndex_Tag") as TagEntityIndex<LogicEntity>;
             if (index == null)
             {
                 return null;
