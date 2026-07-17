@@ -1,10 +1,13 @@
-﻿using Entitas;
+﻿using System;
+using System.Collections.Generic;
+using Entitas;
 
 namespace Xease.CoreGame
 {
     public class LiteUnityWorlds : ECWorlds, IUnityStyleDriver
     {
         protected UnityStyleSystems _rootSystemUnity;
+        protected bool _needVerifyRequiredSystemOrder = true;
         
         //////////////////////////////////////////////////////////////////////////
         /// 驱动 Ex:
@@ -34,45 +37,74 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
+        /// ECWorlds：
         protected override void CreateSystems()
         {
-            var systems = new UnityStyleSystems();
-
-            // 初始化：
-            systems.Add(new SysInitializeBasePack(this));
-            systems.Add(new SysInitializeLiteUnityPack(this));
-
-            // 规则：
-            systems.Add(new SysGameModeUpdate(this));
+            base.CreateSystems();
+            _rootSystemUnity = _rootSystem as UnityStyleSystems;
             
-            // 输入：
-            systems.Add(new SysCommandSend(this));
-            systems.Add(new SysCommandReceive(this));
+            //基准系统校验
+            if (_needVerifyRequiredSystemOrder)
+            {
+                Type[] requiredTypes = new Type[]
+                {
+                    typeof(SysInitializeBasePack),
+                    typeof(SysInitializeLiteUnityPack),
+                    typeof(SysCommandSend),
+                    typeof(SysCommandReceive),
+                    typeof(SysGameModeUpdate),
+                    typeof(SysViewLoader),
+                    typeof(SysSyncViewTransform),
+                };
+                VerifyRequiredSystemOrder(requiredTypes);
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        protected virtual void VerifyRequiredSystemOrder(Type[] requiredTypes)
+        {
+            if (_rootSystem == null)
+            {
+                WLogger.LogError("[基准系统检查:LiteUnityWorlds] _rootSystem == null");
+                return;
+            }
+            if (_rootSystemUnity == null)
+            {
+                WLogger.LogError("[基准系统检查:LiteUnityWorlds] _rootSystemUnity == null");
+                return;
+            }
             
-            // 处理流水线：
-            //systems.Add(new SysSupplyProcess(this));
-            //systems.Add(new SysAI(this));
-            //systems.Add(new SysMainFSM(this));
-            //systems.Add(new SysSkillProcess(this));
+            var systems = _rootSystemUnity.Systems;
+            var lastIndex = -1;
 
-            //systems.Add(new SysLocomotion(this));
-            //systems.Add(new SysCollision(this));
+            foreach (var requiredType in requiredTypes)
+            {
+                var index = FindFirstSystemIndex(systems, requiredType);
+                if (index < 0)
+                {
+                    WLogger.LogError($"[基准系统检查:LiteUnityWorlds] 缺少必需系统: {requiredType.Name}");
+                    continue;
+                }
+                if (index <= lastIndex)
+                {
+                    WLogger.LogError(
+                        $"[基准系统检查:LiteUnityWorlds] 系统顺序错误: {requiredType.Name} 应在上一基准系统之后 (index={index}, prev={lastIndex})");
+                }
+                lastIndex = index;
+            }
+        }
 
-            //systems.Add(new SysSubobject(this));
-            //systems.Add(new SysBuff(this));
-            
-            systems.Add(new SysViewLoader(this));
-            systems.Add(new SysSyncViewTransform(this));
-            //systems.Add(new SysSyncViewAnimator(this));
-            //systems.Add(new SysLife(this));
-            //systems.Add(new SysDeathProcess(this));
-
-
-#if UNITY_EDITOR
-            //systems.Add(new SysDebugDemo(this));
-#endif
-            _rootSystemUnity = systems;
-            _rootSystem = _rootSystemUnity; 
+        static int FindFirstSystemIndex(List<ISystem> list, Type requiredType)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (requiredType.IsAssignableFrom(list[i].GetType()))
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
         
     }

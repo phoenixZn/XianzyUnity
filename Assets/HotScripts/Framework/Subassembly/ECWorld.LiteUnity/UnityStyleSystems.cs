@@ -35,14 +35,19 @@ namespace Xease.CoreGame
     //////////////////////////////////////////////////////////////////////////
     public class UnityStyleSystems : Systems, IUnityStyleDriver
     {
+        private readonly List<ISystem> _systems = new ();
         private readonly List<IFixedUpdateSystem> _fixedUpdateSystemList = new ();
         private readonly List<IUpdateSystem> _updateSystemList = new ();
         private readonly List<ILateUpdateSystem> _lateUpdateSystemList = new ();
         private readonly List<IGizmosSystem> _gizmosSystemList = new ();
         private readonly List<IUnityGUI> _unityGUISystemList = new ();
+
+        public List<ISystem> Systems => _systems;
         
         public override Systems Add(ISystem system)
         {
+            _systems.Add(system);
+
             if (system is IFixedUpdateSystem _fixedUpdateSystem)
             {
                 _fixedUpdateSystemList.Add(_fixedUpdateSystem);

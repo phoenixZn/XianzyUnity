@@ -6,7 +6,6 @@ namespace Xease.CoreGame
     {
         protected LogicEntity _hostEntity;
         public LogicEntity HostEntity  => _hostEntity;
-        //public LogicEntity Owner => _hostEntity; //适配旧名字
 
         public virtual void PostInitialize(LogicEntity hostEntity)
         {

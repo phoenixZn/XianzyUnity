@@ -9,6 +9,8 @@ namespace Xease.CoreGame
     {
         public string WorldName { get; }
 
+        public Func<WorldCreationInfo, ECWorlds, Systems> CreateRootSystems { get; set; }
+
         protected WorldCreationInfo(string worldName)
         {
             WorldName = worldName;
@@ -130,7 +132,12 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         /// 扩展:
-        protected abstract void CreateSystems();
+        protected virtual void CreateSystems()
+        {
+            if (CreationInfo?.CreateRootSystems == null)
+                throw new InvalidOperationException("WorldCreationInfo.CreateRootSystems must be set before InitWorlds.");
+            _rootSystem = CreationInfo.CreateRootSystems(CreationInfo, this);
+        }
 
 
         //扩展可以使用LogicEntity子类

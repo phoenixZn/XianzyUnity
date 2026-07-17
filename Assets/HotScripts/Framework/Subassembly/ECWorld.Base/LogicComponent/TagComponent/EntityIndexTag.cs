@@ -4,6 +4,38 @@ using System.Collections.Generic;
 
 namespace Xease.CoreGame
 {
+    //////////////////////////////////////////////////////////////////////////
+    /// EntityIndex: ComTag
+    public static partial class WorldExtension
+    {
+        public static void AddEntityIndex_ComTag(this LogicWorld world)
+        {
+            var index = new TagEntityIndex<LogicEntity>(
+                "EntityIndex_Tag",
+                world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComTag)),
+                (e, c) =>
+                {
+                    var component = c != null
+                        ? (TagComponent)c
+                        : e.comTag;
+                    return component.Tags;
+                });
+            world.AddEntityIndex(index);
+        }
+        
+        public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, int tag)
+        {
+            var index = world.GetEntityIndex("EntityIndex_Tag") as TagEntityIndex<LogicEntity>;
+            if (index == null)
+            {
+                return null;
+            }
+            return index.GetEntities(tag);
+        }
+    }
+
+    
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 按 Tag 位掩码建立多 key 索引：getKey 返回完整 uint 掩码，在 add/remove 内拆位，避免 getKeys 数组分配。
     /// </summary>

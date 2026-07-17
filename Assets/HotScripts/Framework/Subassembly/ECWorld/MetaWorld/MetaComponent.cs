@@ -6,7 +6,6 @@ namespace Xease.CoreGame
     {
         private MetaEntity _hostEntity;
         public MetaEntity HostEntity => _hostEntity;
-        //public MetaEntity Owner => _hostEntity; //适配旧名字
 
         public virtual void PostInitialize(MetaEntity hostEntity)
         {

@@ -4,11 +4,37 @@ namespace Xease.CoreGame
 {
     public class IDComponent : LogicComponent
     {
-        public long id { get; private set; }
+        public long ID { get; private set; }
+        public string Name { get; private set; }
 
-        public void Init(long id)
+        public void Init(long id, string name)
         {
-            this.id = id;
+            ID = id;
+            Name = name;
+        }
+        
+        public void SetID(long id)
+        {
+            if (ID == id)
+                return;
+            ID = id;
+            Name = null;
+            _hostEntity?.ReplaceComponent(LogicComponentsLookup.ComID, this);
+        }
+        
+        public void SetName(string name)
+        {
+            if (Name == name)
+                return;
+            Name = name;
+            _hostEntity?.ReplaceComponent(LogicComponentsLookup.ComID, this);
+        }
+        
+        public override void DisposeOnRemove()
+        {
+            Name = null;
+            ID = 0;
+            base.DisposeOnRemove();
         }
     }
 
@@ -17,8 +43,8 @@ namespace Xease.CoreGame
     {
         public IDComponent comID { get { return (IDComponent)GetComponent(LogicComponentsLookup.ComID); } }
         public bool hasComID { get { return HasComponent(LogicComponentsLookup.ComID); } }
-
-        public void AddComID(long newId)
+        
+        public void AddComID(long id, string name = null)
         {
             var index = LogicComponentsLookup.ComID;
             if (index < 0)
@@ -27,7 +53,7 @@ namespace Xease.CoreGame
                 return;
             }
             var component = (IDComponent)CreateComponent(index, typeof(IDComponent));
-            component.Init(newId);
+            component.Init(id, name);
             AddComponent(index, component);
         }
         
@@ -37,40 +63,11 @@ namespace Xease.CoreGame
             {
                 if (hasComID)
                 {
-                    return comID.id;
+                    return comID.ID;
                 }
                 return creationIndex;
             }
         } 
-    }
-    
-    //////////////////////////////////////////////////////////////////////////
-    /// EntityIndex: ComID
-    public static partial class WorldExtension
-    {
-        public static void AddEntityIndex_ComID(this LogicWorld world)
-        {
-            var index = new PrimaryEntityIndex<LogicEntity, long>(
-                "EntityIndex_ID",
-                world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComID)),
-                (e, c) => ((IDComponent) c).id);
-            world.AddEntityIndex(index);
-        }
-
-        public static LogicEntity GetEntityWithComID(this LogicWorld world, long id)
-        {
-            var index = world.GetEntityIndex("EntityIndex_ID") as PrimaryEntityIndex<LogicEntity, long>;
-            if (index == null)
-            {
-                return null;
-            }
-            return index.GetEntity(id);
-        }
-
-        public static LogicEntity GetEntity(this LogicWorld world, long id)
-        {
-            return world.GetEntityWithComID(id);
-        }
     }
     
 
@@ -80,7 +77,5 @@ namespace Xease.CoreGame
         private static ComponentTypeIndex _ComIDIndex = new (typeof(IDComponent));
         public static int ComID => _ComIDIndex.Index;
     }
-
-
-
+    
 }

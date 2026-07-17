@@ -152,36 +152,6 @@ namespace Xease.CoreGame
         }
     }
     
-    
-    public static partial class WorldExtension
-    {
-        public static void AddEntityIndex_ComTag(this LogicWorld world)
-        {
-            var index = new TagEntityIndex<LogicEntity>(
-                "EntityIndex_Tag",
-                world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComTag)),
-                (e, c) =>
-                {
-                    var component = c != null
-                        ? (TagComponent)c
-                        : e.comTag;
-                    return component.Tags;
-                });
-            world.AddEntityIndex(index);
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-        /// EntityIndex: ComTag
-        public static HashSet<LogicEntity> GetEntitiesWithComTag(this LogicWorld world, int tag)
-        {
-            var index = world.GetEntityIndex("EntityIndex_Tag") as TagEntityIndex<LogicEntity>;
-            if (index == null)
-            {
-                return null;
-            }
-            return index.GetEntities(tag);
-        }
-    }
 
     //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
