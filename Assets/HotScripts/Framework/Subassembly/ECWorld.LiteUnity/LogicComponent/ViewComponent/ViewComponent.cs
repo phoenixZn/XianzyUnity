@@ -96,21 +96,11 @@ namespace Xease.CoreGame
 
         public override void DisposeOnRemove()
         {
-            TryReleaseAsset();
             wrapper?.Dispose();
             wrapper = null;
             assetLocation = null;
             loadState = ViewLoadState.None;
             _hostEntity = null;
-        }
-
-        private void TryReleaseAsset()
-        {
-            if (string.IsNullOrEmpty(assetLocation))
-                return;
-
-            var assetSvc = GEnv.Inst?.Services?.AssetSvc;
-            assetSvc?.Release(assetLocation);
         }
     }
 

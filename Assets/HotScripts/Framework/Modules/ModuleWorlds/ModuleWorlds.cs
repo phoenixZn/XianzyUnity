@@ -3,20 +3,28 @@ using Xease.CoreGame;
 
 namespace Xease
 {
-    public partial class ModuleMainWorld : Module, IEnvUpdate, IEnvFixedUpdate, IEnvLateUpdate, IEnvDrawGizmos, IEnvOnGUI
+    public partial class ModuleWorlds : Module, IEnvUpdate, IEnvFixedUpdate, IEnvLateUpdate, IEnvDrawGizmos, IEnvOnGUI
     {
+        // MainWorld:
         protected ECWorlds _mainWorld;
         protected IUnityStyleDriver _worldDriverEx;
         public ECWorlds MainWorld => _mainWorld;
+        
+        // WorldsConfig:
+        protected WorldsConfig _worldsConfig;
+        public WorldsConfig WorldsConfig => _worldsConfig;
+        
+        
         public bool IsActive { get; private set; }
         
-        public ModuleMainWorld()
+        public ModuleWorlds()
         {
         }
         
         protected override void OnInit()
         {
-            G.Log("ModuleMainWorld 构造");
+            G.Log("ModuleWorlds 构造");
+            _worldsConfig = new WorldsConfig();
             base.OnInit();
         }
         

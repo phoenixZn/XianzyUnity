@@ -5,7 +5,7 @@ namespace Xease.CoreGame
 {
     public partial class WorldsConfig
     {
-        private static void InitConfigs()
+        private void InitConfigs_Main()
         {
             AddConfig("MainWorldTest", () => new MainWorldCreationInfo()
             {

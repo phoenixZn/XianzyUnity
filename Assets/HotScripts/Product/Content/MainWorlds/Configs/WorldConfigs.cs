@@ -7,19 +7,19 @@ namespace Xease.CoreGame
 
     public partial class WorldsConfig
     {
-        private static readonly Dictionary<string, Func<WorldCreationInfo>> _configs = new();
+        private readonly Dictionary<string, Func<WorldCreationInfo>> _configs = new();
 
-        static WorldsConfig()
+        public WorldsConfig()
         {
-            InitConfigs();
+            InitConfigs_Main();
         }
 
-        protected static void AddConfig(string worldCfgID, Func<WorldCreationInfo> factory)
+        protected void AddConfig(string worldCfgID, Func<WorldCreationInfo> factory)
         {
             _configs.Add(worldCfgID, factory);
         }
 
-        public static WorldCreationInfo Get(string worldCfgID)
+        public WorldCreationInfo Get(string worldCfgID)
         {
             if (!_configs.TryGetValue(worldCfgID, out var factory))
             {

@@ -56,12 +56,13 @@ public partial class LogicEntityDebugger : MonoBehaviour, IVarEnvFriend
 
     protected virtual LogicWorld GetLogicWorld()
     {
-        var modMainWorld = G.Module<ModuleMainWorld>();
-        if (modMainWorld?.MainWorld == null)
+        var modMainWorld = G.Module<ModuleWorlds>();
+        var w = modMainWorld?.MainWorld;
+        if (w == null)
         {
             return null;
         }
-        return modMainWorld?.MainWorld.LogicWorld;
+        return w.LogicWorld;
     }
 
     void Update()

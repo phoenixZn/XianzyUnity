@@ -7,7 +7,7 @@
         public float TimeScale => mTimeSlowRatio.Value * GameSpeed;
 
         /// <summary>
-        /// 设置游戏速度，向上设置用这个 >1，比如游戏倍速等。
+        /// 设置游戏速度，向上设置用这个 >1，比如游戏基准倍速等。
         /// </summary>
         /// <param name="timeSpeed">大于1</param>
         public void SetGameSpeed(float timeSpeed)
@@ -16,7 +16,7 @@
         }
         
         /// <summary>
-        /// 设置游戏速度减缓，向下设置用这个 <1,比如子弹时间、暂停、三选一等
+        /// 设置游戏速度减缓，向下设置用这个 <1,比如子弹时间、暂停等
         /// </summary>
         /// <param name="slowFlag">减速标签，不够就扩充</param>
         /// <param name="scale">缩小系数</param>
