@@ -71,14 +71,27 @@ namespace Xease
         }
 
         //////////////////////////////////////////////////////////////////////////
-        public void CreateGameWorld<T>(WorldCreationInfo creationInfo) where T : ECWorlds
+        public void CreateGameWorld(WorldCreationInfo creationInfo)
         {
+            if (creationInfo == null)
+            {
+                G.LogError("CreateGameWorld creationInfo == null");
+                return;
+            }
+
+            var worldsType = creationInfo.WorldsClassType;
+            if (worldsType == null || !typeof(ECWorlds).IsAssignableFrom(worldsType))
+            {
+                G.LogError($"CreateGameWorld WorldsClassType invalid: {worldsType}");
+                return;
+            }
+
             if (_mainWorld != null)
             {
                 G.LogError("CreateGameWorld 发现已有 _mainWorld != null, 强制执行清理");
                 DestroyGameWorld();    
             }
-            _mainWorld = Activator.CreateInstance(typeof(T)) as T;
+            _mainWorld = Activator.CreateInstance(worldsType) as ECWorlds;
             _worldDriverEx = _mainWorld as IUnityStyleDriver;
             _mainWorld.InitWorlds(creationInfo);
         }

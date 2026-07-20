@@ -7,13 +7,13 @@ namespace Xease.CoreGame
 {
     public partial class WorldCreationInfo
     {
-        public string WorldName { get; }
+        public string WorldName { get; set; }
+        public Type WorldsClassType { get; set; }
 
         public Func<WorldCreationInfo, ECWorlds, Systems> CreateRootSystems { get; set; }
 
-        protected WorldCreationInfo(string worldName)
+        protected WorldCreationInfo()
         {
-            WorldName = worldName;
         }
     }
 

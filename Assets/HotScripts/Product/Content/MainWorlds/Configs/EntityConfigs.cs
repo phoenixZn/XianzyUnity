@@ -1,4 +1,4 @@
-﻿namespace Xease.CoreGame.Configs
+﻿namespace Xease.CoreGame
 {
     public class EntityConfigs
     {
