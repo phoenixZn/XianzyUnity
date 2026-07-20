@@ -7,171 +7,115 @@
 - Unity 运行时：异步加载 Prefab，绑定真实 `Transform`
 - 命令行 / 纯逻辑：通过 `NullViewTransformProxy` 空实现，不依赖引擎
 
-核心原则：**逻辑侧始终同步调用**，资源加载异步进行，由 ViewWrapper 的 Shadow State 缓冲加载完成前的变换数据。
+核心原则：**逻辑侧始终同步调用**；获取/释放策略由 `ViewWrapperBase` **子类**成对定义；Proxy 只做 Transform 操作与字段清理。
 
 ## 2. MVVM 映射
 
 | 角色 | 类型 | 职责 |
 |------|------|------|
 | Model | `TransformComponent` | 逻辑层权威位置、朝向、缩放 |
-| ViewModel | `IViewWrapper` / `IAssetViewLoadable` / `IViewTransformSyncable` / `ViewWrapperBase` | 多 Wrapper 组合；按需加载与 Transform 同步 |
-| View | `IViewTransformProxy` 实现 | 操作引擎 `Transform`；无引擎时用 Null 实现 |
+| ViewModel | `IViewWrapper` / `IViewAcquirable` / `ViewWrapperBase` 子类 | Shadow、同步 API；**子类管整段获取+释放** |
+| View | `IViewTransformProxy` | Set*；`Dispose` 只清字段（不 Destroy 资源） |
 
 ```mermaid
-flowchart LR
-    subgraph logic [LogicLayer]
-        Entity[LogicEntity]
-        TC[TransformComponent]
-    end
-    subgraph vm [ViewModelLayer]
-        VC[ViewComponent]
-        VW[IViewWrapper]
-        AL[IAssetViewLoadable]
-        TS[IViewTransformSyncable]
-    end
-    subgraph engine [EngineLayer]
-        Proxy[IViewTransformProxy]
-        GO[Unity Transform]
-    end
-    Entity --> TC
-    Entity --> VC
-    VC -->|"List + CacheInterface"| VW
-    VW -.->|可选实现| AL
-    VW -.->|可选实现| TS
-    VW --> Proxy
-    Proxy --> GO
-    SysSync[SysSyncViewTransform] -->|"读 position/rotation"| TC
-    SysSync -->|"ApplyTransform"| TS
-    SysLoad[SysViewLoader] -->|"Load + BindProxy"| AL
+flowchart TB
+    Sys[SysViewLoader]
+    VC[ViewComponent]
+    Acq[IViewAcquirable]
+    Base[ViewWrapperBase]
+    Sub[AsyncAssetViewWrapper]
+    Proxy[IViewTransformProxy]
+    Sys -->|"MarkLoading + BeginAcquire"| Acq
+    VC -->|"CacheInterface"| Acq
+    Sub --> Acq
+    Sub --> Base
+    Sub -->|"BindProxy + 持有 _instance"| Proxy
+    Base -->|"ApplyTransform SetActive"| Proxy
+    Sub -->|"ReleaseOwnedView Destroy"| Sub
+    Base -->|"Dispose: ReleaseOwnedView then proxy.Dispose"| Proxy
 ```
 
 ## 3. 类型职责与生命周期
 
 ### ViewComponent
 
-- 挂载于 `LogicEntity`，持有 `List<IViewWrapper>`（对齐 CustomLogic 的多节点模式）
-- `CacheInterface`：按接口分流缓存（`IAssetViewLoadable`、`IViewTransformSyncable`，便于按接口区分输入响应）
-- `Init(IViewWrapper)`：无 location；可选加入第一个 Wrapper
-- `AddViewWrapper`：追加 + `CacheInterface` + `NotifyChanged`
-- `MarkLoading` / `MarkReady` / `MarkFailed`：针对具体 `IAssetViewLoadable`
-- `DisposeOnRemove`：释放全部 Wrapper 并清空接口缓存
-
-### IViewWrapper
-
-逻辑层访问表现的基础入口：
-
-- `BindProxy`：绑定 `IViewTransformProxy` 并 `FlushToProxy`
-- `SetActive`：显隐控制（同样走 Shadow + Flush）
-
-### IAssetViewLoadable
-
-表达「需要按 `AssetLocation` 异步加载」的能力（与表现 API 解耦）：
-
-- `AssetLocation`：资源路径（由 `RequestLoad` 写入）
-- `LoadState`：`None` → `Loading` → `Ready` / `Failed`
-- `RequestLoad(string)`：写入路径并重置为 `None`，触发 Loader
-- `SetLoadState`：由 System / Component 推进状态
-
-### IViewTransformSyncable
-
-表达「需要同步逻辑 Transform 到表现」的能力：
-
-- `SyncTransform`：是否参与同步（默认 `true`，可临时关闭）
-- `ApplyTransform`：写入 Shadow，Proxy 就绪时立即刷到引擎
+- 持有 `List<IViewWrapper>`，`CacheInterface` 分流 `IViewAcquirable` / `IViewTransformSyncable`
+- `MarkLoading` / `MarkReady` / `MarkFailed`：针对具体 `IViewAcquirable`
+- `HasPendingAcquire`：任一 Acquirable 待获取
 
 ### ViewWrapperBase
 
-同时实现 `IViewWrapper`、`IAssetViewLoadable`、`IViewTransformSyncable` 的默认实现。
+- Shadow、`ApplyTransform`、`SetActive`、`BindProxy`、`FlushToProxy`
+- `Dispose` 模板：`ReleaseOwnedView()` → `proxy.Dispose()`
+- `ReleaseOwnedView`：虚方法，默认空；**子类实现资源卸载**
+- `BindProxy`：只换绑句柄，**不**调用 `ReleaseOwnedView`（避免「先赋 `_instance` 再 Bind」时误毁）
+
+### AsyncAssetViewWrapper（默认策略子类）
+
+- 实现 `IViewAcquirable`；`AssetLocation` / `RequestLoad` 为本类具体 API
+- `BeginAcquire`：`LoadAssetAsync` → Instantiate → 持有 `_instance` → `BindProxy(UnityViewTransformProxy)`
+- `ReleaseOwnedView`：`Object.Destroy(_instance)`
+- AssetSvc 不可用：绑 `NullViewTransformProxy`
+
+### IViewAcquirable
+
+```csharp
+ViewLoadState LoadState { get; }
+bool HasPendingAcquire { get; }
+void BeginAcquire(ViewAcquireContext ctx);
+void SetLoadState(ViewLoadState state);
+```
 
 ### IViewTransformProxy
 
-引擎 Transform 的抽象，隔离 Unity 依赖：
+- `UnityViewTransformProxy.Dispose`：**仅清字段**，不 Destroy GO
+- 资源卸载只在 Wrapper 子类；禁止往 Proxy 注入 `BeforeDispose(ref GameObject)` 作为主路径
+- 将来 Proxy 自身可入池（与 GO 生命周期无关）
 
-- `UnityViewTransformProxy`：包装 `UnityEngine.Transform`
-- `NullViewTransformProxy`：纯逻辑空实现，`IsValid = true`
+### 配对约束（禁止自由交叉）
+
+| 获取策略（子类） | 释放（ReleaseOwnedView） | 产出 Proxy |
+|------------------|--------------------------|------------|
+| `AsyncAssetViewWrapper` | Destroy GO | `UnityViewTransformProxy` |
+| 后续 Pool 子类 | ReturnToPool | 同左配套 |
+| 后续 Scene 子类 | Detach-only | 同左配套 |
+
+调用方只选 Wrapper 子类，从不单独拼装「加载策略 × 卸载策略」。
 
 ### 生命周期
 
-1. `SetComView(assetLocation)` → 确保组件存在 → 对 Wrapper 调用 `IAssetViewLoadable.RequestLoad` → `AddViewWrapper`
-2. `SysViewLoader` 响应 Added/Replaced → 遍历待加载 `AssetLoadables` → `Loading` → 异步加载
-3. 加载成功 → `Instantiate` → `BindProxy` → `Ready` → 刷入当前 `TransformComponent`
-4. Entity 销毁 / 组件移除 → `DisposeOnRemove` → 销毁 GameObject、释放资源
+1. `SetComView(path)` → 默认 `new AsyncAssetViewWrapper(path)` + `AddViewWrapper`
+2. `SysViewLoader`：`HasPendingAcquire` → `MarkLoading` → `BeginAcquire`
+3. 策略内部 BindProxy；回调 → `MarkReady` / `MarkFailed` + SyncTransform
+4. 组件移除 → Wrapper.`Dispose` → `ReleaseOwnedView` + Proxy 清字段
 
 ## 4. Shadow State + Pending Flush
 
-`ViewWrapperBase` 维护 `_position`、`_rotation`、`_scale`、`_active`：
+与此前相同：`ApplyTransform` / `SetActive` 立即写 Shadow；Proxy 就绪则 Flush。
 
-1. `ApplyTransform` / `SetActive` **立即**更新 Shadow，不等待加载
-2. 若 Proxy 已绑定且 `IsValid` → 同步写入 Proxy
-3. 资源加载中 → 仅更新 Shadow
-4. `BindProxy` 完成后调用 `FlushToProxy()`，一次性应用缓存
+## 5. System 协作
 
-```mermaid
-sequenceDiagram
-    participant Logic
-    participant VC as ViewComponent
-    participant VW as ViewWrapper
-    participant Loader as SysViewLoader
-    participant Sync as SysSyncViewTransform
-    participant Proxy as IViewTransformProxy
+### SysViewLoader
 
-    Logic->>VC: SetComView("prefab/path")
-    VC->>VW: RequestLoad then AddViewWrapper
-    Loader->>VW: async load
-    Logic->>Sync: SetPosition via TransformComponent
-    Sync->>VW: ApplyTransform Shadow only
-    Loader->>Proxy: Instantiate + BindProxy
-    VW->>Proxy: FlushToProxy
-    Logic->>Sync: SetRotation
-    Sync->>VW: ApplyTransform
-    VW->>Proxy: immediate write
-```
+- **只编排**：不碰 AssetSvc / Instantiate / `new UnityViewTransformProxy`
+- Filter：`HasPendingAcquire`
+- Execute：`MarkLoading` → `BeginAcquire` → 回调 `MarkReady/Failed` + `SyncTransformFromEntity`
 
-## 5. 纯逻辑 / 命令行运行
+### SysSyncViewTransform
 
-当 `GEnv.Inst.Services.AssetSvc` 不可用时，`SysViewLoader` 直接：
+- Filter：`HasSyncTransform`；对 `TransformSyncables` 调用 `ApplyTransform`
 
-1. 绑定 `NullViewTransformProxy`
-2. 标记 `Ready`
-3. `FlushToProxy`（无引擎副作用）
-
-逻辑代码路径与 Unity 运行时一致，无需分支判断。
-
-## 6. System 协作
-
-### SysViewLoader（ReactiveSystem）
-
-- **Trigger**：`ComView` Added（含 Replace 触发的 Added）
-- **Filter**：`hasComView && HasPendingAssetLoad`
-- **Execute**：遍历 `AssetLoadables` 中 `LoadState == None` 且路径非空的项 → Loading → 异步加载 → BindProxy → Ready；失败则 Failed
-
-### SysSyncViewTransform（ReactiveSystem）
-
-- **Trigger**：`ComTransform` Added
-- **Filter**：`hasComTransform && hasComView && HasSyncTransform`
-- **Execute**：读取 `position` / `rotation` / `scale`，对 `TransformSyncables` 中 `SyncTransform == true` 的项调用 `ApplyTransform`
-
-朝向同步使用 `TransformComponent.rotation`（与 `SetFaceDir` 派生的 `WorldFaceDir` 一致）。
-
-加载完成时，`SysViewLoader` 会额外调用一次 `ApplyTransform`，保证首帧与逻辑 Transform 对齐。
-
-## 7. 使用示例
+## 6. 使用示例
 
 ```csharp
-var entity = logicWorld.CreateEntity();
-entity.SetComTransform(Vector3.zero, Quaternion.identity, Vector3.one);
 entity.SetComView("Characters/Hero");
+// 等价于 AddViewWrapper(new AsyncAssetViewWrapper("Characters/Hero"))
 
-// 追加第二个可加载 Wrapper
-entity.SetComView("Characters/HeroWeapon");
-
-// 逻辑移动 — 加载前后均可调用
 entity.SetPosition(new Vector3(1, 0, 0));
-entity.SetFaceDir(Vector3.forward);
 ```
 
-## 8. 扩展点
+## 7. 扩展点
 
-- **自定义 Wrapper**：`ViewComponent.AddViewWrapper(customWrapper)` 注入测试或特化实现；在 `CacheInterface` 中按接口分流
-- **SysSyncViewAnimator**：后续可按相同 Reactive 模式同步动画参数
-- **父节点挂载**：可在 `SysViewLoader` 实例化后设置 `SetParent`，或扩展 `IViewTransformProxy`
+- 新策略：新增 `ViewWrapperBase` 子类，实现 `IViewAcquirable` + `ReleaseOwnedView`，在 `BeginAcquire` 内产出配套 Proxy
+- 不要做 AcquireStrategy × ReleaseStrategy 配置矩阵
+- 不要把加载逻辑塞进 Proxy 子类

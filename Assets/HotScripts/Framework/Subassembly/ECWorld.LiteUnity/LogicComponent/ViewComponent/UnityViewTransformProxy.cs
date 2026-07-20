@@ -45,11 +45,8 @@ namespace Xease.CoreGame
 
         public void Dispose()
         {
-            if (_gameObject != null)
-            {
-                Object.Destroy(_gameObject);
-                _gameObject = null;
-            }
+            // 只清理字段；GameObject 销毁/还池由 ViewWrapper 子类 ReleaseOwnedView 负责
+            _gameObject = null;
             _transform = null;
         }
     }

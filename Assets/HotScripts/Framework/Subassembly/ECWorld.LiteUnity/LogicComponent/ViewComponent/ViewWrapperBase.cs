@@ -3,19 +3,27 @@ using UnityEngine;
 
 namespace Xease.CoreGame
 {
-    public class ViewWrapperBase : IViewWrapper, IAssetViewLoadable, IViewTransformSyncable
+    public class ViewWrapperBase : IViewWrapper, IViewTransformSyncable
     {
         private IViewTransformProxy _proxy;
         private Vector3 _position;
         private Quaternion _rotation = Quaternion.identity;
         private Vector3 _scale = Vector3.one;
         private bool _active = true;
-        private string _assetLocation;
         private bool _disposed;
 
         public ViewWrapperBase(IViewTransformProxy proxy = null)
         {
             _proxy = proxy ?? NullViewTransformProxy.Instance;
+        }
+
+        protected bool IsDisposed => _disposed;
+
+        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
+
+        public void SetLoadState(ViewLoadState loadState)
+        {
+            LoadState = loadState;
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -27,6 +35,8 @@ namespace Xease.CoreGame
             if (_disposed)
                 return;
 
+            // 只换绑句柄；资源所有权由子类在 Acquire / ReleaseOwnedView 中管理
+            // （若此处调用 ReleaseOwnedView，会在「先赋值 _instance 再 BindProxy」时误毁新建对象）
             _proxy?.Dispose();
             _proxy = proxy ?? NullViewTransformProxy.Instance;
             FlushToProxy();
@@ -47,28 +57,18 @@ namespace Xease.CoreGame
                 return;
 
             _disposed = true;
+            ReleaseOwnedView();
             _proxy?.Dispose();
             _proxy = NullViewTransformProxy.Instance;
-            _assetLocation = null;
             LoadState = ViewLoadState.None;
             SyncTransform = true;
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        // IAssetViewLoadable
-        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
-
-        public string AssetLocation => _assetLocation;
-
-        public void RequestLoad(string assetLocation)
+        /// <summary>
+        /// 子类释放自己持有的表现资源（Destroy / 还池 / Detach）。
+        /// </summary>
+        protected virtual void ReleaseOwnedView()
         {
-            _assetLocation = assetLocation;
-            LoadState = ViewLoadState.None;
-        }
-
-        public void SetLoadState(ViewLoadState loadState)
-        {
-            LoadState = loadState;
         }
 
         //////////////////////////////////////////////////////////////////////////

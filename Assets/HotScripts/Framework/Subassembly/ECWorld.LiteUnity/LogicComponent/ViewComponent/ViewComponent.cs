@@ -23,13 +23,21 @@ namespace Xease.CoreGame
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // IAssetViewLoadable：按 AssetLocation 异步加载资源
-    public interface IAssetViewLoadable
+    // IViewAcquirable：可获取表现对象（加载策略入口）
+    public interface IViewAcquirable
     {
         ViewLoadState LoadState { get; }
-        string AssetLocation { get; }
-        void RequestLoad(string assetLocation);
+        bool HasPendingAcquire { get; }
+        void BeginAcquire(ViewAcquireContext ctx);
         void SetLoadState(ViewLoadState state);
+    }
+
+    public struct ViewAcquireContext
+    {
+        /// <summary>
+        /// 成功时 proxy 已由策略 BindProxy；失败时 proxy 可为 null。
+        /// </summary>
+        public Action<bool, IViewTransformProxy> OnCompleted;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -48,18 +56,17 @@ namespace Xease.CoreGame
         public IReadOnlyList<IViewWrapper> Wrappers => _wrappers;
 
         //////////////////////////////////////////////////////////////////////////
-        // IAssetViewLoadable
-        private readonly List<IAssetViewLoadable> _assetLoadables = new();
-        public IReadOnlyList<IAssetViewLoadable> AssetLoadables => _assetLoadables;
+        // IViewAcquirable
+        private readonly List<IViewAcquirable> _acquirables = new();
+        public IReadOnlyList<IViewAcquirable> Acquirables => _acquirables;
 
-        public bool HasPendingAssetLoad
+        public bool HasPendingAcquire
         {
             get
             {
-                for (int i = 0; i < _assetLoadables.Count; ++i)
+                for (int i = 0; i < _acquirables.Count; ++i)
                 {
-                    var loadable = _assetLoadables[i];
-                    if (loadable.LoadState == ViewLoadState.None && !string.IsNullOrEmpty(loadable.AssetLocation))
+                    if (_acquirables[i].HasPendingAcquire)
                         return true;
                 }
 
@@ -106,8 +113,8 @@ namespace Xease.CoreGame
 
         protected virtual void CacheInterface(IViewWrapper vw)
         {
-            if (vw is IAssetViewLoadable loadable)
-                _assetLoadables.Add(loadable);
+            if (vw is IViewAcquirable acquirable)
+                _acquirables.Add(acquirable);
 
             if (vw is IViewTransformSyncable syncable)
                 _transformSyncables.Add(syncable);
@@ -115,33 +122,33 @@ namespace Xease.CoreGame
 
         protected virtual void ClearInterfaceCache()
         {
-            _assetLoadables.Clear();
+            _acquirables.Clear();
             _transformSyncables.Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
-        // IAssetViewLoadable 状态推进
-        public void MarkLoading(IAssetViewLoadable loadable)
+        // IViewAcquirable 状态推进
+        public void MarkLoading(IViewAcquirable acquirable)
         {
-            SetLoadState(loadable, ViewLoadState.Loading);
+            SetLoadState(acquirable, ViewLoadState.Loading);
         }
 
-        public void MarkReady(IAssetViewLoadable loadable)
+        public void MarkReady(IViewAcquirable acquirable)
         {
-            SetLoadState(loadable, ViewLoadState.Ready);
+            SetLoadState(acquirable, ViewLoadState.Ready);
         }
 
-        public void MarkFailed(IAssetViewLoadable loadable)
+        public void MarkFailed(IViewAcquirable acquirable)
         {
-            SetLoadState(loadable, ViewLoadState.Failed);
+            SetLoadState(acquirable, ViewLoadState.Failed);
         }
 
-        private void SetLoadState(IAssetViewLoadable loadable, ViewLoadState state)
+        private void SetLoadState(IViewAcquirable acquirable, ViewLoadState state)
         {
-            if (loadable == null || loadable.LoadState == state)
+            if (acquirable == null || acquirable.LoadState == state)
                 return;
 
-            loadable.SetLoadState(state);
+            acquirable.SetLoadState(state);
             NotifyChanged();
         }
 
@@ -186,10 +193,7 @@ namespace Xease.CoreGame
                 AddComponent(index, component);
             }
 
-            var wrapper = viewWrapper ?? new ViewWrapperBase();
-            if (wrapper is IAssetViewLoadable loadable)
-                loadable.RequestLoad(assetLocation);
-
+            var wrapper = viewWrapper ?? new AsyncAssetViewWrapper(assetLocation);
             comView.AddViewWrapper(wrapper);
         }
     }
