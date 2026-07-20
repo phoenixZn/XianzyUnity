@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Xease;
 
@@ -12,78 +13,135 @@ namespace Xease.CoreGame
         Failed,
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    // IViewWrapper：基础表现能力
     public interface IViewWrapper : IDisposable
     {
         bool IsReady { get; }
-        ViewLoadState LoadState { get; }
-        void RequestLoad(string assetLocation);
         void BindProxy(IViewTransformProxy proxy);
-        void ApplyTransform(Vector3 position, Quaternion rotation, Vector3 scale);
         void SetActive(bool active);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // IAssetViewLoadable：按 AssetLocation 异步加载资源
+    public interface IAssetViewLoadable
+    {
+        ViewLoadState LoadState { get; }
+        string AssetLocation { get; }
+        void RequestLoad(string assetLocation);
+        void SetLoadState(ViewLoadState state);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // IViewTransformSyncable：需要同步逻辑 Transform 到表现
+    public interface IViewTransformSyncable
+    {
+        bool SyncTransform { get; set; }
+        void ApplyTransform(Vector3 position, Quaternion rotation, Vector3 scale);
     }
 
     public class ViewComponent : LogicComponent, IComponentDispose
     {
-        public string assetLocation { get; private set; }
-        public ViewLoadState loadState { get; private set; } = ViewLoadState.None;
-        public bool syncTransform { get; set; } = true;
-        public IViewWrapper wrapper { get; private set; }
+        //////////////////////////////////////////////////////////////////////////
+        // IViewWrapper
+        private readonly List<IViewWrapper> _wrappers = new();
+        public IReadOnlyList<IViewWrapper> Wrappers => _wrappers;
 
-        public void Init(string location, IViewWrapper viewWrapper = null)
+        //////////////////////////////////////////////////////////////////////////
+        // IAssetViewLoadable
+        private readonly List<IAssetViewLoadable> _assetLoadables = new();
+        public IReadOnlyList<IAssetViewLoadable> AssetLoadables => _assetLoadables;
+
+        public bool HasPendingAssetLoad
         {
-            assetLocation = location;
-            loadState = ViewLoadState.None;
-            syncTransform = true;
-            wrapper = viewWrapper ?? new ViewWrapperBase();
-            wrapper.RequestLoad(location);
+            get
+            {
+                for (int i = 0; i < _assetLoadables.Count; ++i)
+                {
+                    var loadable = _assetLoadables[i];
+                    if (loadable.LoadState == ViewLoadState.None && !string.IsNullOrEmpty(loadable.AssetLocation))
+                        return true;
+                }
+
+                return false;
+            }
         }
 
-        public void RequestLoad(string location)
+        //////////////////////////////////////////////////////////////////////////
+        // IViewTransformSyncable
+        private readonly List<IViewTransformSyncable> _transformSyncables = new();
+        public IReadOnlyList<IViewTransformSyncable> TransformSyncables => _transformSyncables;
+
+        public bool HasSyncTransform
         {
-            assetLocation = location;
-            loadState = ViewLoadState.None;
-            wrapper ??= new ViewWrapperBase();
-            wrapper.RequestLoad(location);
-            NotifyChanged();
+            get
+            {
+                for (int i = 0; i < _transformSyncables.Count; ++i)
+                {
+                    if (_transformSyncables[i].SyncTransform)
+                        return true;
+                }
+
+                return false;
+            }
         }
 
-        public void AttachWrapper(IViewWrapper viewWrapper)
+        //////////////////////////////////////////////////////////////////////////
+        // Wrapper 管理
+        public void Init(IViewWrapper viewWrapper = null)
+        {
+            if (viewWrapper != null)
+                AddViewWrapper(viewWrapper);
+        }
+
+        public void AddViewWrapper(IViewWrapper viewWrapper)
         {
             if (viewWrapper == null)
                 return;
 
-            wrapper?.Dispose();
-            wrapper = viewWrapper;
-            if (!string.IsNullOrEmpty(assetLocation))
-                wrapper.RequestLoad(assetLocation);
+            _wrappers.Add(viewWrapper);
+            CacheInterface(viewWrapper);
             NotifyChanged();
         }
 
-        public void MarkLoading()
+        protected virtual void CacheInterface(IViewWrapper vw)
         {
-            SetLoadState(ViewLoadState.Loading);
+            if (vw is IAssetViewLoadable loadable)
+                _assetLoadables.Add(loadable);
+
+            if (vw is IViewTransformSyncable syncable)
+                _transformSyncables.Add(syncable);
         }
 
-        public void MarkReady()
+        protected virtual void ClearInterfaceCache()
         {
-            SetLoadState(ViewLoadState.Ready);
-            if (wrapper is ViewWrapperBase viewWrapperBase)
-                viewWrapperBase.SetLoadState(ViewLoadState.Ready);
+            _assetLoadables.Clear();
+            _transformSyncables.Clear();
         }
 
-        public void MarkFailed()
+        //////////////////////////////////////////////////////////////////////////
+        // IAssetViewLoadable 状态推进
+        public void MarkLoading(IAssetViewLoadable loadable)
         {
-            SetLoadState(ViewLoadState.Failed);
-            if (wrapper is ViewWrapperBase viewWrapperBase)
-                viewWrapperBase.SetLoadState(ViewLoadState.Failed);
+            SetLoadState(loadable, ViewLoadState.Loading);
         }
 
-        private void SetLoadState(ViewLoadState state)
+        public void MarkReady(IAssetViewLoadable loadable)
         {
-            if (loadState == state)
+            SetLoadState(loadable, ViewLoadState.Ready);
+        }
+
+        public void MarkFailed(IAssetViewLoadable loadable)
+        {
+            SetLoadState(loadable, ViewLoadState.Failed);
+        }
+
+        private void SetLoadState(IAssetViewLoadable loadable, ViewLoadState state)
+        {
+            if (loadable == null || loadable.LoadState == state)
                 return;
 
-            loadState = state;
+            loadable.SetLoadState(state);
             NotifyChanged();
         }
 
@@ -96,10 +154,11 @@ namespace Xease.CoreGame
 
         public override void DisposeOnRemove()
         {
-            wrapper?.Dispose();
-            wrapper = null;
-            assetLocation = null;
-            loadState = ViewLoadState.None;
+            for (int i = 0; i < _wrappers.Count; ++i)
+                _wrappers[i]?.Dispose();
+
+            _wrappers.Clear();
+            ClearInterfaceCache();
             _hostEntity = null;
         }
     }
@@ -123,14 +182,15 @@ namespace Xease.CoreGame
             if (!hasComView)
             {
                 var component = (ViewComponent)CreateComponent(index, typeof(ViewComponent));
-                component.Init(assetLocation, viewWrapper);
+                component.Init();
                 AddComponent(index, component);
-                return;
             }
 
-            if (viewWrapper != null)
-                comView.AttachWrapper(viewWrapper);
-            comView.RequestLoad(assetLocation);
+            var wrapper = viewWrapper ?? new ViewWrapperBase();
+            if (wrapper is IAssetViewLoadable loadable)
+                loadable.RequestLoad(assetLocation);
+
+            comView.AddViewWrapper(wrapper);
         }
     }
 

@@ -18,7 +18,7 @@ namespace Xease.CoreGame
         {
             if (!entity.hasComTransform || !entity.hasComView)
                 return false;
-            return entity.comView.syncTransform;
+            return entity.comView.HasSyncTransform;
         }
 
         protected override void Execute(List<LogicEntity> entities)

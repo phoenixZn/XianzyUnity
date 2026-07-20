@@ -19,39 +19,61 @@ namespace Xease.CoreGame
 
         protected override bool Filter(LogicEntity entity)
         {
-            if (!entity.hasComView)
-                return false;
-            var view = entity.comView;
-            if (view.loadState != ViewLoadState.None)
-                return false;
-            return !string.IsNullOrEmpty(view.assetLocation);
+            return entity.hasComView && entity.comView.HasPendingAssetLoad;
         }
 
         protected override void Execute(List<LogicEntity> entities)
         {
             foreach (var entity in entities)
             {
-                LoadView(entity);
+                LoadViews(entity);
             }
         }
 
-        private static void LoadView(LogicEntity entity)
+        private static void LoadViews(LogicEntity entity)
         {
             var view = entity.comView;
-            view.MarkLoading();
+            var loadables = view.AssetLoadables;
+            for (int i = 0; i < loadables.Count; ++i)
+            {
+                var loadable = loadables[i];
+                if (loadable.LoadState != ViewLoadState.None || string.IsNullOrEmpty(loadable.AssetLocation))
+                    continue;
+
+                LoadView(entity, view, loadable);
+            }
+        }
+
+        private static void LoadView(LogicEntity entity, ViewComponent view, IAssetViewLoadable loadable)
+        {
+            view.MarkLoading(loadable);
+
+            var wrapper = loadable as IViewWrapper;
+            if (wrapper == null)
+            {
+                WLogger.LogError($"SysViewLoader loadable is not IViewWrapper: {loadable.AssetLocation}");
+                view.MarkFailed(loadable);
+                return;
+            }
 
             var assetSvc = GEnv.Inst?.Services?.AssetSvc;
             if (assetSvc == null)
             {
-                BindNullProxy(entity, view);
+                BindNullProxy(entity, view, loadable, wrapper);
                 return;
             }
 
-            var location = view.assetLocation;
-            assetSvc.LoadAssetAsync<GameObject>(location, handle => OnAssetLoaded(entity, view, location, handle));
+            var location = loadable.AssetLocation;
+            assetSvc.LoadAssetAsync<GameObject>(location, handle => OnAssetLoaded(entity, view, loadable, wrapper, location, handle));
         }
 
-        private static void OnAssetLoaded(LogicEntity entity, ViewComponent view, string location, AssetHandle handle)
+        private static void OnAssetLoaded(
+            LogicEntity entity,
+            ViewComponent view,
+            IAssetViewLoadable loadable,
+            IViewWrapper wrapper,
+            string location,
+            AssetHandle handle)
         {
             if (entity == null || !entity.isEnabled || !entity.hasComView || entity.comView != view)
                 return;
@@ -59,7 +81,7 @@ namespace Xease.CoreGame
             if (handle == null || handle.Status != EOperationStatus.Succeed)
             {
                 WLogger.LogError($"SysViewLoader load failed: {location}");
-                view.MarkFailed();
+                view.MarkFailed(loadable);
                 return;
             }
 
@@ -67,21 +89,25 @@ namespace Xease.CoreGame
             if (prefab == null)
             {
                 WLogger.LogError($"SysViewLoader asset is not GameObject: {location}");
-                view.MarkFailed();
+                view.MarkFailed(loadable);
                 return;
             }
 
             var instance = Object.Instantiate(prefab);
             var proxy = new UnityViewTransformProxy(instance.transform);
-            view.wrapper.BindProxy(proxy);
-            view.MarkReady();
+            wrapper.BindProxy(proxy);
+            view.MarkReady(loadable);
             SyncTransformFromEntity(entity);
         }
 
-        private static void BindNullProxy(LogicEntity entity, ViewComponent view)
+        private static void BindNullProxy(
+            LogicEntity entity,
+            ViewComponent view,
+            IAssetViewLoadable loadable,
+            IViewWrapper wrapper)
         {
-            view.wrapper.BindProxy(NullViewTransformProxy.Instance);
-            view.MarkReady();
+            wrapper.BindProxy(NullViewTransformProxy.Instance);
+            view.MarkReady(loadable);
             SyncTransformFromEntity(entity);
         }
 
@@ -91,11 +117,19 @@ namespace Xease.CoreGame
                 return;
 
             var view = entity.comView;
-            if (!view.syncTransform || view.wrapper == null)
+            if (!view.HasSyncTransform)
                 return;
 
             var transform = entity.comTransform;
-            view.wrapper.ApplyTransform(transform.position, transform.rotation, transform.scale);
+            var syncables = view.TransformSyncables;
+            for (int i = 0; i < syncables.Count; ++i)
+            {
+                var syncable = syncables[i];
+                if (!syncable.SyncTransform)
+                    continue;
+
+                syncable.ApplyTransform(transform.position, transform.rotation, transform.scale);
+            }
         }
     }
 }
