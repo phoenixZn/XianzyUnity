@@ -37,7 +37,7 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
-        /// ECWorlds：
+        /// ECWorlds：override
         protected override void CreateSystems()
         {
             base.CreateSystems();

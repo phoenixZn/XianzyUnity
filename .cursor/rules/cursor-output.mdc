@@ -1,0 +1,41 @@
+---
+description: >-
+  Agent 产出的 Markdown 文档默认写入 cursor_output/；用户指定路径时以用户为准。
+alwaysApply: true
+---
+
+# Agent Markdown 输出目录
+
+当任务需要生成或落盘 **Markdown 文档**（分析报告、方案、任务清单、设计说明、翻译稿等）时：
+
+## 默认路径
+
+- **默认目录**：`cursor_output/`（相对仓库根目录）
+- **默认行为**：除用户明确要求「仅对话输出、不要写文件」外，应将完整 Markdown 写入该目录，并在对话中说明已写入的路径
+- **目录不存在时**：先创建 `cursor_output/` 再写入
+
+## 优先级
+
+1. 用户在本轮消息中给出的**显式路径**（如 `output_path`、`写到 xxx.md`）
+2. 技能/命令中的路径参数（如 `analyze-code` 的 `output_path`）
+3. 本规则的默认：`cursor_output/<有意义的文件名>.md`
+
+## 文件命名
+
+- 使用**简体中文或英文**描述主题，避免无意义命名（如 `output.md`、`temp.md`）
+- 同类文档可加后缀区分版本或轮次（如 `-实现任务`、`-施工步骤`、`_round2`）
+- 路径只用正斜杠，不写绝对盘符路径（除非用户要求）
+
+## 不适用
+
+- 修改**业务代码**、配置、资源等非 Markdown 产出
+- 用户明确说「不要生成文件」「只在聊天里回答」
+- 项目内正式的 `docs/`、`README` 等由用户指定维护的文档（按用户给定路径写入，不强行改到 `cursor_output/`）
+
+## 示例
+
+| 场景 | 推荐路径 |
+|------|----------|
+| LitMotion 插件分析 | `cursor_output/LitMotion插件分析报告.md` |
+| 战斗测试 UI 实现方案 | `cursor_output/战斗测试游戏内测试UI-实现方案.md` |
+| 用户指定 `docs/analysis/Foo.md` | 按用户路径，不改为 `cursor_output/` |

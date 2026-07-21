@@ -46,15 +46,20 @@ flowchart TB
 ### ViewWrapperBase
 
 - Shadow、`ApplyTransform`、`SetActive`、`BindProxy`、`FlushToProxy`
-- `Dispose` 模板：`ReleaseOwnedView()` → `proxy.Dispose()`
+- `IsReady`：虚属性，默认 `true`（同步就绪的 Wrapper 无需加载状态）
+- **不含** `LoadState` / `SetLoadState`（属 `IViewAcquirable` 实现侧）
+- `Dispose` 模板：`ReleaseOwnedView()` → `proxy.Dispose()` → `OnDisposed()`
 - `ReleaseOwnedView`：虚方法，默认空；**子类实现资源卸载**
+- `OnDisposed`：虚方法，默认空；子类复位自身获取状态等
 - `BindProxy`：只换绑句柄，**不**调用 `ReleaseOwnedView`（避免「先赋 `_instance` 再 Bind」时误毁）
 
 ### AsyncAssetViewWrapper（默认策略子类）
 
-- 实现 `IViewAcquirable`；`AssetLocation` / `RequestLoad` 为本类具体 API
+- 实现 `IViewAcquirable`；持有并推进 `LoadState`；`IsReady == (LoadState == Ready)`
+- `AssetLocation` / `RequestLoad` 为本类具体 API
 - `BeginAcquire`：`LoadAssetAsync` → Instantiate → 持有 `_instance` → `BindProxy(UnityViewTransformProxy)`
 - `ReleaseOwnedView`：`Object.Destroy(_instance)`
+- `OnDisposed`：复位 `LoadState = None`
 - AssetSvc 不可用：绑 `NullViewTransformProxy`
 
 ### IViewAcquirable

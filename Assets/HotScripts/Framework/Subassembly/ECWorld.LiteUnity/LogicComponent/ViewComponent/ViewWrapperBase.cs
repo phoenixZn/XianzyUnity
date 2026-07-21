@@ -19,16 +19,9 @@ namespace Xease.CoreGame
 
         protected bool IsDisposed => _disposed;
 
-        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
-
-        public void SetLoadState(ViewLoadState loadState)
-        {
-            LoadState = loadState;
-        }
-
         //////////////////////////////////////////////////////////////////////////
-        // IViewWrapper
-        public bool IsReady => LoadState == ViewLoadState.Ready;
+        /// IViewWrapper:
+        public virtual bool IsReady => true;
 
         public void BindProxy(IViewTransformProxy proxy)
         {
@@ -60,8 +53,8 @@ namespace Xease.CoreGame
             ReleaseOwnedView();
             _proxy?.Dispose();
             _proxy = NullViewTransformProxy.Instance;
-            LoadState = ViewLoadState.None;
             SyncTransform = true;
+            OnDisposed();
         }
 
         /// <summary>
@@ -71,8 +64,15 @@ namespace Xease.CoreGame
         {
         }
 
+        /// <summary>
+        /// Dispose 末尾钩子：子类复位自身获取状态等。
+        /// </summary>
+        protected virtual void OnDisposed()
+        {
+        }
+
         //////////////////////////////////////////////////////////////////////////
-        // IViewTransformSyncable
+        /// IViewTransformSyncable:
         public bool SyncTransform { get; set; } = true;
 
         public void ApplyTransform(Vector3 position, Quaternion rotation, Vector3 scale)
@@ -87,7 +87,7 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
-        // Proxy Flush
+        /// Proxy Flush
         public void FlushToProxy()
         {
             if (_proxy == null || !_proxy.IsValid)

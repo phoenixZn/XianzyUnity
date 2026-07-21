@@ -1,0 +1,12 @@
+---
+description: 禁止 Shell 无编码写 UTF-8 源文件；改码用 StrReplace/Write；见乱码立即 git 恢复
+alwaysApply: true
+---
+
+# 文件编码
+
+- 改源码：只用 `StrReplace` / `Write`；Shell 仅编译/git/搜索，不写源文件
+- 禁止：`Get-Content | ... | Set-Content`、无 `-Encoding` 的 `Set-Content`
+- 必须 Shell 写：`Set-Content -Encoding utf8NoBOM` 或 `[IO.File]::WriteAllText($p,$c,[Text.UTF8Encoding]::new($false))`；读：`-Encoding utf8`
+- 大段搬迁/拆分：多次 `StrReplace` 或 `git show`+合并；禁止 Shell 正则删块写回
+- 改后 grep `????`；有乱码 → `git checkout -- <file>` 重做，不继续 patch

@@ -32,7 +32,18 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
-        // IViewAcquirable
+        /// IViewWrapper:
+        public override bool IsReady => LoadState == ViewLoadState.Ready;
+
+        //////////////////////////////////////////////////////////////////////////
+        /// IViewAcquirable:
+        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
+
+        public void SetLoadState(ViewLoadState loadState)
+        {
+            LoadState = loadState;
+        }
+
         public bool HasPendingAcquire =>
             LoadState == ViewLoadState.None && !string.IsNullOrEmpty(_assetLocation);
 
@@ -94,6 +105,11 @@ namespace Xease.CoreGame
 
             Object.Destroy(_instance);
             _instance = null;
+        }
+
+        protected override void OnDisposed()
+        {
+            LoadState = ViewLoadState.None;
         }
     }
 }
