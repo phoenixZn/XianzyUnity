@@ -6,7 +6,8 @@ namespace Xease.CoreGame
     {
         static bool _DelayBhvCfg = Register(typeof(FTDelayBhvCfg), NodeCategory.Bhv);
     }
-
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public class FTDelayBhvCfg : ICustomNodeCfg, IParseFromXml
     {
         //延迟时间
@@ -41,6 +42,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时节点:  时间延迟
     /// </summary>
@@ -48,16 +50,12 @@ namespace Xease.CoreGame
     {
         private FTDelayBhvCfg mCfg;
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
             mCfg = cfg as FTDelayBhvCfg;
-        }
-
-        private void Init()
-        {
-            var timeLen = mCfg.TimeLen.GetValue(this);
-            InitDuration(timeLen);
         }
 
         public override void Destroy()
@@ -74,6 +72,14 @@ namespace Xease.CoreGame
         protected override void OnBegin()
         {
             Init();
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
+        private void Init()
+        {
+            var timeLen = mCfg.TimeLen.GetValue(this);
+            InitDuration(timeLen);
         }
     }
 }

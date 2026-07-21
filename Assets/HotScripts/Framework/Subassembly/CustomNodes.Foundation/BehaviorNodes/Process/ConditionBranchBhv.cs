@@ -8,8 +8,9 @@ namespace Xease.CoreGame
         private static bool _ConditionBranchBhvCfg = Register(typeof(ConditionBranchBhvCfg), NodeCategory.Bhv);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 静态配置
+    /// 静态配置: 条件分支
     /// </summary>
     public class ConditionBranchBhvCfg : ICustomNodeCfg, IParseFromXml
     {
@@ -71,6 +72,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 按条件触发的行为节点：条件 + 行为
     /// </summary>
@@ -83,7 +85,8 @@ namespace Xease.CoreGame
         protected bool? mIsConditionReached = null;
         protected bool mCheckOnTick = false;
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// CustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -168,6 +171,8 @@ namespace Xease.CoreGame
             mFalseBhv?.Deactivate();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedStopCheck:
         public bool CanStop()
         {
             // 1. 条件检查是否能被停止
@@ -192,6 +197,8 @@ namespace Xease.CoreGame
             return true;
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// BehaviorNodeBase:
         protected override void OnBegin()
         {
             Inner_CheckConditionReached();
@@ -227,6 +234,8 @@ namespace Xease.CoreGame
             return dt;
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
         protected void Inner_CheckConditionReached()
         {
             var isReached = mCondition.IsConditionReached();

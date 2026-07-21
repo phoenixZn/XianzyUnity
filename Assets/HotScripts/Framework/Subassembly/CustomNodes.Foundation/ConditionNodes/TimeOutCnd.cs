@@ -6,7 +6,7 @@ namespace Xease.CoreGame
     {
         static bool _TimeOutCndCfg = Register(typeof(TimeOutCndCfg), NodeCategory.Cnd);
     }
-
+    //////////////////////////////////////////////////////////////////////////
     //静态配置
     public class TimeOutCndCfg : ConditionBaseCfg
     {
@@ -30,6 +30,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 时间条件，超时
     /// </summary>
@@ -44,6 +45,8 @@ namespace Xease.CoreGame
             mTimeAcc = 0;
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -56,27 +59,34 @@ namespace Xease.CoreGame
             mTimeAcc = 0;
             mCfg = null;
         }
+        
+        public override void Reset()
+        {
+            mTimeAcc = 0;
+        }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedUpdate:
         public virtual float Update(float dt)
         {
             if (mTimeAcc <= mCfg.TimeLimit)
             {
                 mTimeAcc += dt;
             }
-
             return dt;
         }
+        
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ConditionNodeBase: override
         protected override bool Inner_ConditionCheck()
         {
             return mTimeAcc > mCfg.TimeLimit;
         }
+        
 
-        public override void Reset()
-        {
-            mTimeAcc = 0;
-        }
-
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedStopCheck:
         public bool CanStop()
         {
             return IsConditionReached();

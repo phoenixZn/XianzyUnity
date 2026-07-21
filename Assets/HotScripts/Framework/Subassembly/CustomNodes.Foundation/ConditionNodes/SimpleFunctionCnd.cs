@@ -8,7 +8,8 @@ namespace Xease.CoreGame
     {
         static bool _SimpleFunctionCndCfg = Register(typeof(SimpleFunctionCndCfg), NodeCategory.Cnd);
     }
-
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置
     public class SimpleFunctionCndCfg : ConditionBaseCfg
     {
         public string ClassName { get; protected set; }
@@ -56,6 +57,8 @@ namespace Xease.CoreGame
         private SimpleFunctionCndCfg mCfg;
         public object[] mParams;
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -96,7 +99,9 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
-
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// ConditionNodeBase:
         protected override bool Inner_ConditionCheck()
         {
             if (mCachedMethod != null && mCfg != null)

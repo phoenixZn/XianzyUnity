@@ -1,15 +1,6 @@
 using System.Collections.Generic;
 using System.Xml;
 
-/// <summary>
-/// 逻辑节点: ParallelBhv
-/// 节点描述: 并行执行所包含的节点
-/// 用例：
-/// <Node type="ParallelBhv">
-///   <Node type="PlayEffect" PlayOn="Player" EffectID="21" SetEffectName="AttackChain" />
-///   <Node type="PlayEffect" PlayOn="Enemy" EffectID="22" SetEffectName="Attacked" />
-/// </Node>
-/// </summary>
 namespace Xease.CoreGame
 {
     public static partial class NodeConfigTypeRegistry
@@ -17,8 +8,9 @@ namespace Xease.CoreGame
         private static bool _ParallelBhvCfg = Register(typeof(ParallelBhvCfg), NodeCategory.Bhv);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 静态配置
+    /// 静态配置: 并行执行所包含的节点
     /// </summary>
     public class ParallelBhvCfg : ICustomNodeCfg, IParseFromXml
     {
@@ -42,6 +34,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 并行执行 行为组包装
     /// </summary>

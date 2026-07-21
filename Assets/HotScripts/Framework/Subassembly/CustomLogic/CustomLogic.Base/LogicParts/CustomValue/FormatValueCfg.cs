@@ -1,5 +1,6 @@
 namespace Xease.CoreGame
 {
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 兼容常量、黑板变量 等多种格式化配置方式
     /// </summary>
@@ -76,6 +77,7 @@ namespace Xease.CoreGame
 
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public class IntCfg : FormatValueCfg<int>
     {
         public IntCfg(int defaultValue) : base(defaultValue)
@@ -97,6 +99,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public class LongCfg : FormatValueCfg<long>
     {
         public LongCfg(long defaultValue) : base(defaultValue)
@@ -118,6 +121,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public class FloatCfg : FormatValueCfg<float>
     {
         public FloatCfg(float defaultValue) : base(defaultValue)
@@ -139,6 +143,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public class StringCfg : FormatValueCfg<string>
     {
         public StringCfg(string defaultValue) : base(defaultValue)

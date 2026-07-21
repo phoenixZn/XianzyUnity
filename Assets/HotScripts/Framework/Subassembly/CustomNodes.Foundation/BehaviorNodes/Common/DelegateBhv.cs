@@ -6,11 +6,12 @@ namespace Xease.CoreGame
     {
         static bool _DelegateBhvCfg = Register(typeof(DelegateBhvCfg), NodeCategory.Bhv);
     }
-
+    
     public delegate void NodeParamAction(CustomNode node);
-
     public delegate void NodeParamTickAction(CustomNode node, float dt);
-
+    
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public class DelegateBhvCfg : ICustomNodeCfg
     {
         public NodeParamTickAction NodeParamTickFunc { get; protected set; } //这个不宜配置到Seq中

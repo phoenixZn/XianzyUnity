@@ -11,7 +11,8 @@ namespace Xease.CoreGame
     }
 
     public delegate bool NodeParamCndFunction(CustomNode node);
-
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置
     public class DelegateConditionCfg : ConditionBaseCfg
     {
         public NodeParamCndFunction CndFunc { get; protected set; }
@@ -31,6 +32,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时：调用简单函数
     /// </summary>
@@ -50,7 +52,8 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// ConditionNodeBase: override
         protected override bool Inner_ConditionCheck()
         {
             if (mCfg?.CndFunc != null)

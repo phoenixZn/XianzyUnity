@@ -3,9 +3,8 @@ using System.Xml;
 
 namespace Xease.CoreGame
 {
-    /// <summary>
-    /// 静态配置
-    /// </summary>
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public abstract class CndListCfg : ICustomNodeCfg, IParseFromXml
     {
         public List<ICustomNodeCfg> CndCfgList;
@@ -36,6 +35,8 @@ namespace Xease.CoreGame
         }
     }
     
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public abstract class ConditionBaseCfg : ICustomNodeCfg, IParseFromXml
     {
         public bool UseUnaryOperationNOT { get; protected set; } = false;
@@ -51,6 +52,8 @@ namespace Xease.CoreGame
         }
     }
     
+    //////////////////////////////////////////////////////////////////////////
+    //运行时节点:
     public abstract class ConditionNodeBase : CustomNode, ICondition
     {
         //是否对条件结果取反
@@ -62,7 +65,8 @@ namespace Xease.CoreGame
         //保存判断结果 for UseFixedResult
         protected bool? mFixedResult = null;
 
-
+        //////////////////////////////////////////////////////////////////////////
+        // ICustomNode
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -80,7 +84,8 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        // ICondition
         public virtual bool IsConditionReached()
         {
             if (mFixedResult != null)
@@ -107,7 +112,8 @@ namespace Xease.CoreGame
             mFixedResult = null;
         }
 
-
+        ///////////////////////////////////////////////////////////////////////////
+        // this
         protected virtual bool Inner_ConditionCheck()
         {
             return false;

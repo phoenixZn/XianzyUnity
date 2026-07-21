@@ -7,6 +7,7 @@ namespace Xease.CoreGame
         static bool _RandomChanceCndCfg = Register(typeof(RandomChanceCndCfg), NodeCategory.Cnd);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     //静态配置
     public class RandomChanceCndCfg : ConditionBaseCfg
     {
@@ -26,6 +27,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 随机概率条件
     /// </summary>
@@ -34,6 +36,8 @@ namespace Xease.CoreGame
         private RandomChanceCndCfg mCfg;
         private float mRandNum;
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -53,6 +57,8 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// ConditionNodeBase:
         protected override bool Inner_ConditionCheck()
         {
             return mRandNum < mCfg.ProbPercent;

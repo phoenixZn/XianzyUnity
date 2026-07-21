@@ -4,7 +4,8 @@ namespace Xease.CoreGame
     {
         static bool _DelayUpdateBhvCfg = Register(typeof(FiniteTimeUpdateCfg), NodeCategory.Bhv);
     }
-
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public class FiniteTimeUpdateCfg : ICustomNodeCfg
     {
         //延迟时间
@@ -39,6 +40,7 @@ namespace Xease.CoreGame
 
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时节点:  时间延迟
     /// </summary>

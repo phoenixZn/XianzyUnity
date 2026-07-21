@@ -7,6 +7,8 @@ namespace Xease.CoreGame
 
     public delegate bool WaitCheckFunc(CustomNode node);
 
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public class WaitCheckBhvCfg : ICustomNodeCfg
     {
         public WaitCheckFunc CheckFunc { get; protected set; }
@@ -22,6 +24,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时：调用简单函数 等待阻塞
     /// </summary>

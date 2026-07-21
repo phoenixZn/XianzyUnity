@@ -26,6 +26,7 @@ namespace Xease.CoreGame
         public VarEnv DefaultVarEnv { get; }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 自定义逻辑静态配置，装配信息
     /// </summary>
@@ -36,15 +37,27 @@ namespace Xease.CoreGame
         //运行时类型
         private System.Type _logicType = typeof(CustomLogic);
 
-        /// <summary>
-        /// 逻辑配置ID
-        /// </summary>
-        public int ID { get; set; } = 0;
+        public CustomLogicCfg()
+        {
+        }
 
-        /// <summary>
-        /// 描述
-        /// </summary>
-        public string Desc { get; set; }
+        public CustomLogicCfg(int id, List<ICustomNodeCfg> nodeCfgList, System.Type logicType = null, string desc = null)
+        {
+            ID = id;
+            _nodeCfgList = nodeCfgList;
+            if (logicType != null)
+            {
+                LogicType = logicType;
+            }
+
+            Desc = desc;
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomLogicCfg:
+        
+        //逻辑配置ID
+        public int ID { get; set; } = 0;
 
         public System.Type LogicType
         {
@@ -67,41 +80,20 @@ namespace Xease.CoreGame
         //只在前置黑板没有值的时候提供缺省值， 如果发现前置黑板已经有值就会跳过
         public VarEnv DefaultVarEnv { get; protected set; } = null;
 
-        public virtual System.Type NodeType()
-        {
-            return LogicType;
-        }
-
         public List<ICustomNodeCfg> GetNodeCfgList()
         {
             return _nodeCfgList;
         }
 
-
-        public void DefaultVar(Action<VarEnv> initVarEnv)
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNodeCfg:
+        public virtual System.Type NodeType()
         {
-            DefaultVarEnv ??= new VarEnv(); //静态配置不走对象池，直接 new
-            initVarEnv(DefaultVarEnv);
+            return LogicType;
         }
 
-
-        public CustomLogicCfg()
-        {
-        }
-
-        public CustomLogicCfg(int id, List<ICustomNodeCfg> nodeCfgList, System.Type logicType = null, string desc = null)
-        {
-            ID = id;
-            _nodeCfgList = nodeCfgList;
-            if (logicType != null)
-            {
-                LogicType = logicType;
-            }
-
-            Desc = desc;
-        }
-
-
+        //////////////////////////////////////////////////////////////////////////
+        /// IParseFromXml:
         public virtual bool ParseFromXml(System.Xml.XmlNode cfgNode)
         {
             int id = cfgNode.GetSingleNodeID();
@@ -132,8 +124,22 @@ namespace Xease.CoreGame
 
             return true;
         }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        
+        //描述
+        public string Desc { get; set; }
+
+        //缺省黑板补全
+        public void DefaultVar(Action<VarEnv> initVarEnv)
+        {
+            DefaultVarEnv ??= new VarEnv(); //静态配置不走对象池，直接 new
+            initVarEnv(DefaultVarEnv);
+        }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 自定义逻辑运行时： 逻辑根节点，由多个子节点构成
     /// </summary>
@@ -153,6 +159,8 @@ namespace Xease.CoreGame
             mNodes = new List<ICustomNode>();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// CustomNode：override
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -163,6 +171,73 @@ namespace Xease.CoreGame
             Inner_InitializeNodes(logicCfg, context, mUsedTempLogicSet);
         }
 
+        public override void Destroy()
+        {
+            mUsedTempLogicSet.Clear();
+            var factory = mContext.Factory;
+            //节点
+            for (int i = 0; i < mNodes.Count; ++i)
+            {
+                factory.DestroyCustomNode(mNodes[i]);
+            }
+
+            mNodes.Clear();
+            ClearInterfaceCache();
+
+            //黑板
+            factory.DestroyPart(VarEnvRef);
+            factory.DestroyPart(GenInfo);
+
+            base.Destroy();
+        }
+
+        public override void CollectInterfaceInChildren<T>(ref List<T> interfaceList)
+        {
+            for (int i = 0; i < mNodes.Count; ++i)
+            {
+                TraverseCollectInterface(ref interfaceList, mNodes[i]);
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedUpdate:
+        public virtual float Update(float dt)
+        {
+            for (int i = 0; i < mNeedUpdateList.Count; ++i)
+            {
+                var iupdate = mNeedUpdateList[i];
+                var node = iupdate as ICustomNode;
+                if (node != null && node.IsActive)
+                {
+                    iupdate.Update(dt);
+                }
+            }
+
+            return dt;
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedStopCheck:
+        //CustomLogic逻辑的生存周期： 默认是刚创建就可以被销毁
+        //除非某些Node通过NeedStopCheck, 表达自己当前不能被销毁，如果被打断可能会出问题
+        public virtual bool CanStop()
+        {
+            for (int i = 0; i < mNeedStopCheckList.Count; ++i)
+            {
+                var stopcheck = mNeedStopCheckList[i];
+                var node = stopcheck as ICustomNode;
+                if (node != null && node.IsActive)
+                {
+                    if (!stopcheck.CanStop())
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
         private void Inner_InitializeNodes(ICustomLogicCfg logicCfg, CustomNodeContext context, HashSet<int> usedTempLogicSet)
         {
             if (logicCfg == null)
@@ -217,34 +292,6 @@ namespace Xease.CoreGame
             }
         }
 
-        public override void Destroy()
-        {
-            mUsedTempLogicSet.Clear();
-            var factory = mContext.Factory;
-            //节点
-            for (int i = 0; i < mNodes.Count; ++i)
-            {
-                factory.DestroyCustomNode(mNodes[i]);
-            }
-
-            mNodes.Clear();
-            ClearInterfaceCache();
-
-            //黑板
-            factory.DestroyPart(VarEnvRef);
-            factory.DestroyPart(GenInfo);
-
-            base.Destroy();
-        }
-
-        public override void CollectInterfaceInChildren<T>(ref List<T> interfaceList)
-        {
-            for (int i = 0; i < mNodes.Count; ++i)
-            {
-                TraverseCollectInterface(ref interfaceList, mNodes[i]);
-            }
-        }
-
         internal virtual void AddCustomNode(CustomNode node)
         {
             mNodes.Add(node);
@@ -266,39 +313,6 @@ namespace Xease.CoreGame
             }
 
             TraverseCollectInterface(ref mNeedStopCheckList, node);
-        }
-
-        public virtual float Update(float dt)
-        {
-            for (int i = 0; i < mNeedUpdateList.Count; ++i)
-            {
-                var iupdate = mNeedUpdateList[i];
-                var node = iupdate as ICustomNode;
-                if (node != null && node.IsActive)
-                {
-                    iupdate.Update(dt);
-                }
-            }
-
-            return dt;
-        }
-
-        //CustomLogic逻辑的生存周期： 默认是刚创建就可以被销毁
-        //除非某些Node通过NeedStopCheck, 表达自己当前不能被销毁，如果被打断可能会出问题
-        public virtual bool CanStop()
-        {
-            for (int i = 0; i < mNeedStopCheckList.Count; ++i)
-            {
-                var stopcheck = mNeedStopCheckList[i];
-                var node = stopcheck as ICustomNode;
-                if (node != null && node.IsActive)
-                {
-                    if (!stopcheck.CanStop())
-                        return false;
-                }
-            }
-
-            return true;
         }
     }
 }

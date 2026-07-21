@@ -7,6 +7,7 @@ namespace Xease.CoreGame
         static bool _LogicTempleteNodeCfg = Register(typeof(LogicTempleteCfg), NodeCategory.Mixture);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// CustomLogic模板节点， 等价于在该LogicTempletNode处直接插入TempletLogic的全部节点
     /// </summary>

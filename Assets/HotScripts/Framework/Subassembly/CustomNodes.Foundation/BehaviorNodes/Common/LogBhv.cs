@@ -6,7 +6,8 @@ namespace Xease.CoreGame
     {
         static bool _LogBhvCfg = Register(typeof(LogBhvCfg), NodeCategory.Bhv);
     }
-
+    //////////////////////////////////////////////////////////////////////////
+    //静态配置:
     public class LogBhvCfg : ICustomNodeCfg, IParseFromXml
     {
         public string LogStr;
@@ -35,6 +36,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时节点:  打印Log
     /// </summary>

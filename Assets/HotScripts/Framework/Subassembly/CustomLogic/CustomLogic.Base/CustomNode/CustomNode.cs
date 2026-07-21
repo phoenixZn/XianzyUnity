@@ -1,10 +1,21 @@
+/********************************************************************
+	created:	2015/10/29
+	purpose:	* CustomLogic中的节点概念，用于组织逻辑对象的结构关联
+
+	change list:
+*********************************************************************/
+
 using System.Collections.Generic;
 
 //CustomLogic中的节点概念，用于组织逻辑对象的结构关联
 
 namespace Xease.CoreGame
 {
-    //逻辑内流通，接口性质的上下文结构，（不应被修改）
+    //////////////////////////////////////////////////////////////////////////
+    // CustomNodeContext 
+    // 逻辑内流通，接口性质的上下文结构，（不应被修改）
+    // 如果项目确定因为特殊情况，需要扩展，只能添加一个 CustomNodeContext 的继承类
+    //////////////////////////////////////////////////////////////////////////
     public struct CustomNodeContext
     {
         public ICustomLogicGenInfo GenInfo;
@@ -37,7 +48,9 @@ namespace Xease.CoreGame
         }
     }
 
-    //自定义节点、条件节点、行为节点、结构容器节点，都继承自它
+    //////////////////////////////////////////////////////////////////////////
+    //  自定义节点:  条件节点、行为节点、结构容器节点 都继承自它
+    //////////////////////////////////////////////////////////////////////////
     public class CustomNode : ICustomNode
     {
         private static int sCreationIndexAcc = 0;
@@ -53,14 +66,18 @@ namespace Xease.CoreGame
         public ICustomLogicGenInfo GenInfo => mContext.GenInfo;
 
         public CustomLogic RootLogic => mContext.Logic;
-
-        public bool IsInPool { get; private set; } = false;
-
+        
         public bool IsActive
         {
             get { return mIsActive; }
         }
 
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// ICanRecycle:
+        public bool IsInPool { get; private set; } = false;
+
+        
         public void Construct()
         {
             IsInPool = false;
@@ -74,32 +91,8 @@ namespace Xease.CoreGame
         }
 
 
-        public T GetRootLogic<T>() where T : CustomLogic
-        {
-            if (mContext.Logic is T theLogic)
-            {
-                return theLogic;
-            }
-
-            this.LogError($"CustomNode.GetOwnerLogic logic({mContext.Logic.GetType()}) is not {typeof(T)}");
-            return null;
-        }
-
-        public T GetGenInfo<T>(bool logError = true) where T : class
-        {
-            if (mContext.GenInfo is T theGenInfo)
-            {
-                return theGenInfo;
-            }
-
-            if (logError)
-            {
-                this.LogError($"CustomNode.GetGenInfo genInfo({mContext.GenInfo.GetType()}) is not {typeof(T)}");
-            }
-
-            return null;
-        }
-
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public virtual void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             CreationIndex = ++sCreationIndexAcc;
@@ -127,7 +120,8 @@ namespace Xease.CoreGame
         {
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// IInterfaceCollector:
         public virtual void CollectInterface<T>(ref List<T> interfaceList) where T : class
         {
             T notify = this as T;
@@ -165,6 +159,8 @@ namespace Xease.CoreGame
             node.CollectInterfaceInChildren<T>(ref interfaceList);
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
         public void SetVar<T>(string key, T value)
         {
             VarEnvRef.WriteVar(key, value);
@@ -185,6 +181,33 @@ namespace Xease.CoreGame
         public bool HasVar<T>(string key)
         {
             return VarEnvRef.HasVar<T>(key);
+        }
+        
+        
+        public T GetRootLogic<T>() where T : CustomLogic
+        {
+            if (mContext.Logic is T theLogic)
+            {
+                return theLogic;
+            }
+
+            this.LogError($"CustomNode.GetOwnerLogic logic({mContext.Logic.GetType()}) is not {typeof(T)}");
+            return null;
+        }
+
+        public T GetGenInfo<T>(bool logError = true) where T : class
+        {
+            if (mContext.GenInfo is T theGenInfo)
+            {
+                return theGenInfo;
+            }
+
+            if (logError)
+            {
+                this.LogError($"CustomNode.GetGenInfo genInfo({mContext.GenInfo.GetType()}) is not {typeof(T)}");
+            }
+
+            return null;
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Xease.CoreGame
         static bool SequenceBhvCfg = Register(typeof(SequenceBhvCfg), NodeCategory.Bhv);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 静态配置
     /// </summary>
@@ -86,6 +87,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 顺序执行 行为队列包装 
     /// </summary>
@@ -102,7 +104,8 @@ namespace Xease.CoreGame
         private SequenceBhvCfg mCfg;
 
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
             base.InitializeNode(cfg, context);
@@ -132,15 +135,6 @@ namespace Xease.CoreGame
                 mBehaviorSeq.Add(subbhv);
                 subbhv.Deactivate();
             }
-        }
-
-        protected override void OnBegin()
-        {
-            base.OnBegin();
-            mCfgLoopCnt = mCfg.LoopCnt.GetValue(this);
-            mCfgLoopInterval = mCfg.LoopInterval.GetValue(this);
-
-            mRemainLoopCnt = mCfgLoopCnt;
         }
 
         public override void Activate()
@@ -176,7 +170,17 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// BehaviorNodeBase:
+        protected override void OnBegin()
+        {
+            base.OnBegin();
+            mCfgLoopCnt = mCfg.LoopCnt.GetValue(this);
+            mCfgLoopInterval = mCfg.LoopInterval.GetValue(this);
 
+            mRemainLoopCnt = mCfgLoopCnt;
+        }
+        
         public override void Reset()
         {
             base.Reset();
@@ -291,7 +295,8 @@ namespace Xease.CoreGame
             return dt_remain;
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// ICustomNode:
         public override void CollectInterfaceInChildren<T>(ref List<T> interfaceList)
         {
             base.CollectInterfaceInChildren<T>(ref interfaceList);
@@ -303,7 +308,8 @@ namespace Xease.CoreGame
             }
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// INeedStopCheck:
         public bool CanStop()
         {
             if (AlwaysLoop)
@@ -316,7 +322,8 @@ namespace Xease.CoreGame
             return mRemainLoopCnt <= 0;
         }
 
-
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
         private bool IsCurBhvEnd(BehaviorNodeBase curBhv)
         {
             if (curBhv is INeedStopCheck theBhv)

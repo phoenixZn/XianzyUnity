@@ -12,6 +12,7 @@ namespace Xease.CoreGame
     {
         protected Dictionary<string, ILogicConfigContainer> _configContainerDic = new();
 
+        //////////////////////////////////////////////////////////////////////////
         //缓存
         protected CLNodesPool<ICustomNode> _nodesPool = new();
         protected CLNodesPool<ICanRecycle> _partsPool = new();
@@ -36,6 +37,7 @@ namespace Xease.CoreGame
             _configContainerDic.Clear();
         }
 
+        //////////////////////////////////////////////////////////////////////////
         //主方法：创建并装配一个自定义逻辑
         public CustomLogic CreateLogic(ICustomLogicGenInfo genInfo)
         {

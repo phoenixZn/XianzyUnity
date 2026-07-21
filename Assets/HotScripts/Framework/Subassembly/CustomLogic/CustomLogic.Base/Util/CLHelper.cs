@@ -2,10 +2,10 @@ using System.Xml;
 
 namespace Xease.CoreGame
 {
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// CustomLogic相关一些调试、辅助代码
     /// </summary>
-    //////////////////////////////////////////////////////////////////////////
     public static partial class CLHelper
     {
         public static bool IsNodeCanStop(this CustomNode node)
@@ -18,7 +18,10 @@ namespace Xease.CoreGame
         }
     }
     
-
+    //////////////////////////////////////////////////////////////////////////
+    /// <summary>
+    /// CustomLogic Log
+    /// </summary>
     public static partial class CLogger
     {
         public static bool LogAssert(bool condition, object logMsg = null)
