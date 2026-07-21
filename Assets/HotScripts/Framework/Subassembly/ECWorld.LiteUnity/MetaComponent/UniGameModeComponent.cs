@@ -4,7 +4,7 @@
     {
         public CustomLogic GameModeLogic { get; private set; }
 
-        public void Init(ICustomLogicGenInfo genInfo)
+        public void Init(CustomLogicGenInfo genInfo)
         {
             GameModeLogic = G.CustomLogic.CreateLogic<CustomLogic>(genInfo);
         }
@@ -33,7 +33,7 @@
             get { return HasUniqueComponent(MetaComponentsLookup.ComUniGameMode); }
         }
         
-        public void SetComUniGameMode(ICustomLogicGenInfo genInfo)
+        public void SetComUniGameMode(CustomLogicGenInfo genInfo)
         {
             var index = MetaComponentsLookup.ComUniGameMode;
             var component = (UniGameModeComponent)UniqueEntity.CreateComponent(index, typeof(UniGameModeComponent));

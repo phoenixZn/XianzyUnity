@@ -18,7 +18,7 @@ namespace Xease.CoreGame
     //////////////////////////////////////////////////////////////////////////
     public struct CustomNodeContext
     {
-        public ICustomLogicGenInfo GenInfo;
+        public CustomLogicGenInfo GenInfo;
         public CustomLogic Logic;
 
         public VarEnv VarEnvImp;
@@ -29,7 +29,7 @@ namespace Xease.CoreGame
         //逻辑节点工厂（运行时逻辑节点get）
         public CustomLogicFactory Factory;
 
-        public CustomNodeContext(ICustomLogicGenInfo genInfo, CustomLogic logic, VarEnv varEnvImp, ILogicConfigContainer container, CustomLogicFactory factory)
+        public CustomNodeContext(CustomLogicGenInfo genInfo, CustomLogic logic, VarEnv varEnvImp, ILogicConfigContainer container, CustomLogicFactory factory)
         {
             GenInfo = genInfo;
             Logic = logic;
@@ -63,7 +63,7 @@ namespace Xease.CoreGame
         public VarEnv VarEnvRef => mContext.VarEnvImp;
 
         //运行时初始数据
-        public ICustomLogicGenInfo GenInfo => mContext.GenInfo;
+        public CustomLogicGenInfo GenInfo => mContext.GenInfo;
 
         public CustomLogic RootLogic => mContext.Logic;
         

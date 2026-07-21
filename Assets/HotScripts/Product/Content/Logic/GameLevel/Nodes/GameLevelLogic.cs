@@ -53,7 +53,7 @@ namespace Xease.CoreGame
             // VarEnv varEnv = svc.NewVarEnv();
             // varEnv.WriteVar(CvKey.CV_LogicWorld, this.GetLogicWorld());
             // varEnv.WriteVar(CvKey.CV_MetaWorld, metaWorld);
-            // var genInfo = svc.NewGenInfo<ICustomLogicGenInfo>();
+            // var genInfo = svc.NewGenInfo<CustomLogicGenInfo>();
             // genInfo.LogicConfigID = logicID;
             // genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameLevel;
             // genInfo.PreEnv = varEnv;

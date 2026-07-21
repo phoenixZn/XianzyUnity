@@ -10,7 +10,7 @@ namespace Xease.CoreGame
     /// <summary>
     /// 运行时初始化信息（不应被修改）
     /// </summary>
-    public class ICustomLogicGenInfo : ICanRecycle
+    public class CustomLogicGenInfo : ICanRecycle
     {
         //逻辑配置ID
         protected int _logicConfigID = 0;
@@ -41,6 +41,11 @@ namespace Xease.CoreGame
 
         public bool IsInPool { get; private set; } = false;
 
+        public virtual VarEnv CopyToPreVarEnv(ref VarEnv varEnv)
+        {
+            return varEnv;
+        }
+        
         public void Construct()
         {
             IsInPool = false;

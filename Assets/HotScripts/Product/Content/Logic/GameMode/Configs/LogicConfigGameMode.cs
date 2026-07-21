@@ -42,6 +42,21 @@ namespace Xease.CoreGame
                     CustomState("GST_Loading", Seq(new Nodes()
                     {
                         LogDebug(n => n.Log("Main Mode Loading")),
+                        BeginCall(n =>
+                        {
+                            LogicEntity entity = n.GetLogicWorld().CreateEntity();
+                            var svc = G.CustomLogic;
+                            var genInfo = MainFsmGenInfo.New(svc,
+                                metaWorld: n.GetMetaWorld(),
+                                ownerEntity: entity);
+                            genInfo.LogicConfigID = 3100001;
+                            genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_EntityFSM;
+                            var logic = svc.CreateLogic<BattleFSM>(genInfo);
+                            if (logic != null)
+                            {
+                                entity.AddComFSM(logic);
+                            } 
+                        }),
                     })),
                     
                     CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()

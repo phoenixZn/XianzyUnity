@@ -25,7 +25,7 @@ namespace Xease.CoreGame
                     systems.Add(new SysGameModeUpdate(worlds));
                     //systems.Add(new SysSupplyProcess(worlds));
                     //systems.Add(new SysAI(worlds));
-                    //systems.Add(new SysMainFSM(worlds));
+                    systems.Add(new SysMainFSM(worlds));
                     //systems.Add(new SysSkillProcess(worlds));
                     //systems.Add(new SysLocomotion(worlds));
                     //systems.Add(new SysCollision(worlds));
@@ -36,7 +36,7 @@ namespace Xease.CoreGame
                     systems.Add(new SysSyncViewTransform(worlds));
                     //systems.Add(new SysSyncViewAnimator(worlds));
                     // 销毁：
-                    //systems.Add(new SysLife(worlds));
+                    systems.Add(new SysLife(worlds.LogicWorld));
                     //systems.Add(new SysDeathProcess(worlds));
                     //systems.Add(new SysDebugDemo(worlds));
 

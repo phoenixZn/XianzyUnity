@@ -2,7 +2,7 @@
 
 namespace Xease.CoreGame
 {
-    public class EntityCustomLogicGenInfo : ICustomLogicGenInfo
+    public class EntityCustomLogicGenInfo : CustomLogicGenInfo
     {
     }
     

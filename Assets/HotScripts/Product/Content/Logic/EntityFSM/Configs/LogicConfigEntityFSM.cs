@@ -26,6 +26,12 @@ namespace Xease.CoreGame
                     G.Log("测试EntityFSM模版 3100000");
                 }),
             });
+            
+            AddConfig(3100001, new List<ICustomNodeCfg>()
+            {
+                Templete(3100000),
+                LogDebug(n=>{ n.Log("测试Entity FSM");})
+            });
         }
     }
 }
