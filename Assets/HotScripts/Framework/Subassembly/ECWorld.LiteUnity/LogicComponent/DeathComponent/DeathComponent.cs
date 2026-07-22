@@ -10,6 +10,7 @@ namespace Xease.CoreGame
         }
     }
     
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
 
@@ -43,7 +44,7 @@ namespace Xease.CoreGame
         }
     }
     
-    
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComDeathIndex = new (typeof(DeathComponent));

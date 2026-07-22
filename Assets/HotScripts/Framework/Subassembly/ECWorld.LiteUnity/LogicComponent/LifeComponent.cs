@@ -10,6 +10,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public LifeComponent comLife
@@ -51,7 +52,7 @@ namespace Xease.CoreGame
         }
     }
 
-
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComLifeIndex = new(typeof(LifeComponent));

@@ -51,7 +51,7 @@ namespace Xease.CoreGame
                                 ownerEntity: entity);
                             genInfo.LogicConfigID = 3100001;
                             genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_EntityFSM;
-                            var logic = svc.CreateLogic<BattleFSM>(genInfo);
+                            var logic = svc.CreateLogic<EntityMainFSMLogic>(genInfo);
                             if (logic != null)
                             {
                                 entity.AddComFSM(logic);

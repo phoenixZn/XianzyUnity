@@ -10,7 +10,7 @@ namespace Xease.CoreGame
         public LogicConfig_EntityFSM(string name)
             : base(name, 20)
         {
-            DefaultLogicType = typeof(EntityFSMLogic);
+            DefaultLogicType = typeof(EntityMainFSMLogic);
             
             //实体状态机: ID从 3000000 开始
             InitConfigs_Template();

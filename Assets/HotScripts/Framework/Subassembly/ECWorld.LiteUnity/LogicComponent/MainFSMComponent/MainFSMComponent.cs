@@ -20,7 +20,6 @@ namespace Xease.CoreGame
                     }
                 }
             }
-
             return false;
         }
 
@@ -37,61 +36,36 @@ namespace Xease.CoreGame
         }
     }
 
-    public class BattleFSM : EntityCmdLogic
-    {
-        private FSMNode _mainFsmNode; // 主状态机；约定为 Logic 根下直连子 FSMNode，入池前清空
 
-        /// <summary>主状态机节点；约定配置为 Logic 根节点的直接子 FSMNode。</summary>
-        public FSMNode MainFsmNode => _mainFsmNode;
-
-        public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
-        {
-            if (!(context.GenInfo is MainFsmGenInfo))
-            {
-                G.Log($"别怕！纯提醒用，礼乐将崩，正分步处理AI乱搞黑板的隐患, 欢迎好人积极参与抢险：BattleFSM InitializeNode GenInfo is not MainFsmGenInfo, GenInfo={context.GenInfo.GetType()}");
-            }
-            
-            base.InitializeNode(cfg, context);
-            G.Log($"MainFSM LogicConfigID={context.GenInfo.LogicConfigID}");
-        }
-
-        public override void Destroy()
-        {
-            _mainFsmNode = null;
-            base.Destroy();
-        }
-
-        protected override void CacheInterface(CustomNode node)
-        {
-            base.CacheInterface(node);
-            if (_mainFsmNode == null && node is FSMNode fsmNode)
-            {
-                _mainFsmNode = fsmNode;
-            }
-        }
-    }
     
 
     public class MainFSMComponent : LogicComponent, IEntityCommandHandler
     {
-        public BattleFSM Logic { get; private set; }
+        public EntityCmdLogic Logic { get; private set; }
 
         public override void DisposeOnRemove()
+        {
+            ClearLogic();
+            base.DisposeOnRemove();
+        }
+        
+        public void Init(EntityCmdLogic fsmLogic)
+        {
+            ClearLogic();
+            Logic = fsmLogic;
+        }
+
+        private void ClearLogic()
         {
             if (Logic != null)
             {
                 G.CustomLogic.DestroyLogic(Logic);
                 Logic = null;
             }
-
-            base.DisposeOnRemove();
         }
 
-        public void Init(BattleFSM fsm)
-        {
-            Logic = fsm;
-        }
-
+        //////////////////////////////////////////////////////////////////////////
+        /// IEntityCommandHandler:
         public bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
         {
             return Logic.HandleEntityCommand(entity, cmd);
@@ -110,16 +84,16 @@ namespace Xease.CoreGame
             get { return HasComponent(LogicComponentsLookup.ComMainFSM); }
         }
 
-        public void AddComFSM(BattleFSM fsm)
+        public void AddComFSM(EntityCmdLogic logic)
         {
-            if (fsm == null)
+            if (logic == null)
             {
-                G.LogError("AddComFSM fsm == null");
+                G.LogError("AddComFSM logic == null");
             }
 
             var index = LogicComponentsLookup.ComMainFSM;
             var component = (MainFSMComponent)CreateComponent(index, typeof(MainFSMComponent));
-            component.Init(fsm);
+            component.Init(logic);
             AddComponent(index, component);
         }
 

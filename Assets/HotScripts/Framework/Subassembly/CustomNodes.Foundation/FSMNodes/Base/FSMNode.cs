@@ -101,16 +101,15 @@ namespace Xease.CoreGame
     /// </summary>
     public class FSMNode : CustomNode, INeedUpdate, INeedStopCheck
     {
-        IFSMNodeCfg mCfg;
+        protected IFSMNodeCfg mCfg;
         protected Dictionary<string, StateNode> mStates = new();
-        private string mDefaultStateID;
-        private StateNode mCurrentState = null;
+        protected string mDefaultStateID;
+        protected StateNode mCurrentState = null;
 
         protected List<StateTransitionNode> mTransitions = new();
-
-
-        private HashSet<int> mUsedTempLogicSet = new();
-        private Dictionary<string, ICustomNodeCfg> tempStateCfgs = new(16);
+        
+        protected HashSet<int> mUsedTempLogicSet = new();
+        protected Dictionary<string, ICustomNodeCfg> tempStateCfgs = new(16);
 
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {

@@ -35,7 +35,7 @@ namespace Xease.CoreGame
                 G.LogError("modeParam == null");
             }
             G.Log($"AddMeta_GameMode ModeLogicID={modeParam.ModeLogicID}");
-            var genInfo = G.CustomLogic.NewGenInfo<CustomLogicGenInfo>();
+            var genInfo = GameModeGenInfo.New(G.CustomLogic, _worlds, _worlds.CreationInfo);
             genInfo.LogicConfigID = modeParam.ModeLogicID;
             genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameMode;
             //genInfo.PreEnv = varEnv;
