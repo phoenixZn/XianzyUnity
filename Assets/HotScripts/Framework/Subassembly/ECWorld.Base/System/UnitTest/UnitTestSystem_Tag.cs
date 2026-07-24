@@ -30,6 +30,9 @@ namespace Xease.CoreGame
             UnitTest_Tags_Entity(0b1010, 2, new[] { 2, 8 }, new[] { 1, 3 });
             UnitTest_Tags_Entity(tagsBit0And31, 2, new[] { 1, unchecked((int)0x80000000u) }, new[] { 0, 31 });
 
+            UnitTest_Tags_IncrementalAddAndRemove();
+            UnitTest_Tags_QueryMissNoPollution();
+
             G.Log("UnitTest_Tags end");
         }
 
@@ -64,6 +67,52 @@ namespace Xease.CoreGame
             {
                 AssertEntityInComTagSet(entity, negativeKey, false, $"{prefix} GetEntitiesWithComTag negative key={negativeKey}");
             }
+
+            entity.Destroy();
+        }
+
+        // 增量 Add 后 Tags 合并；Remove 后旧 key 应从索引清除
+        void UnitTest_Tags_IncrementalAddAndRemove()
+        {
+            const string prefix = "UnitTest_Tags_IncrementalAddAndRemove";
+            var entity = _logicWorld.CreateEntity();
+
+            entity.AddComTags(0b0001);
+            entity.AddComTags(0b1000);
+
+            AssertEqual(0b1001, (int)entity.comTag.Tags, $"{prefix} Tags after incremental Add");
+            AssertEntityInComTagSet(entity, 1, true, $"{prefix} after Add key=1");
+            AssertEntityInComTagSet(entity, 8, true, $"{prefix} after Add key=8");
+
+            entity.RemoveTags(0b0001);
+            AssertEqual(0b1000, (int)entity.comTag.Tags, $"{prefix} Tags after Remove");
+            AssertEntityInComTagSet(entity, 1, false, $"{prefix} after Remove key=1 cleared");
+            AssertEntityInComTagSet(entity, 8, true, $"{prefix} after Remove key=8 retained");
+
+            entity.Destroy();
+        }
+
+        // miss 查询不得写入 _index，后续同 key 的真实实体不应被空桶干扰
+        void UnitTest_Tags_QueryMissNoPollution()
+        {
+            const string prefix = "UnitTest_Tags_QueryMissNoPollution";
+            const int missKey = 0b0100;
+
+            var missSet = _logicWorld.GetEntitiesWithComTag(missKey);
+            if (missSet == null)
+            {
+                G.LogError($"UnitTest FAIL: {prefix} miss query returned null, ensure SysInitializeBasePack runs first");
+                return;
+            }
+
+            AssertEqual(0, missSet.Count, $"{prefix} miss query returns empty set");
+
+            var entity = _logicWorld.CreateEntity();
+            entity.AddComTags((uint)missKey);
+            AssertEntityInComTagSet(entity, missKey, true, $"{prefix} after Add following miss query");
+
+            entity.RemoveTags((uint)missKey);
+            AssertEntityInComTagSet(entity, missKey, false, $"{prefix} after Remove following miss query");
 
             entity.Destroy();
         }

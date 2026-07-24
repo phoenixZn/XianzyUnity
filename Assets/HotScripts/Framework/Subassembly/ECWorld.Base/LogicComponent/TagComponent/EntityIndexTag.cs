@@ -58,13 +58,11 @@ namespace Xease.CoreGame
 
         public HashSet<TEntity> GetEntities(int tagKey)
         {
-            if (!_index.TryGetValue(tagKey, out var entities))
-            {
-                entities = new HashSet<TEntity>(EntityEqualityComparer<TEntity>.comparer);
-                _index.Add(tagKey, entities);
-            }
+            // 纯查询 miss 不写入 _index，避免污染索引结构
+            if (_index.TryGetValue(tagKey, out var entities))
+                return entities;
 
-            return entities;
+            return new HashSet<TEntity>(EntityEqualityComparer<TEntity>.comparer);
         }
 
         public override string ToString()
@@ -116,15 +114,29 @@ namespace Xease.CoreGame
             }
         }
 
+        HashSet<TEntity> getOrCreateEntities(int tagKey)
+        {
+            if (!_index.TryGetValue(tagKey, out var entities))
+            {
+                entities = new HashSet<TEntity>(EntityEqualityComparer<TEntity>.comparer);
+                _index.Add(tagKey, entities);
+            }
+
+            return entities;
+        }
+
         void AddEntityForKey(int tagKey, TEntity entity)
         {
-            GetEntities(tagKey).Add(entity);
+            getOrCreateEntities(tagKey).Add(entity);
             RetainEntity(entity);
         }
 
         void RemoveEntityForKey(int tagKey, TEntity entity)
         {
-            GetEntities(tagKey).Remove(entity);
+            if (!_index.TryGetValue(tagKey, out var entities))
+                return;
+
+            entities.Remove(entity);
             ReleaseEntity(entity);
         }
 

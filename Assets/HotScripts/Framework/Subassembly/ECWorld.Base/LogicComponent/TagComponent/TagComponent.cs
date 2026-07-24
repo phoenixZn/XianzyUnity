@@ -15,7 +15,7 @@ namespace Xease.CoreGame
 
         public void AddTags(uint tags)
         {
-            Tags &= tags;
+            Tags |= tags;
         }
 
         public void RemoveTags(uint tags)
@@ -118,13 +118,18 @@ namespace Xease.CoreGame
                 var component = (TagComponent)CreateComponent(index, typeof(TagComponent));
                 component.SetTags(newTags);
                 AddComponent(index, component);
+                return;
             }
-            else
-            {
-                var component = (TagComponent)GetComponent(index);
-                component.AddTags(newTags);
-                ReplaceComponent(index, component);
-            }
+
+            // 新实例再 Replace，保证 previous 仍持旧 Tags，避免 EntityIndex 旧 key 残留
+            var previous = (TagComponent)GetComponent(index);
+            var nextTags = previous.Tags | newTags;
+            if (nextTags == previous.Tags)
+                return;
+
+            var next = (TagComponent)CreateComponent(index, typeof(TagComponent));
+            next.SetTags(nextTags);
+            ReplaceComponent(index, next);
         }
 
         public void RemoveComTag()
@@ -136,10 +141,17 @@ namespace Xease.CoreGame
         {
             if (!hasComTag)
                 return;
+
+            // 新实例再 Replace，保证 previous 仍持旧 Tags，避免 EntityIndex 旧 key 残留
             var index = LogicComponentsLookup.ComTag;
-            var component = (TagComponent)GetComponent(index);
-            component.RemoveTags(tags);
-            ReplaceComponent(index, component);
+            var previous = (TagComponent)GetComponent(index);
+            var nextTags = previous.Tags & ~tags;
+            if (nextTags == previous.Tags)
+                return;
+
+            var next = (TagComponent)CreateComponent(index, typeof(TagComponent));
+            next.SetTags(nextTags);
+            ReplaceComponent(index, next);
         }
 
         public bool HasTags(uint tags)

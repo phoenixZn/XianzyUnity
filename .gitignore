@@ -58,6 +58,7 @@ Assets/StreamingAssets/yoo.meta
 Assets/Samples/YooAsset/
 
 /TempDocs/
+/cursor_output/
 /*.properties
 
 # PureCsproj 构建产物与本地引用见 PureCsproj/.gitignore

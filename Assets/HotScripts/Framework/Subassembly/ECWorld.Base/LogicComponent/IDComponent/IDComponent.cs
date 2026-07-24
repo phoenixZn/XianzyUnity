@@ -17,17 +17,36 @@ namespace Xease.CoreGame
         {
             if (ID == id)
                 return;
-            ID = id;
-            Name = null;
-            _hostEntity?.ReplaceComponent(LogicComponentsLookup.ComID, this);
+
+            // 无宿主时仅改本地字段；有宿主则新实例 Replace，保留 previous 旧 ID 供索引 remove
+            if (_hostEntity == null)
+            {
+                ID = id;
+                return;
+            }
+
+            var index = LogicComponentsLookup.ComID;
+            var next = (IDComponent)_hostEntity.CreateComponent(index, typeof(IDComponent));
+            next.Init(id, Name);
+            _hostEntity.ReplaceComponent(index, next);
         }
         
         public void SetName(string name)
         {
             if (Name == name)
                 return;
-            Name = name;
-            _hostEntity?.ReplaceComponent(LogicComponentsLookup.ComID, this);
+
+            // 无宿主时仅改本地字段；有宿主则新实例 Replace，保留 previous 旧 Name 供索引 remove
+            if (_hostEntity == null)
+            {
+                Name = name;
+                return;
+            }
+
+            var index = LogicComponentsLookup.ComID;
+            var next = (IDComponent)_hostEntity.CreateComponent(index, typeof(IDComponent));
+            next.Init(ID, name);
+            _hostEntity.ReplaceComponent(index, next);
         }
         
         public override void DisposeOnRemove()

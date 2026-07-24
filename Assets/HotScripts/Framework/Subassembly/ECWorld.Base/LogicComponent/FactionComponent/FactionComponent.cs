@@ -54,13 +54,17 @@ namespace Xease.CoreGame
                     var component = (FactionComponent)CreateComponent(index, typeof(FactionComponent));
                     component.Init(value);
                     AddComponent(index, component);
+                    return;
                 }
-                else
-                {
-                    var component = (FactionComponent)GetComponent(index);
-                    component.Init(value);
-                    ReplaceComponent(index, component);
-                }
+
+                // 新实例再 Replace，保证 previous 仍持旧 Faction，避免 EntityIndex 旧 key 残留
+                var previous = (FactionComponent)GetComponent(index);
+                if (previous.Faction == value)
+                    return;
+
+                var next = (FactionComponent)CreateComponent(index, typeof(FactionComponent));
+                next.Init(value);
+                ReplaceComponent(index, next);
             }
         }
     }
