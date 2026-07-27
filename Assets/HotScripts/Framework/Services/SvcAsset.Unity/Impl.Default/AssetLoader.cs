@@ -56,14 +56,14 @@ namespace Xease
             return _assetHandles.TryGetValue(location, out var handle) ? handle : null;
         }
 
-        public void LoadAssetAsync(string location, System.Action<AssetHandle> callback, uint priority = 0)
+        public AssetHandle LoadAssetAsync(string location, System.Action<AssetHandle> callback, uint priority = 0)
         {
             if (_assetHandles.TryGetValue(location, out var handle))
             {
                 if (handle.IsDone)
                 {
                     callback.Invoke(handle);
-                    return;
+                    return handle;
                 }
                 handle.Completed += callback;
             }
@@ -73,16 +73,18 @@ namespace Xease
                 handle.Completed += callback;
                 _assetHandles.Add(location, handle);
             }
+
+            return handle;
         }
 
-        public void LoadAssetAsync<T>(string location, System.Action<AssetHandle> onCompleted, uint priority = 0) where T : UnityEngine.Object
+        public AssetHandle LoadAssetAsync<T>(string location, System.Action<AssetHandle> onCompleted, uint priority = 0) where T : UnityEngine.Object
         {
             if (_assetHandles.TryGetValue(location, out var handle))
             {
                 if (handle.IsDone)
                 {
                     onCompleted.Invoke(handle);
-                    return;
+                    return handle;
                 }
                 handle.Completed += onCompleted;
             }
@@ -92,6 +94,8 @@ namespace Xease
                 handle.Completed += onCompleted;
                 _assetHandles.Add(location, handle);
             }
+
+            return handle;
         }
 
         public IEnumerator LoadAssetCoro(string location, System.Action<AssetHandle> onBegin = null, uint priority = 0)

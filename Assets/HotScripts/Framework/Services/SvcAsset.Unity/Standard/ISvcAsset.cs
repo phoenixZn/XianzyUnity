@@ -18,10 +18,10 @@ namespace Xease
         
         public void Release(string location, EAssetGroup group = EAssetGroup.Default);
         
-        public void LoadAssetAsync(string location, System.Action<AssetHandle> callback,
+        public AssetHandle LoadAssetAsync(string location, System.Action<AssetHandle> callback,
             EAssetGroup group = EAssetGroup.Default, uint priority = 0);
         
-        public void LoadAssetAsync<T>(string location, System.Action<AssetHandle> callback,
+        public AssetHandle LoadAssetAsync<T>(string location, System.Action<AssetHandle> callback,
             EAssetGroup group = EAssetGroup.Default, uint priority = 0) where T : UnityEngine.Object;
         
         public IEnumerator LoadAssetAsync(string location, EAssetGroup group = EAssetGroup.Default,
@@ -61,12 +61,12 @@ namespace Xease
         /// <summary>
         /// 异步加载资源
         /// </summary>
-        void LoadAssetAsync(string location, System.Action<AssetHandle> callback, uint priority = 0);
+        AssetHandle LoadAssetAsync(string location, System.Action<AssetHandle> callback, uint priority = 0);
 
         /// <summary>
         /// 异步加载指定类型资源
         /// </summary>
-        void LoadAssetAsync<T>(string location, System.Action<AssetHandle> onCompleted, uint priority = 0) where T : UnityEngine.Object;
+        AssetHandle LoadAssetAsync<T>(string location, System.Action<AssetHandle> onCompleted, uint priority = 0) where T : UnityEngine.Object;
         #endregion
 
         #region 协程加载方法

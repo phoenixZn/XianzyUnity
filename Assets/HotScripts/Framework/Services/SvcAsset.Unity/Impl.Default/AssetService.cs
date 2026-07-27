@@ -49,14 +49,14 @@ namespace Xease
                 loader.Release(location);
         }
 
-        public void LoadAssetAsync(string location, System.Action<AssetHandle> callback, EAssetGroup group = EAssetGroup.Default, uint priority = 0)
+        public AssetHandle LoadAssetAsync(string location, System.Action<AssetHandle> callback, EAssetGroup group = EAssetGroup.Default, uint priority = 0)
         {
-            GetOrCreateLoader(group).LoadAssetAsync(location, callback, priority);
+            return GetOrCreateLoader(group).LoadAssetAsync(location, callback, priority);
         }
         
-        public void LoadAssetAsync<T>(string location, System.Action<AssetHandle> callback, EAssetGroup group = EAssetGroup.Default, uint priority = 0) where T : UnityEngine.Object
+        public AssetHandle LoadAssetAsync<T>(string location, System.Action<AssetHandle> callback, EAssetGroup group = EAssetGroup.Default, uint priority = 0) where T : UnityEngine.Object
         {
-            GetOrCreateLoader(group).LoadAssetAsync<T>(location, callback, priority);
+            return GetOrCreateLoader(group).LoadAssetAsync<T>(location, callback, priority);
         }
         
         public IEnumerator LoadAssetAsync(string location, EAssetGroup group = EAssetGroup.Default, System.Action<AssetHandle> onBegin = null, uint priority = 0)
