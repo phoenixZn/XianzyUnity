@@ -43,7 +43,7 @@ namespace Xease.CoreGame
 
         private static void BeginAcquire(LogicEntity entity, ViewComponent view, IViewAcquirable acquirable)
         {
-            view.MarkLoading(acquirable);
+            SetLoadState(view, acquirable, ViewLoadState.Loading);
 
             // 静态方法组绑定，避免每帧闭包分配
             var ctx = new ViewAcquireContext
@@ -67,12 +67,22 @@ namespace Xease.CoreGame
 
             if (!ctx.Success)
             {
-                view.MarkFailed(acquirable);
+                SetLoadState(view, acquirable, ViewLoadState.Failed);
                 return;
             }
 
-            view.MarkReady(acquirable);
+            SetLoadState(view, acquirable, ViewLoadState.Ready);
             SyncTransformFromEntity(entity);
+        }
+
+        // 推进 acquirable 加载状态并 dirty ViewComponent
+        private static void SetLoadState(ViewComponent view, IViewAcquirable acquirable, ViewLoadState state)
+        {
+            if (view == null || acquirable == null || acquirable.LoadState == state)
+                return;
+
+            acquirable.SetLoadState(state);
+            view.NotifyChanged();
         }
 
         internal static void SyncTransformFromEntity(LogicEntity entity)
@@ -89,7 +99,7 @@ namespace Xease.CoreGame
             for (int i = 0; i < syncables.Count; ++i)
             {
                 var syncable = syncables[i];
-                if (!syncable.SyncTransform)
+                if (!syncable.NeedsSyncTransform)
                     continue;
 
                 syncable.ApplyTransform(transform.position, transform.rotation, transform.scale);

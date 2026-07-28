@@ -53,7 +53,7 @@ namespace Xease.CoreGame
             ReleaseOwnedView();
             _proxy?.Dispose();
             _proxy = NullViewTransformProxy.Instance;
-            SyncTransform = true;
+            NeedsSyncTransform = true;
             OnDisposed();
         }
 
@@ -73,7 +73,7 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         /// IViewTransformSyncable:
-        public bool SyncTransform { get; set; } = true;
+        public bool NeedsSyncTransform { get; set; } = true;
 
         public void ApplyTransform(Vector3 position, Quaternion rotation, Vector3 scale)
         {

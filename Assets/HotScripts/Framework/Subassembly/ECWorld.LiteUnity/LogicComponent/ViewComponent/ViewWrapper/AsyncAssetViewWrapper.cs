@@ -67,7 +67,7 @@ namespace Xease.CoreGame
         {
             if (IsDisposed)
             {
-                ctx.Complete(false, null);
+                ctx.Complete(false);
                 return;
             }
 
@@ -77,7 +77,7 @@ namespace Xease.CoreGame
                 CancelPendingAcquire(notifyFailure: false);
                 ReleaseOwnedView();
                 BindProxy(NullViewTransformProxy.Instance);
-                ctx.Complete(true, NullViewTransformProxy.Instance);
+                ctx.Complete(true);
                 return;
             }
 
@@ -102,14 +102,14 @@ namespace Xease.CoreGame
 
             if (IsDisposed)
             {
-                InvokePendingCompleted(false, null);
+                InvokePendingCompleted(false);
                 return;
             }
 
             if (handle == null || handle.Status != EOperationStatus.Succeed)
             {
                 WLogger.LogError($"AsyncAssetViewWrapper load failed: {_assetLocation}");
-                InvokePendingCompleted(false, null);
+                InvokePendingCompleted(false);
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace Xease.CoreGame
             if (prefab == null)
             {
                 WLogger.LogError($"AsyncAssetViewWrapper asset is not GameObject: {_assetLocation}");
-                InvokePendingCompleted(false, null);
+                InvokePendingCompleted(false);
                 return;
             }
 
@@ -125,16 +125,16 @@ namespace Xease.CoreGame
             _instance = Object.Instantiate(prefab);
             var proxy = new UnityViewTransformProxy(_instance.transform);
             BindProxy(proxy);
-            InvokePendingCompleted(true, proxy);
+            InvokePendingCompleted(true);
         }
 
         // 回调当前 pending ctx 并清空挂起态（handle 已完成，无需 Completed -=）
-        private void InvokePendingCompleted(bool success, IViewTransformProxy proxy)
+        private void InvokePendingCompleted(bool success)
         {
             var ctx = _pendingCtx;
             _pendingHandle = null;
             _pendingCtx = default;
-            ctx.Complete(success, proxy);
+            ctx.Complete(success);
         }
 
         // 退订进行中的加载；notifyFailure 时回调旧 ctx 失败（Dispose）
@@ -153,7 +153,7 @@ namespace Xease.CoreGame
 
             var ctx = _pendingCtx;
             _pendingCtx = default;
-            ctx.Complete(false, null);
+            ctx.Complete(false);
         }
 
         //////////////////////////////////////////////////////////////////////////

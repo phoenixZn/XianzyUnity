@@ -42,17 +42,15 @@ namespace Xease.CoreGame
         public ViewComponent View;
         public IViewAcquirable Acquirable;
 
-        // 结果侧（策略完成时写入；成功时 Proxy 已 BindProxy，失败可为 null）
+        // 结果侧仅 Success；Proxy 由策略在回调前 BindProxy
         public bool Success;
-        public IViewTransformProxy Proxy;
 
         public Action<ViewAcquireContext> OnCompleted;
 
         // 写入结果并回调；须在值拷贝上调用（如 var ctx = _pendingCtx; ctx.Complete(...)）
-        public void Complete(bool success, IViewTransformProxy proxy)
+        public void Complete(bool success)
         {
             Success = success;
-            Proxy = proxy;
             OnCompleted?.Invoke(this);
         }
     }
@@ -61,7 +59,7 @@ namespace Xease.CoreGame
     // IViewTransformSyncable：需要同步逻辑 Transform 到表现
     public interface IViewTransformSyncable
     {
-        bool SyncTransform { get; set; }
+        bool NeedsSyncTransform { get; set; }
         void ApplyTransform(Vector3 position, Quaternion rotation, Vector3 scale);
     }
 
@@ -102,7 +100,7 @@ namespace Xease.CoreGame
             {
                 for (int i = 0; i < _transformSyncables.Count; ++i)
                 {
-                    if (_transformSyncables[i].SyncTransform)
+                    if (_transformSyncables[i].NeedsSyncTransform)
                         return true;
                 }
 
@@ -144,32 +142,8 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
-        // IViewAcquirable 状态推进
-        public void MarkLoading(IViewAcquirable acquirable)
-        {
-            SetLoadState(acquirable, ViewLoadState.Loading);
-        }
-
-        public void MarkReady(IViewAcquirable acquirable)
-        {
-            SetLoadState(acquirable, ViewLoadState.Ready);
-        }
-
-        public void MarkFailed(IViewAcquirable acquirable)
-        {
-            SetLoadState(acquirable, ViewLoadState.Failed);
-        }
-
-        private void SetLoadState(IViewAcquirable acquirable, ViewLoadState state)
-        {
-            if (acquirable == null || acquirable.LoadState == state)
-                return;
-
-            acquirable.SetLoadState(state);
-            NotifyChanged();
-        }
-
-        private void NotifyChanged()
+        // Entitas dirty
+        public void NotifyChanged()
         {
             if (_hostEntity == null)
                 return;
