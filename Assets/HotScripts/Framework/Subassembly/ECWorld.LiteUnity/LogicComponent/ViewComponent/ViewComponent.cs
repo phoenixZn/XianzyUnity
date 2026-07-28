@@ -18,7 +18,6 @@ namespace Xease.CoreGame
     public interface IViewWrapper : IDisposable
     {
         bool IsReady { get; }
-        void BindProxy(IViewTransformProxy proxy);
         void SetActive(bool active);
     }
 

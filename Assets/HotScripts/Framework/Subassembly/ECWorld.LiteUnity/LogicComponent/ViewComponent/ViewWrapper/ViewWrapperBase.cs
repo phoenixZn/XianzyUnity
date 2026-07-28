@@ -22,19 +22,7 @@ namespace Xease.CoreGame
         //////////////////////////////////////////////////////////////////////////
         /// IViewWrapper:
         public virtual bool IsReady => true;
-
-        public void BindProxy(IViewTransformProxy proxy)
-        {
-            if (_disposed)
-                return;
-
-            // 只换绑句柄；资源所有权由子类在 Acquire / ReleaseOwnedView 中管理
-            // （若此处调用 ReleaseOwnedView，会在「先赋值 _instance 再 BindProxy」时误毁新建对象）
-            _proxy?.Dispose();
-            _proxy = proxy ?? NullViewTransformProxy.Instance;
-            FlushToProxy();
-        }
-
+        
         public void SetActive(bool active)
         {
             if (_disposed)
@@ -43,7 +31,7 @@ namespace Xease.CoreGame
             _active = active;
             FlushToProxy();
         }
-
+        
         public void Dispose()
         {
             if (_disposed)
@@ -55,20 +43,6 @@ namespace Xease.CoreGame
             _proxy = NullViewTransformProxy.Instance;
             NeedsSyncTransform = true;
             OnDisposed();
-        }
-
-        /// <summary>
-        /// 子类释放自己持有的表现资源（Destroy / 还池 / Detach）。
-        /// </summary>
-        protected virtual void ReleaseOwnedView()
-        {
-        }
-
-        /// <summary>
-        /// Dispose 末尾钩子：子类复位自身获取状态等。
-        /// </summary>
-        protected virtual void OnDisposed()
-        {
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -86,6 +60,34 @@ namespace Xease.CoreGame
             FlushToProxy();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
+        public void BindProxy(IViewTransformProxy proxy)
+        {
+            if (_disposed)
+                return;
+
+            // 只换绑句柄；资源所有权由子类在 Acquire / ReleaseOwnedView 中管理
+            // （若此处调用 ReleaseOwnedView，会在「先赋值 _instance 再 BindProxy」时误毁新建对象）
+            _proxy?.Dispose();
+            _proxy = proxy ?? NullViewTransformProxy.Instance;
+            FlushToProxy();
+        }
+        
+        /// <summary>
+        /// 子类释放自己持有的表现资源（Destroy / 还池 / Detach）。
+        /// </summary>
+        protected virtual void ReleaseOwnedView()
+        {
+        }
+
+        /// <summary>
+        /// Dispose 末尾钩子：子类复位自身获取状态等。
+        /// </summary>
+        protected virtual void OnDisposed()
+        {
+        }
+        
         //////////////////////////////////////////////////////////////////////////
         /// Proxy Flush
         public void FlushToProxy()
