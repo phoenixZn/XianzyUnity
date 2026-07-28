@@ -45,23 +45,27 @@ namespace Xease.CoreGame
         {
             view.MarkLoading(acquirable);
 
+            // 静态方法组绑定，避免每帧闭包分配
             var ctx = new ViewAcquireContext
             {
-                OnCompleted = (success, _) => OnAcquireCompleted(entity, view, acquirable, success)
+                Entity = entity,
+                View = view,
+                Acquirable = acquirable,
+                OnCompleted = OnAcquireCompleted,
             };
             acquirable.BeginAcquire(ctx);
         }
 
-        private static void OnAcquireCompleted(
-            LogicEntity entity,
-            ViewComponent view,
-            IViewAcquirable acquirable,
-            bool success)
+        private static void OnAcquireCompleted(ViewAcquireContext ctx)
         {
+            var entity = ctx.Entity;
+            var view = ctx.View;
+            var acquirable = ctx.Acquirable;
+
             if (entity == null || !entity.isEnabled || !entity.hasComView || entity.comView != view)
                 return;
 
-            if (!success)
+            if (!ctx.Success)
             {
                 view.MarkFailed(acquirable);
                 return;

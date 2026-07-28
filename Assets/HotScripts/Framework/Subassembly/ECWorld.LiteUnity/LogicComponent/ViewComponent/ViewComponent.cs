@@ -32,12 +32,29 @@ namespace Xease.CoreGame
         void SetLoadState(ViewLoadState state);
     }
 
+    /// <summary>
+    /// Acquire 请求/结果袋：请求字段由调用方填写；结果字段由策略在回调前写入。
+    /// </summary>
     public struct ViewAcquireContext
     {
-        /// <summary>
-        /// 成功时 proxy 已由策略 BindProxy；失败时 proxy 可为 null。
-        /// </summary>
-        public Action<bool, IViewTransformProxy> OnCompleted;
+        // 请求侧（SysViewLoader 填入）
+        public LogicEntity Entity;
+        public ViewComponent View;
+        public IViewAcquirable Acquirable;
+
+        // 结果侧（策略完成时写入；成功时 Proxy 已 BindProxy，失败可为 null）
+        public bool Success;
+        public IViewTransformProxy Proxy;
+
+        public Action<ViewAcquireContext> OnCompleted;
+
+        // 写入结果并回调；须在值拷贝上调用（如 var ctx = _pendingCtx; ctx.Complete(...)）
+        public void Complete(bool success, IViewTransformProxy proxy)
+        {
+            Success = success;
+            Proxy = proxy;
+            OnCompleted?.Invoke(this);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

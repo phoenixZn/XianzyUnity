@@ -7,18 +7,24 @@ using Object = UnityEngine.Object;
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// 异步 Asset 加载策略：持有 Instantiate 出的 GameObject，释放时 Destroy。
-    /// AssetLocation / RequestLoad 为本类具体 API，不进入 IViewAcquirable。
-    /// 同实例连载时 last-wins：退订旧 handle 回调，仅当前 pending 落地并回调。
+    /// 异步Asset加载,ViewWrapper
     /// </summary>
     public class AsyncAssetViewWrapper : ViewWrapperBase, IViewAcquirable
     {
+        /*
+         异步 Asset 加载策略：持有 Instantiate 出的 GameObject，释放时 Destroy。
+         AssetLocation / RequestLoad 为本类具体 API，不进入 IViewAcquirable。
+         同实例连载时 last-wins：退订旧 handle 回调，仅当前 pending 落地并回调。
+        */
         private string _assetLocation;
         private GameObject _instance;
+        
         // 当前关心的加载句柄；被 supersede 时仅退订，不 Release（留 Loader 缓存）
         private AssetHandle _pendingHandle;
+        
         // 仅当前 pending 的 Acquire 回调上下文
         private ViewAcquireContext _pendingCtx;
+        
         // 实例级缓存，避免每次 BeginAcquire 分配闭包
         private readonly Action<AssetHandle> _onAssetLoaded;
 
@@ -26,14 +32,14 @@ namespace Xease.CoreGame
         {
             _onAssetLoaded = OnAssetLoaded;
             if (!string.IsNullOrEmpty(assetLocation))
-                RequestLoad(assetLocation);
+                SetAssetLocation(assetLocation);
         }
 
         //////////////////////////////////////////////////////////////////////////
         // Asset 配置（具体类 API）
         public string AssetLocation => _assetLocation;
 
-        public void RequestLoad(string assetLocation)
+        public void SetAssetLocation(string assetLocation)
         {
             // 换 location 时静默丢弃进行中的加载，避免旧资源落地
             CancelPendingAcquire(notifyFailure: false);
@@ -61,7 +67,7 @@ namespace Xease.CoreGame
         {
             if (IsDisposed)
             {
-                ctx.OnCompleted?.Invoke(false, null);
+                ctx.Complete(false, null);
                 return;
             }
 
@@ -71,7 +77,7 @@ namespace Xease.CoreGame
                 CancelPendingAcquire(notifyFailure: false);
                 ReleaseOwnedView();
                 BindProxy(NullViewTransformProxy.Instance);
-                ctx.OnCompleted?.Invoke(true, NullViewTransformProxy.Instance);
+                ctx.Complete(true, NullViewTransformProxy.Instance);
                 return;
             }
 
@@ -128,7 +134,7 @@ namespace Xease.CoreGame
             var ctx = _pendingCtx;
             _pendingHandle = null;
             _pendingCtx = default;
-            ctx.OnCompleted?.Invoke(success, proxy);
+            ctx.Complete(success, proxy);
         }
 
         // 退订进行中的加载；notifyFailure 时回调旧 ctx 失败（Dispose）
@@ -147,7 +153,7 @@ namespace Xease.CoreGame
 
             var ctx = _pendingCtx;
             _pendingCtx = default;
-            ctx.OnCompleted?.Invoke(false, null);
+            ctx.Complete(false, null);
         }
 
         //////////////////////////////////////////////////////////////////////////
