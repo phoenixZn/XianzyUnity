@@ -96,10 +96,12 @@ namespace Xease.CoreGame
                     ArmorPierce += valueAdd;
                     break;
                 
-                // 伤害加成和抗性
+                // 韧性
                 case PropertyFloat.Tenacity:
                     Tenacity += valueAdd;
                     break;
+                
+                // 中间计算值:
                 case PropertyFloat.ScaleAtkBase:
                     ScaleAtkBase += valueAdd;
                     break;
@@ -137,6 +139,7 @@ namespace Xease.CoreGame
             comAttributes.TryGetValue<double>(PropertyFloat.ArmorPierce, out ArmorPierce, 0);  // 0 - 10000f
             
             comAttributes.TryGetValue<double>(PropertyFloat.Tenacity, out Tenacity, 0f);
+            
             comAttributes.TryGetValue<double>(PropertyFloat.ScaleHpBase, out ScaleHpBase, 0f);
             comAttributes.TryGetValue<double>(PropertyFloat.ScaleAtkBase, out ScaleAtkBase, 0f);
             comAttributes.TryGetValue<double>(PropertyFloat.ScaleFinalDamage, out ScaleFinalDamage, 0f);
