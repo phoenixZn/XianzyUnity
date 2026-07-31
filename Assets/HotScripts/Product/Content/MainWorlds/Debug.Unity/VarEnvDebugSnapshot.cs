@@ -39,16 +39,10 @@ public static class VarEnvDebugSnapshot // 借助 IVarEnvFriend 友元 API 只�
             return;
         }
 
-        var typeDic = env.GetRawDictionary(vfriend);
-        if (typeDic == null)
+        env.ForeachBuckets(vfriend, (bucketType, variables) =>
         {
-            return;
-        }
-
-        foreach (var typeKv in typeDic)
-        {
-            DispatchBucket(typeKv.Key, typeKv.Value, vfriend, displayList, shouldIncludeBucket);
-        }
+            DispatchBucket(bucketType, variables, vfriend, displayList, shouldIncludeBucket);
+        });
 
         displayList.Sort(CompareDisplayByKey);
     }

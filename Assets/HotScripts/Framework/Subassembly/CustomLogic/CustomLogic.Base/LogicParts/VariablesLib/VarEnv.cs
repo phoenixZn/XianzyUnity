@@ -6,6 +6,8 @@ namespace Xease.CoreGame
 {
     public interface IVariables
     {
+        // 分桶值类型，供友元遍历识别
+        System.Type VarType { get; }
         bool HasVar(string id);
         bool ClearVar(string key);
         void Clear();
@@ -21,10 +23,17 @@ namespace Xease.CoreGame
     {
     }
 
+    /// <summary>
+    /// 单一值类型的变量桶：string key → T。
+    /// </summary>
     public class VariablesImp<T> : IVariables
     {
-        protected Dictionary<string, T> _varDic = new Dictionary<string, T>(4);
-        
+        // 桶内变量表；容量按常用规模预留
+        protected Dictionary<string, T> _varDic = new (4);
+
+        /// <summary>分桶值类型。</summary>
+        public System.Type VarType => typeof(T);
+
         /// <summary>
         /// 供 IVarEnvFriend 友元获取桶内字典；无效时返回 null。
         /// </summary>
@@ -34,7 +43,7 @@ namespace Xease.CoreGame
                 return _varDic;
             return null;
         }
-        
+
         public void WriteVar(string id, T value)
         {
             _varDic[id] = value;
@@ -42,9 +51,8 @@ namespace Xease.CoreGame
 
         public bool ReadVar(string id, out T getV)
         {
-            if (_varDic.ContainsKey(id))
+            if (_varDic.TryGetValue(id, out getV))
             {
-                getV = _varDic[id];
                 return true;
             }
 
@@ -99,19 +107,48 @@ namespace Xease.CoreGame
         }
     }
 
-    //Variables Env
+    /// <summary>
+    /// 变量黑板：int/bool/float/long/object 走定长热桶，其余类型用稠密 TypeKey 字典。
+    /// </summary>
     public partial class VarEnv : ICanRecycle
     {
-        private Dictionary<System.Type, IVariables> _varTypeDic;
-
-        /// <summary>
-        /// 供 IVarEnvFriend 友元获取类型分桶字典；无效时返回 null。
-        /// </summary>
-        public Dictionary<System.Type, IVariables> GetRawDictionary(IVarEnvFriend vfriend)
+        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
+        private static readonly System.Type[] s_fastTypes =
         {
-            if (vfriend != null)
-                return _varTypeDic;
-            return null;
+            typeof(int),
+            typeof(bool),
+            typeof(float),
+            typeof(long),
+            typeof(object),
+        };
+
+        // 常用类型下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
+        private readonly IVariables[] _fastBuckets = new IVariables[s_fastTypes.Length];
+        // 非热类型分类器 <TypeKey, 变量桶>；首次写入懒创建
+        private Dictionary<int, IVariables> _varTypeDic = new (4);
+
+        // 进程内仅非热类型单调分配稠密 TypeKey
+        private static int s_nextTypeKey = s_fastTypes.Length;
+
+        private static class TypeKeyOf<T>
+        {
+            // -1 = 非热类型，走 _varTypeDic
+            public static readonly int FastSlot = ResolveFastSlot();
+            // 仅 FastSlot < 0 时分配；热类型 Id 无意义
+            public static readonly int Id = FastSlot >= 0
+                ? -1
+                : System.Threading.Interlocked.Increment(ref s_nextTypeKey) - 1;
+
+            private static int ResolveFastSlot()
+            {
+                var type = typeof(T);
+                var fastTypes = s_fastTypes;
+                for (int i = 0; i < fastTypes.Length; i++)
+                {
+                    if (type == fastTypes[i]) return i;
+                }
+                return -1;
+            }
         }
 
         private static int _index = 0;
@@ -122,9 +159,7 @@ namespace Xease.CoreGame
         public VarEnv()
         {
             _createIdx = ++_index;
-            _varTypeDic = new Dictionary<System.Type, IVariables>(5);
         }
-        
 
         public void Construct()
         {
@@ -136,51 +171,45 @@ namespace Xease.CoreGame
             IsInPool = true;
             Clear();
         }
-        
-
-        public void AddVarType<T>(System.Type type)
-        {
-            if (!_varTypeDic.ContainsKey(type))
-                _varTypeDic.Add(type, new VariablesImp<T>());
-        }
 
         private VariablesImp<T> GetVariables<T>(bool autoAdd = false)
         {
-            var type = typeof(T);
-            if (_varTypeDic.ContainsKey(type))
+            var slot = TypeKeyOf<T>.FastSlot;
+            IVariables vars;
+            if (slot >= 0)
             {
-                return _varTypeDic[type] as VariablesImp<T>;
+                vars = _fastBuckets[slot];
+            }
+            else if (_varTypeDic == null || !_varTypeDic.TryGetValue(TypeKeyOf<T>.Id, out vars))
+            {
+                vars = null;
+            }
+            if (vars != null)
+            {
+                return vars as VariablesImp<T>;
+            }
+            if (!autoAdd)
+            {
+                return null;
             }
 
-            if (autoAdd)
-            {
-                var variables = new VariablesImp<T>();
-                _varTypeDic.Add(typeof(T), variables);
-                return variables;
-            }
-
-            return null;
+            var variables = new VariablesImp<T>();
+            StoreVariables(variables);
+            return variables;
         }
 
-        private IVariables GetIVariables<T>()
+        private void StoreVariables<T>(VariablesImp<T> variables)
         {
-            var typeT = typeof(T);
-            if (typeT.IsClass || typeT.IsInterface)
+            var slot = TypeKeyOf<T>.FastSlot;
+            if (slot >= 0)
             {
-                return GetVariables<object>();
+                _fastBuckets[slot] = variables;
+                return;
             }
-
-            if (typeT == typeof(uint))
-            {
-                CLogger.LogError($"GetIVariables case uint");
-                return GetVariables<int>();
-            }
-            else
-            {
-                return GetVariables<T>();
-            }
+            _varTypeDic ??= new Dictionary<int, IVariables>();
+            _varTypeDic.Add(TypeKeyOf<T>.Id, variables);
         }
-
+        
 
         public bool ReadVar<T>(string key, out T value)
         {
@@ -248,21 +277,49 @@ namespace Xease.CoreGame
                 }
             }
         }
-
+        
+        //////////////////////////////////////////////////////////////////////////
+        ///IVariables 相关操作 
         public bool HasVar<T>(string key)
         {
             var variables = GetIVariables<T>();
             return variables?.HasVar(key) ?? false;
         }
-
         public bool ClearVar<T>(string key)
         {
             var variables = GetIVariables<T>();
             return variables?.ClearVar(key) ?? false;
         }
+        private IVariables GetIVariables<T>()
+        {
+            var typeT = typeof(T);
+            if (typeT.IsClass || typeT.IsInterface)
+            {
+                return GetVariables<object>();
+            }
+            if (typeT == typeof(uint))
+            {
+                CLogger.LogError($"GetIVariables case uint");
+                return GetVariables<int>();
+            }
+            return GetVariables<T>();
+        }
 
+
+        //////////////////////////////////////////////////////////////////////////
         public void Clear()
         {
+            var buckets = _fastBuckets;
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                buckets[i]?.Clear();
+            }
+
+            if (_varTypeDic == null)
+            {
+                return;
+            }
+
             foreach (var kv in _varTypeDic)
             {
                 kv.Value.Clear();
@@ -271,10 +328,20 @@ namespace Xease.CoreGame
 
         public void CopyTo(in VarEnv env)
         {
+            var buckets = _fastBuckets;
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                buckets[i]?.CopyTo(env);
+            }
+
+            if (_varTypeDic == null)
+            {
+                return;
+            }
+
             foreach (var item in _varTypeDic)
             {
-                var variables = item.Value;
-                variables.CopyTo(env);
+                item.Value.CopyTo(env);
             }
         }
 
@@ -293,7 +360,7 @@ namespace Xease.CoreGame
             }
             return false;
         }
-        
+
         public bool CopyTo<T>(in VarEnv env, string key, string newKey)
         {
             if (env.HasVar<T>(newKey))
@@ -305,6 +372,42 @@ namespace Xease.CoreGame
             }
             CLogger.LogError($"复制黑板时，没有找到变量! key={key}, newKey={newKey}, valueType={typeof(T)}");
             return false;
+        }
+        
+        /// <summary>
+        /// 供 IVarEnvFriend 友元遍历类型分桶；凭证无效时不回调。
+        /// </summary>
+        public void ForeachBuckets(IVarEnvFriend vfriend, Action<System.Type, IVariables> onBucket)
+        {
+            if (vfriend == null || onBucket == null)
+            {
+                return;
+            }
+
+            var buckets = _fastBuckets;
+            var fastTypes = s_fastTypes;
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                var bucket = buckets[i];
+                if (bucket != null)
+                {
+                    onBucket(fastTypes[i], bucket);
+                }
+            }
+
+            if (_varTypeDic == null)
+            {
+                return;
+            }
+
+            foreach (var kv in _varTypeDic)
+            {
+                var bucket = kv.Value;
+                if (bucket != null)
+                {
+                    onBucket(bucket.VarType, bucket);
+                }
+            }
         }
     }
 }
