@@ -42,6 +42,10 @@ namespace Xease.CoreGame
             {
                 ProfilerAttributes_New();
             }
+            if (ExecuteAcc % 100 == 40)
+            {
+                ProfilerAttributes_NewFastKey();
+            }
         }
         
         public void TearDown()

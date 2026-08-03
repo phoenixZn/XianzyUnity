@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Xease.CoreGame
@@ -219,13 +220,81 @@ namespace Xease.CoreGame
             System.Type AttributeType { get; }
         }
 
-        public class AttributeModifiers<TValue> // TValue属性的数值类型
-            : Dictionary<int, IModifyValue<TValue>> //<TEnum, 数值叠加计算器>
-                , IAttributes
+        //////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// 单值类型属性修改器表：key 在 [0, FastKeyCapacity) 走定长数组，其余走冷字典；与将来 int 脏标记位宽对齐。
+        /// </summary>
+        public class AttributeModifiers<TValue> : IAttributes
         {
+            // 热 key 容量；与 int 脏标记 32 位对齐，改容量需同步脏标记方案
+            public const int FastKeyCapacity = 32;
+
+            // 热槽懒分配；下标即 attrName，null 表示未占用
+            private IModifyValue<TValue>[] _fastSlots;
+            // 冷 key 字典；仅 key 越界或未进热区时使用
+            private Dictionary<int, IModifyValue<TValue>> _cold;
+
+            //////////////////////////////////////////////////////////////////////////
+            /// IAttributes:
             public System.Type AttributeType
             {
                 get { return typeof(TValue); }
+            }
+
+            //////////////////////////////////////////////////////////////////////////
+            /// This：
+            /// <summary>是否已注册指定 attrName 的修改器。</summary>
+            public bool ContainsKey(int key)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    return _fastSlots != null && _fastSlots[key] != null;
+                }
+
+                return _cold != null && _cold.ContainsKey(key);
+            }
+
+            /// <summary>按 attrName 取修改器；未注册时返回 false。</summary>
+            public bool TryGetValue(int key, out IModifyValue<TValue> value)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    if (_fastSlots != null)
+                    {
+                        value = _fastSlots[key];
+                        return value != null;
+                    }
+
+                    value = null;
+                    return false;
+                }
+
+                if (_cold != null)
+                {
+                    return _cold.TryGetValue(key, out value);
+                }
+
+                value = null;
+                return false;
+            }
+
+            /// <summary>注册修改器；同 key 已存在时抛 ArgumentException（对齐 Dictionary.Add）。</summary>
+            public void Add(int key, IModifyValue<TValue> value)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    _fastSlots ??= new IModifyValue<TValue>[FastKeyCapacity];
+                    if (_fastSlots[key] != null)
+                    {
+                        throw new ArgumentException("An item with the same key has already been added.");
+                    }
+
+                    _fastSlots[key] = value;
+                    return;
+                }
+
+                _cold ??= new Dictionary<int, IModifyValue<TValue>>();
+                _cold.Add(key, value);
             }
         }
     }

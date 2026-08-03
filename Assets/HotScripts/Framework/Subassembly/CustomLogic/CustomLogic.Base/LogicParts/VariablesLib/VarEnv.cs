@@ -23,6 +23,7 @@ namespace Xease.CoreGame
     {
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 单一值类型的变量桶：string key → T。
     /// </summary>
@@ -107,6 +108,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 变量黑板：int/bool/float/long/object 走定长热桶，其余类型用稠密 TypeKey 字典。
     /// </summary>
@@ -118,17 +120,23 @@ namespace Xease.CoreGame
             typeof(int),
             typeof(bool),
             typeof(float),
+            typeof(double),
             typeof(long),
             typeof(object),
         };
 
-        // 常用类型下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
+        // 常用类型下标直达，绕过 Dictionary；
         private readonly IVariables[] _fastBuckets = new IVariables[s_fastTypes.Length];
-        // 非热类型分类器 <TypeKey, 变量桶>；首次写入懒创建
+        // 非热类型分类器 <TypeKey, 变量桶>；
         private Dictionary<int, IVariables> _varTypeDic = new (4);
 
         // 进程内仅非热类型单调分配稠密 TypeKey
         private static int s_nextTypeKey = s_fastTypes.Length;
+
+        // 按T缓存的手工定制读写路由：精确值类型桶 / object 桶 / uint→int
+        private const byte RouteExact = 0;
+        private const byte RouteObject = 1;
+        private const byte RouteUIntAsInt = 2;  //篡改unit到int
 
         private static class TypeKeyOf<T>
         {
@@ -138,6 +146,8 @@ namespace Xease.CoreGame
             public static readonly int Id = FastSlot >= 0
                 ? -1
                 : System.Threading.Interlocked.Increment(ref s_nextTypeKey) - 1;
+            // 按 T 只初始化一次：Exact / Object / UIntAsInt
+            public static readonly byte Route = ResolveRoute();
 
             private static int ResolveFastSlot()
             {
@@ -149,16 +159,25 @@ namespace Xease.CoreGame
                 }
                 return -1;
             }
+
+            private static byte ResolveRoute()
+            {
+                var t = typeof(T);
+                // class / interface（等价于原 IsClass||IsInterface）
+                if (!t.IsValueType) return RouteObject;
+                if (t == typeof(uint)) return RouteUIntAsInt;
+                return RouteExact;
+            }
         }
-
-        private static int _index = 0;
+        
+        //Debug Use: 进程内实例创建序号源，构造时递增写入 _createIdx
+        private static int s_nextCreateIdx = 0;
         private int _createIdx = 0;
-
         public bool IsInPool { get; private set; } = false;
 
         public VarEnv()
         {
-            _createIdx = ++_index;
+            _createIdx = ++s_nextCreateIdx;
         }
 
         public void Construct()
@@ -213,68 +232,59 @@ namespace Xease.CoreGame
 
         public bool ReadVar<T>(string key, out T value)
         {
-            var typeT = typeof(T);
-            if (typeT.IsClass || typeT.IsInterface)
+            switch (TypeKeyOf<T>.Route)
             {
-                var variables = GetVariables<object>();
-                if (variables != null && variables.ReadVar(key, out var exist))
+                case RouteObject:
                 {
-                    if (exist is T v)
+                    var variables = GetVariables<object>();
+                    if (variables != null && variables.ReadVar(key, out var exist) && exist is T v)
                     {
                         value = v;
                         return true;
                     }
+                    break;
                 }
-            }
-            else
-            {
-                value = default;
-                if (typeT == typeof(uint))
+                case RouteUIntAsInt:
                 {
-                    CLogger.LogError($"ReadVar case uint  key={key}, value={value}");
                     var variables = GetVariables<int>();
                     if (variables != null && variables.ReadVar(key, out var exist))
                     {
                         value = Unsafe.As<int, T>(ref exist);
                         return true;
                     }
+                    break;
                 }
-                else
+                default:
                 {
                     var variables = GetVariables<T>();
                     if (variables != null && variables.ReadVar(key, out value))
                     {
                         return true;
                     }
+                    break;
                 }
             }
 
-            value = default(T);
+            value = default;
             return false;
         }
 
         public void WriteVar<T>(string key, T value)
         {
-            var typeT = typeof(T);
-            if (typeT.IsClass || typeT.IsInterface)
+            switch (TypeKeyOf<T>.Route)
             {
-                var variables = GetVariables<object>(true);
-                variables.WriteVar(key, value);
-            }
-            else
-            {
-                if (typeT == typeof(uint))
+                case RouteObject:
+                    GetVariables<object>(true).WriteVar(key, value);
+                    return;
+                case RouteUIntAsInt:
                 {
                     var intV = Unsafe.As<T, int>(ref value);
-                    CLogger.LogError($"WriteVar case uint  key={key}, value={value}, intV={intV}");
-                    var variables = GetVariables<int>(true);
-                    variables.WriteVar(key, intV);
+                    GetVariables<int>(true).WriteVar(key, intV);
+                    return;
                 }
-                else
-                {
-                    VariablesImp<T> variables = GetVariables<T>(true);
-                    variables.WriteVar(key, value);
-                }
+                default:
+                    GetVariables<T>(true).WriteVar(key, value);
+                    return;
             }
         }
         
@@ -282,31 +292,29 @@ namespace Xease.CoreGame
         ///IVariables 相关操作 
         public bool HasVar<T>(string key)
         {
-            var variables = GetIVariables<T>();
-            return variables?.HasVar(key) ?? false;
+            switch (TypeKeyOf<T>.Route)
+            {
+                case RouteObject:
+                    return GetVariables<object>()?.HasVar(key) ?? false;
+                case RouteUIntAsInt:
+                    return GetVariables<int>()?.HasVar(key) ?? false;
+                default:
+                    return GetVariables<T>()?.HasVar(key) ?? false;
+            }
         }
         public bool ClearVar<T>(string key)
         {
-            var variables = GetIVariables<T>();
-            return variables?.ClearVar(key) ?? false;
-        }
-        private IVariables GetIVariables<T>()
-        {
-            var typeT = typeof(T);
-            if (typeT.IsClass || typeT.IsInterface)
+            switch (TypeKeyOf<T>.Route)
             {
-                return GetVariables<object>();
+                case RouteObject:
+                    return GetVariables<object>()?.ClearVar(key) ?? false;
+                case RouteUIntAsInt:
+                    return GetVariables<int>()?.ClearVar(key) ?? false;
+                default:
+                    return GetVariables<T>()?.ClearVar(key) ?? false;
             }
-            if (typeT == typeof(uint))
-            {
-                CLogger.LogError($"GetIVariables case uint");
-                return GetVariables<int>();
-            }
-            return GetVariables<T>();
         }
-
-
-        //////////////////////////////////////////////////////////////////////////
+        
         public void Clear()
         {
             var buckets = _fastBuckets;
@@ -315,14 +323,12 @@ namespace Xease.CoreGame
                 buckets[i]?.Clear();
             }
 
-            if (_varTypeDic == null)
+            if (_varTypeDic != null)
             {
-                return;
-            }
-
-            foreach (var kv in _varTypeDic)
-            {
-                kv.Value.Clear();
+                foreach (var kv in _varTypeDic)
+                {
+                    kv.Value.Clear();
+                }
             }
         }
 

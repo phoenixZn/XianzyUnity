@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Unity.Profiling;
 using Xease.FP;
 
@@ -13,6 +14,7 @@ namespace Xease.CoreGame
         {
             InitAttributes_Old();
             InitAttributes_New();
+            InitAttributes_NewFastKey();
             InitAttributes_SimpleArray();
             InitAttributes_SimpleDic();
         }
@@ -64,14 +66,28 @@ namespace Xease.CoreGame
 
 
         //////////////////////////////////////////////////////////////////////////
+        // ComAttributes.New = Dictionary 修改器表；ComAttributes.New.FastKey = 热键数组表
         private static readonly ProfilerMarker s_attributeMarkerNew = new("ComAttributes.New");
+        private static readonly ProfilerMarker s_attributeMarkerNewFastKey = new("ComAttributes.New.FastKey");
         private List<DebugAttributesNew> attributesList_new = new(AttrImpListCount);
+        private List<DebugAttributesNew> attributesList_newFastKey = new(AttrImpListCount);
+
         private void InitAttributes_New()
         {
-            attributesList_new.Clear();
+            FillAttributesList_New(attributesList_new, useFastKeySlots: false);
+        }
+
+        private void InitAttributes_NewFastKey()
+        {
+            FillAttributesList_New(attributesList_newFastKey, useFastKeySlots: true);
+        }
+
+        private void FillAttributesList_New(List<DebugAttributesNew> list, bool useFastKeySlots)
+        {
+            list.Clear();
             for (int i = 0; i < AttrImpListCount; i++)
             {
-                var attrs = new DebugAttributesNew();
+                var attrs = new DebugAttributesNew(useFastKeySlots);
                 for (int k = AttrKeyMin; k <= AttrKeyMax; k++)
                 {
                     attrs.SetAttribute(k, new MultChangeValue_Last<int>(k));
@@ -81,16 +97,27 @@ namespace Xease.CoreGame
                     attrs.SetAttribute(k, new MultChangeValue_Last<FixPoint>(new FixPoint(k)));
                 }
 
-                attributesList_new.Add(attrs);
+                list.Add(attrs);
             }
         }
+
         private void ProfilerAttributes_New()
         {
-            using (s_attributeMarkerNew.Auto())
+            ProfilerAttributes_NewCore(attributesList_new, s_attributeMarkerNew);
+        }
+
+        private void ProfilerAttributes_NewFastKey()
+        {
+            ProfilerAttributes_NewCore(attributesList_newFastKey, s_attributeMarkerNewFastKey);
+        }
+
+        private static void ProfilerAttributes_NewCore(List<DebugAttributesNew> list, ProfilerMarker marker)
+        {
+            using (marker.Auto())
             {
-                for (int i = 0; i < attributesList_new.Count; i++)
+                for (int i = 0; i < list.Count; i++)
                 {
-                    var attrs = attributesList_new[i];
+                    var attrs = list[i];
                     for (int k = AttrKeyMin; k <= AttrKeyMax; k++)
                     {
                         attrs.GetValue<int>(k, default, false);
@@ -275,10 +302,13 @@ namespace Xease.CoreGame
 
     //////////////////////////////////////////////////////////////////////////
     /// <summary>
-    /// 相对 Old：int/bool/double 走定长热桶，其余类型用稠密 TypeKey 字典；热路径无 typeof 作键。
+    /// 相对 Old：类型层 FastSlot + 修改器表双实现（Dictionary / 热键数组），由 UseFastKeySlots 在创建时选定。
     /// </summary>
     public class DebugAttributesNew
     {
+        // true = 热键数组 AttributeModifiersFast；false = Dictionary AttributeModifiersDic
+        public readonly bool UseFastKeySlots;
+
         // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
         private static readonly System.Type[] s_fastTypes =
         {
@@ -286,7 +316,7 @@ namespace Xease.CoreGame
             typeof(bool),
             typeof(double),
             typeof(float),
-            //typeof(FixPoint),
+            typeof(FixPoint),
         };
 
         // 常用类型下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
@@ -317,13 +347,19 @@ namespace Xease.CoreGame
             }
         }
 
+        /// <summary>创建对照实例；useFastKeySlots 决定修改器表实现，创建后不可改。</summary>
+        public DebugAttributesNew(bool useFastKeySlots = false)
+        {
+            UseFastKeySlots = useFastKeySlots;
+        }
+
         /// <summary>按值类型桶写入属性；桶不存在则创建，同名已存在则失败。</summary>
         public bool SetAttribute<TValue>(int attrName, IModifyValue<TValue> multValue)
         {
             var modifiers = getAttributesByType<TValue>();
             if (modifiers == null)
             {
-                modifiers = new AttributeModifiers<TValue>();
+                modifiers = CreateModifiers<TValue>();
                 var slot = TypeKeyOf<TValue>.FastSlot;
                 if (slot >= 0)
                 {
@@ -381,7 +417,17 @@ namespace Xease.CoreGame
             return false;
         }
 
-        private AttributeModifiers<TValue> getAttributesByType<TValue>(bool logError = false)
+        private IAttributeModifiersTable<TValue> CreateModifiers<TValue>()
+        {
+            if (UseFastKeySlots)
+            {
+                return new AttributeModifiersFast<TValue>();
+            }
+
+            return new AttributeModifiersDic<TValue>();
+        }
+
+        private IAttributeModifiersTable<TValue> getAttributesByType<TValue>(bool logError = false)
         {
             var slot = TypeKeyOf<TValue>.FastSlot;
             IAttributes attrs;
@@ -389,9 +435,11 @@ namespace Xease.CoreGame
             {
                 attrs = _fastBuckets[slot];
             }
-            else if (_classifier == null || !_classifier.TryGetValue(TypeKeyOf<TValue>.Id, out attrs))
+            else
             {
-                attrs = null;
+                WLogger.LogError("getAttributesByType use _classifier :" + typeof(TValue));
+                if (_classifier == null || !_classifier.TryGetValue(TypeKeyOf<TValue>.Id, out attrs))
+                    attrs = null;
             }
 
             if (attrs == null)
@@ -403,20 +451,107 @@ namespace Xease.CoreGame
                 return null;
             }
 
-            return attrs as AttributeModifiers<TValue>;
+            return attrs as IAttributeModifiersTable<TValue>;
         }
 
         public interface IAttributes
         {
             System.Type AttributeType { get; }
         }
-        public class AttributeModifiers<TValue> // TValue属性的数值类型
-            : Dictionary<int, IModifyValue<TValue>> //<TEnum, 数值叠加计算器>
-                , IAttributes
+
+        /// <summary>修改器表最小契约：Dic / Fast 共用，供类型桶读写。</summary>
+        public interface IAttributeModifiersTable<TValue> : IAttributes
+        {
+            bool ContainsKey(int key);
+            bool TryGetValue(int key, out IModifyValue<TValue> value);
+            void Add(int key, IModifyValue<TValue> value);
+        }
+
+        /// <summary>老实现：整表 Dictionary&lt;attrName, 修改器&gt;。</summary>
+        public class AttributeModifiersDic<TValue>
+            : Dictionary<int, IModifyValue<TValue>>
+            , IAttributeModifiersTable<TValue>
         {
             public System.Type AttributeType
             {
                 get { return typeof(TValue); }
+            }
+        }
+
+        /// <summary>
+        /// 热键实现：key 在 [0, FastKeyCapacity) 走定长数组，其余走冷字典（对齐正式 AttributeModifiers）。
+        /// </summary>
+        public class AttributeModifiersFast<TValue> : IAttributeModifiersTable<TValue>
+        {
+            // 热 key 容量；与正式组件 / int 脏标记位宽对齐
+            public const int FastKeyCapacity = 32;
+
+            // 热槽懒分配；下标即 attrName，null 表示未占用
+            private IModifyValue<TValue>[] _fastSlots;
+            // 冷 key 字典；仅 key 越界时使用
+            private Dictionary<int, IModifyValue<TValue>> _cold;
+
+            //////////////////////////////////////////////////////////////////////////
+            /// IAttributes:
+            public System.Type AttributeType
+            {
+                get { return typeof(TValue); }
+            }
+
+            //////////////////////////////////////////////////////////////////////////
+            /// This：
+            /// <summary>是否已注册指定 attrName 的修改器。</summary>
+            public bool ContainsKey(int key)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    return _fastSlots != null && _fastSlots[key] != null;
+                }
+
+                return _cold != null && _cold.ContainsKey(key);
+            }
+
+            /// <summary>按 attrName 取修改器；未注册时返回 false。</summary>
+            public bool TryGetValue(int key, out IModifyValue<TValue> value)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    if (_fastSlots != null)
+                    {
+                        value = _fastSlots[key];
+                        return value != null;
+                    }
+
+                    value = null;
+                    return false;
+                }
+
+                if (_cold != null)
+                {
+                    return _cold.TryGetValue(key, out value);
+                }
+
+                value = null;
+                return false;
+            }
+
+            /// <summary>注册修改器；同 key 已存在时抛 ArgumentException（对齐 Dictionary.Add）。</summary>
+            public void Add(int key, IModifyValue<TValue> value)
+            {
+                if ((uint)key < FastKeyCapacity)
+                {
+                    _fastSlots ??= new IModifyValue<TValue>[FastKeyCapacity];
+                    if (_fastSlots[key] != null)
+                    {
+                        throw new ArgumentException("An item with the same key has already been added.");
+                    }
+
+                    _fastSlots[key] = value;
+                    return;
+                }
+
+                _cold ??= new Dictionary<int, IModifyValue<TValue>>();
+                _cold.Add(key, value);
             }
         }
     }
