@@ -20,7 +20,7 @@ namespace Xease.CoreGame
         // 常用类型下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
         protected readonly IAttributes[] _fastBuckets = new IAttributes[s_fastTypes.Length];
         // 非热类型分类器 <TypeKey, 属性表>；首次写入懒创建
-        protected Dictionary<int, IAttributes> _classifier;
+        protected Dictionary<int, IAttributes> _classifier = new ();
 
         // 进程内仅非热类型单调分配稠密 TypeKey
         private static int s_nextTypeKey = s_fastTypes.Length;
@@ -179,15 +179,24 @@ namespace Xease.CoreGame
             }
         }
 
-        /// <summary>清空热桶与冷字典，供组件复用。</summary>
+        /// <summary>清空各类型属性表内容并保留子容器，供组件入池复用。</summary>
         public void Clear()
         {
             var buckets = _fastBuckets;
             for (int i = 0; i < buckets.Length; i++)
             {
-                buckets[i] = null;
+                var attrs = buckets[i];
+                attrs?.Clear();
             }
-            _classifier?.Clear();
+
+            var classifier = _classifier;
+            if (classifier != null)
+            {
+                foreach (var attrs in classifier.Values)
+                {
+                    attrs.Clear();
+                }
+            }
         }
 
         private AttributeModifiers<TValue> getAttributesByType<TValue>(bool logError = false)
@@ -218,6 +227,8 @@ namespace Xease.CoreGame
         public interface IAttributes
         {
             System.Type AttributeType { get; }
+            // 注销全部属性条目，保留底层数组/字典容量
+            void Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -229,16 +240,23 @@ namespace Xease.CoreGame
             // 热 key 容量；与 int 脏标记 32 位对齐，改容量需同步脏标记方案
             public const int FastKeyCapacity = 32;
 
-            // 热槽懒分配；下标即 attrName，null 表示未占用
-            private IModifyValue<TValue>[] _fastSlots;
-            // 冷 key 字典；仅 key 越界或未进热区时使用
-            private Dictionary<int, IModifyValue<TValue>> _cold;
+            // 热槽；下标即 attrName，null 表示未占用；
+            private readonly IModifyValue<TValue>[] _fastSlots = new IModifyValue<TValue>[FastKeyCapacity];
+            // 冷 key 字典；仅 key 越界时使用；
+            private readonly Dictionary<int, IModifyValue<TValue>> _coldDict = new();
 
             //////////////////////////////////////////////////////////////////////////
             /// IAttributes:
             public System.Type AttributeType
             {
                 get { return typeof(TValue); }
+            }
+
+            /// <summary>注销全部属性条目；保留热槽数组与冷字典实例。</summary>
+            public void Clear()
+            {
+                Array.Clear(_fastSlots, 0, _fastSlots.Length);
+                _coldDict.Clear();
             }
 
             //////////////////////////////////////////////////////////////////////////
@@ -248,10 +266,9 @@ namespace Xease.CoreGame
             {
                 if ((uint)key < FastKeyCapacity)
                 {
-                    return _fastSlots != null && _fastSlots[key] != null;
+                    return _fastSlots[key] != null;
                 }
-
-                return _cold != null && _cold.ContainsKey(key);
+                return _coldDict.ContainsKey(key);
             }
 
             /// <summary>按 attrName 取修改器；未注册时返回 false。</summary>
@@ -259,23 +276,10 @@ namespace Xease.CoreGame
             {
                 if ((uint)key < FastKeyCapacity)
                 {
-                    if (_fastSlots != null)
-                    {
-                        value = _fastSlots[key];
-                        return value != null;
-                    }
-
-                    value = null;
-                    return false;
+                    value = _fastSlots[key];
+                    return value != null;
                 }
-
-                if (_cold != null)
-                {
-                    return _cold.TryGetValue(key, out value);
-                }
-
-                value = null;
-                return false;
+                return _coldDict.TryGetValue(key, out value);
             }
 
             /// <summary>注册修改器；同 key 已存在时抛 ArgumentException（对齐 Dictionary.Add）。</summary>
@@ -283,18 +287,14 @@ namespace Xease.CoreGame
             {
                 if ((uint)key < FastKeyCapacity)
                 {
-                    _fastSlots ??= new IModifyValue<TValue>[FastKeyCapacity];
                     if (_fastSlots[key] != null)
                     {
                         throw new ArgumentException("An item with the same key has already been added.");
                     }
-
                     _fastSlots[key] = value;
                     return;
                 }
-
-                _cold ??= new Dictionary<int, IModifyValue<TValue>>();
-                _cold.Add(key, value);
+                _coldDict.Add(key, value);
             }
         }
     }

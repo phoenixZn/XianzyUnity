@@ -10,24 +10,24 @@ namespace Xease.CoreGame
         public const int Defense = 3;
 
         // 命中相关
-        public const int Hit = 10;
-        public const int Dodge = 11;
+        public const int Hit = 4;
+        public const int Dodge = 5;
         
         // 暴击相关
-        public const int Crit = 20;
-        public const int CritDamage = 22;
+        public const int Crit = 6;
+        public const int CritDamage = 7;
         
         // 破甲
-        public const int ArmorPierce = 40;
+        public const int ArmorPierce = 8;
         
         // 韧性
-        public const int Tenacity = 60;             
+        public const int Tenacity = 9;             
         
         //中间计算值-基础静态配置上的缩放:
-        public const int ScaleHpBase = 102;
-        public const int ScaleAtkBase = 103;
+        public const int ScaleHpBase = 20;
+        public const int ScaleAtkBase = 21;
         //最终伤害修正
-        public const int ScaleFinalDamage = 110;
+        public const int ScaleFinalDamage = 22;
     }
 
     //属性快照切片

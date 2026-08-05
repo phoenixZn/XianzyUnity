@@ -4,12 +4,12 @@ namespace Xease.CoreGame
 {
     public static partial class AttributeBool
     {
-        public const int Moveable = 1001; // 是否可以移动
-        public const int CanCollision = 1002; // 是否可以发生碰撞
-        public const int Visible = 1003;
-        public const int Stunned = 1004; // 是否处于不能行动状态（眩晕等）
-        public const int CanBeTargeted = 1005; // 是否可以被索敌
-        public const int CanBeHurted = 1006; // 是否可以被伤害
+        public const int Moveable = 1; // 是否可以移动
+        public const int CanCollision = 2; // 是否可以发生碰撞
+        public const int Visible = 3;
+        public const int Stunned = 4; // 是否处于不能行动状态（眩晕等）
+        public const int CanBeTargeted = 5; // 是否可以被索敌
+        public const int CanBeHurted = 6; // 是否可以被伤害
         
         public static AttributesComponent AddBaseAttributeBool(this AttributesComponent component)
         {
@@ -36,6 +36,11 @@ namespace Xease.CoreGame
         /// </summary>
         public static FixPoint GetAttributeFixPoint(this LogicEntity e, int key, FixPoint errorValue = default(FixPoint))
         {
+            if (e == null || !e.hasComAttributes)
+            {
+                WLogger.LogError("GetAttributeFixPoint !HasAttributes");
+                return errorValue;
+            }
             var rv = errorValue;
             if (e.comAttributes.TryGetValue(key, ref rv))
                 return rv;
@@ -50,9 +55,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("e.GetAttribute  !HasAttributes");
+                WLogger.LogError("GetAttributeFloat !HasAttributes");
+                return errorValue;
             }
-
             var rv = errorValue;
             if (e.comAttributes.TryGetValue(key, ref rv))
                 return rv;
@@ -67,9 +72,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("e.GetAttribute  !HasAttributes");
+                WLogger.LogError("GetAttributeDouble !HasAttributes");
+                return errorValue;
             }
-
             var rv = errorValue;
             if (e.comAttributes.TryGetValue(key, ref rv))
                 return rv;
@@ -84,9 +89,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("e.GetAttribute  !HasAttributes");
+                WLogger.LogError("GetAttributeInt !HasAttributes");
+                return errorValue;
             }
-
             var rv = errorValue;
             if (e.comAttributes.TryGetValue(key, ref rv))
                 return rv;
@@ -102,10 +107,9 @@ namespace Xease.CoreGame
             var rv = errorValue;
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("e.GetAttribute  !HasAttributes");
+                WLogger.LogError("GetAttributeBool !HasAttributes");
                 return rv;
             }
-
             if (!e.hasComAttributes)
                 return rv;
             if (e.comAttributes.TryGetValue(key, ref rv))
@@ -121,9 +125,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("Actor.SetAttribute  !HasAttributes");
+                WLogger.LogError("ModifyAttribute !HasAttributes");
+                return;
             }
-
             e.comAttributes.Modify(key, value, flag);
         }
 
@@ -134,9 +138,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("Actor.SetAttribute  !HasAttributes");
+                WLogger.LogError("ModifyAttribute !HasAttributes");
+                return;
             }
-
             e.comAttributes.Modify(key, value, flag);
         }
 
@@ -147,9 +151,9 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("Actor.SetAttribute  !HasAttributes");
+                WLogger.LogError("ModifyAttribute !HasAttributes");
+                return;
             }
-
             e.comAttributes.Modify(key, value, flag);
         }
 
@@ -160,7 +164,8 @@ namespace Xease.CoreGame
         {
             if (e == null || !e.hasComAttributes)
             {
-                WLogger.LogError("Actor.RemoveAttribute  !HasAttributes");
+                WLogger.LogError("RemoveModify !HasAttributes");
+                return;
             }
             e.comAttributes.RemoveModify<T>(key, flag);
         }
