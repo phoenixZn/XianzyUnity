@@ -61,9 +61,11 @@ namespace Xease.CoreGame
                 _rootSystem.ClearReactiveSystems();
                 _rootSystem = null;
             }
-
-            LogicWorld.Reset();
-            MetaWorld.Reset();
+            LogicWorld?.Reset();
+            MetaWorld?.Reset();
+            CreationInfo = null;
+            LogicWorld = null;
+            MetaWorld = null;
         }
         
 
@@ -90,6 +92,7 @@ namespace Xease.CoreGame
         /// 内部初始化:
         protected virtual void RebuildComponentLookUp(Type lookupType, List<ComponentTypeIndex> typeIndexList, out List<Type> cmptTypes, out List<string> cmptNames)
         {
+            typeIndexList.Clear();
             FieldInfo[] fieldInfos = lookupType.GetFields(BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy);
 
             List<FieldInfo> cmptTypeIndexFields = new List<FieldInfo>();
