@@ -10,7 +10,7 @@ namespace Xease.CoreGame
     {
         public static void AddEntityIndex_UnityObjectRelated(this LogicWorld world)
         {
-            var index = new GroupEntityIndex<LogicEntity, int>(
+            var index = new PrimaryEntityIndex<LogicEntity, int>(
                 "EntityIndex_UnityObjectRelated",
                 world.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComUnityObjectRelated)),
                 (e, c) => ((UnityObjectRelatedComponent) c).gameObjectInstanceID.Keys.ToArray());
@@ -19,7 +19,7 @@ namespace Xease.CoreGame
 
         public static LogicEntity GetEntityWithUnityObjectRelated(this LogicWorld world, int gameObjectInstanceID)
         {
-            var index = world.GetEntityIndex("EntityIndex_UnityObjectRelated") as PrimaryEntityIndex<LogicEntity, long>;
+            var index = world.GetEntityIndex("EntityIndex_UnityObjectRelated") as PrimaryEntityIndex<LogicEntity, int>;
             if (index == null)
             {
                 return null;

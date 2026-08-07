@@ -10,7 +10,7 @@ namespace Xease.CoreGame
         
         protected override void InitEntityIndex()
         {
-
+            _logicWorld.AddEntityIndex_UnityObjectRelated();
         }
         protected override void AddMetaComponents()
         {
