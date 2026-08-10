@@ -37,12 +37,18 @@ namespace MackySoft.XPool.Unity {
 		}
 
 		protected override void OnRent (ParticleSystem instance) {
+			// 重新武装停止回调，支持 fire-and-forget：粒子自然停止时由回调归还
+			var main = instance.main;
+			main.stopAction = ParticleSystemStopAction.Callback;
 			if (m_PlayOnRent) {
 				instance.Play(true);
 			}
 		}
 
 		protected override void OnReturn (ParticleSystem instance) {
+			// 手动归还前置 None：阻止 Stop 触发 OnParticleSystemStopped 的二次归还
+			var main = instance.main;
+			main.stopAction = ParticleSystemStopAction.None;
 			instance.Stop(true,ParticleSystemStopBehavior.StopEmitting);
 		}
 

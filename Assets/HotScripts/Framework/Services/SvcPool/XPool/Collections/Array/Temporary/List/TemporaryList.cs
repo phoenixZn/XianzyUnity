@@ -81,7 +81,7 @@ namespace MackySoft.XPool.Collections {
 		/// Add object to the head of the list.
 		/// </summary>
 		public void Add (T item) {
-			ArrayPoolUtility.EnsureCapacity(ref m_Array,m_Count,m_Pool);
+			ArrayPoolUtility.EnsureCapacity(ref m_Array,m_Count + 1,m_Pool);
 			m_Array[m_Count] = item;
 			m_Count++;
 		}

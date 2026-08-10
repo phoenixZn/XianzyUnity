@@ -135,7 +135,12 @@ namespace MackySoft.XPool.Collections {
 			if ((array.Length - arrayIndex) < m_Count) {
 				throw Error.InvalidOffLength();
 			}
-			
+
+			// 空队列必须提前返回：first==last==0 会落入环绕分支，把整段底层数组拷进目标
+			if (m_Count == 0) {
+				return;
+			}
+
 			if (m_First < m_Last) {
 				System.Array.Copy(m_Array,m_First,array,arrayIndex,m_Count);
 			}
