@@ -1,11 +1,12 @@
 ﻿using System;
-using UnityEngine;
 
 namespace MackySoft.XPool.Collections.Internal {
 	internal static class RuntimeHelpers {
 
 		public static bool IsWellKnownNoReferenceContainsType<T> () {
-			return WellKnownNoReferenceContainsType<T>.IsWellKnownType;
+			// BCL结果缓存 + 外部Register扩展
+			return WellKnownNoReferenceContainsType<T>.IsWellKnownType ||
+			       NoReferenceTypeRegistry.IsRegistered<T>();
 		}
 
 		static bool WellKnownNoReferenceContainsTypeInitialize (Type t) {
@@ -21,18 +22,6 @@ namespace MackySoft.XPool.Collections.Internal {
 			if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>)) {
 				return WellKnownNoReferenceContainsTypeInitialize(t.GetGenericArguments()[0]);
 			}
-
-			if (t == typeof(Vector2)) { return true; }
-			if (t == typeof(Vector3)) { return true; }
-			if (t == typeof(Vector4)) { return true; }
-			if (t == typeof(Vector2Int)) { return true; }
-			if (t == typeof(Vector3Int)) { return true; }
-			if (t == typeof(Rect)) { return true; }
-			if (t == typeof(RectInt)) { return true; }
-			if (t == typeof(Bounds)) { return true; }
-			if (t == typeof(BoundsInt)) { return true; }
-			if (t == typeof(Quaternion)) { return true; }
-			if (t == typeof(Color)) { return true; }
 
 			return false;
 		}

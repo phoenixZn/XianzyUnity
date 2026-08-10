@@ -1,9 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace MackySoft.XPool.Internal {
-    internal static class Error {
+    internal static partial class Error {
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ArgumentNullException ArgumentNullException (string paramName) {
@@ -60,9 +59,5 @@ namespace MackySoft.XPool.Internal {
 			return new NotSupportedException("This function is not supported.");
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MissingReferenceException InstanceDestroyed () {
-			return new MissingReferenceException("The instance was destroyed in callback.");
-		}
 	}
 }
