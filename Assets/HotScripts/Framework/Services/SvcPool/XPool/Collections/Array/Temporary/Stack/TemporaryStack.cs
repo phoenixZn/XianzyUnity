@@ -86,7 +86,7 @@ namespace MackySoft.XPool.Collections {
 					}
 				}
 			}
-			return true;
+			return false;
 		}
 
 		/// <summary>

@@ -86,7 +86,7 @@ namespace MackySoft.XPool.Collections {
 			m_First = 0;
 			m_Last = 0;
 			m_Count = 0;
-			m_Mask = 0;
+			// 保留 m_Mask：数组未归还，掩码须与 Length 一致；置 0 会导致后续 Enqueue 环形索引恒写下标 0
 		}
 
 		/// <summary>
@@ -170,7 +170,7 @@ namespace MackySoft.XPool.Collections {
 
 		public IEnumerator<T> GetEnumerator () {
 			for (int i = 0;m_Count > i;i++) {
-				yield return m_Array[i];
+				yield return GetElement(i); // 或 yield return m_Array[(m_First + i) & m_Mask];
 			}
 		}
 

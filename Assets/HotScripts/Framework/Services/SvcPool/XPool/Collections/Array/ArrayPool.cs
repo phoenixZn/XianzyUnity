@@ -122,7 +122,10 @@ namespace MackySoft.XPool.Collections {
 				// Release instances from each buckets.
 				for (int i = 0;i < m_Pool.Length;i++) {
 					var bucket = m_Pool[i];
-					for (int k = bucket.Count - keep;i > 0;k--) {
+					if (bucket == null) {
+						continue;
+					}
+					for (int k = bucket.Count - keep;k > 0;k--) {
 						bucket.Pop();
 					}
 				}

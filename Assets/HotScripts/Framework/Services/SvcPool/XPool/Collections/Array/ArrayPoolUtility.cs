@@ -23,9 +23,10 @@ namespace MackySoft.XPool.Collections {
 			if (array.Length < newSize) {
 				int minimumSize = (array.Length != 0) ? array.Length * 2 : kMinArraySize;
 				T[] newArray = pool.Rent((newSize < minimumSize) ? minimumSize : (newSize * 2));
-				if (newSize > 0) {
+				// 只搬迁 count 个有效元素；newSize 是目标容量，用作拷贝长度会多拷脏数据且可能越界
+				if (count > 0) {
 					if (first < last) {
-						Array.Copy(array,first,newArray,0,newSize);
+						Array.Copy(array,first,newArray,0,count);
 					}
 					else {
 						Array.Copy(array,first,newArray,0,array.Length - first);

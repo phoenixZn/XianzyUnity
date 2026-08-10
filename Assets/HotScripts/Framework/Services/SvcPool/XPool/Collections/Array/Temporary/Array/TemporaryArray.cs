@@ -35,7 +35,7 @@ namespace MackySoft.XPool.Collections {
 				return index >= 0 && index < m_Length ? m_Array[index] : throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
 			}
 			set {
-				if (index < 0 && index >= m_Length) {
+				if (index < 0 || index >= m_Length) {
 					throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
 				}
 				m_Array[index] = value;

@@ -35,7 +35,7 @@ namespace MackySoft.XPool.Collections {
 				return index >= 0 && index < m_Count ? m_Array[index] : throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
 			}
 			set {
-				if (index < 0 && index >= m_Count) {
+				if (index < 0 || index >= m_Count) {
 					throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
 				}
 				m_Array[index] = value;
@@ -60,7 +60,7 @@ namespace MackySoft.XPool.Collections {
 		public bool Contains (T item) {
 			if (item == null) {
 				for (int i = 0;i < m_Count;i++) {
-					if (item == null) {
+					if (m_Array[i] == null) {
 						return true;
 					}
 				}
@@ -335,11 +335,11 @@ namespace MackySoft.XPool.Collections {
 				}
 				return -1;
 			}
-			if (index >= m_Count) {
+			if (index < 0 || index >= m_Count) {
 				throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
 			}
-			if (m_Count > index + 1) {
-				throw Error.ArgumentOutOfRangeOfCollection(nameof(index));
+			if ((count < 0) || count > index + 1) {
+				throw Error.ArgumentOutOfRangeCount(nameof(count));
 			}
 			return System.Array.LastIndexOf(m_Array,item,index,count);
 		}
@@ -518,7 +518,8 @@ namespace MackySoft.XPool.Collections {
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <exception cref="ArgumentNullException"></exception>
 		public int FindIndex (int startIndex,Predicate<T> match) {
-			return FindIndex(startIndex,m_Count,match);
+			// 搜索区间为 [startIndex, m_Count)，count 必须是剩余长度而非总长度
+			return FindIndex(startIndex,m_Count - startIndex,match);
 		}
 
 		/// <summary>
@@ -586,14 +587,13 @@ namespace MackySoft.XPool.Collections {
 				throw Error.ArgumentNullException(nameof(match));
 			}
 			if (m_Count == 0) {
-				if (startIndex == -1) {
+				// 空列表仅允许 startIndex == -1（与 List<T>.FindLastIndex 一致）
+				if (startIndex != -1) {
 					throw Error.ArgumentOutOfRangeOfCollection(nameof(startIndex));
 				}
 			}
-			else {
-				if (startIndex >= m_Count) {
-					throw Error.ArgumentOutOfRangeOfCollection(nameof(startIndex));
-				}
+			else if (startIndex >= m_Count) {
+				throw Error.ArgumentOutOfRangeOfCollection(nameof(startIndex));
 			}
 			if ((count < 0) || (startIndex - count + 1) < 0) {
 				throw Error.ArgumentOutOfRangeCount(nameof(count));

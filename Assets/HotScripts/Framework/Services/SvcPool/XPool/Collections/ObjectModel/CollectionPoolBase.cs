@@ -30,7 +30,7 @@ namespace MackySoft.XPool.Collections.ObjectModel {
 		/// <param name="capacity"> The pool capacity. If less than 0, <see cref="ArgumentOutOfRangeException"/> will be thrown. </param>
 		/// <param name="factory"> Method that create new instance. If is null, <see cref="ArgumentNullException"/> will be thrown. </param>
 		/// <param name="clear"> Method that clear collection. If is null, <see cref="ArgumentNullException"/> will be thrown. </param>
-		protected CollectionPoolBase (int capacity,Func<T> factory,Action<T> clear) {
+		protected CollectionPoolBase (int capacity, Func<T> factory,Action<T> clear) {
 			if (capacity < 0) {
 				throw Error.RequiredNonNegative(nameof(capacity));
 			}
@@ -40,7 +40,7 @@ namespace MackySoft.XPool.Collections.ObjectModel {
 			if (clear == null) {
 				throw Error.ArgumentNullException(nameof(clear));
 			}
-			m_Pool = new Stack<T>(m_Capacity);
+			m_Pool = new Stack<T>(capacity);
 			m_Capacity = capacity;
 			m_Factory = factory;
 			m_Clear = clear;
