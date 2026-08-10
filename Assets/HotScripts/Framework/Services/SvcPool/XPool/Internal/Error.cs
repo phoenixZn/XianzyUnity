@@ -41,7 +41,7 @@ namespace MackySoft.XPool.Internal {
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ArgumentOutOfRangeException ArgumentOutOfRangeCount (string paramName) {
-			return new ArgumentOutOfRangeException(nameof(paramName));
+			return new ArgumentOutOfRangeException(paramName);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

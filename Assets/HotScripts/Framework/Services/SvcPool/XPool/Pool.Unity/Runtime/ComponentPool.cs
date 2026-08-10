@@ -23,7 +23,7 @@ namespace MackySoft.XPool.Unity {
 		public T Rent (Vector3 position,Quaternion rotation,Transform parent = null) {
 			T instance = GetPooledInstance();
 			if (instance != null) {
-				Transform transform = parent.transform;
+				Transform transform = instance.transform;
 				transform.SetParent(parent);
 				transform.SetPositionAndRotation(position,rotation);
 			}
