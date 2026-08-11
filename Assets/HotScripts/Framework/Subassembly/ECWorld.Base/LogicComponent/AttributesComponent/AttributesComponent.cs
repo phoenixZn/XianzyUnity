@@ -8,6 +8,13 @@ namespace Xease.CoreGame
     /// </summary>
     public sealed partial class AttributesComponent : LogicComponent
     {
+        // 常用类型数组下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
+        protected readonly IAttributes[] _fastBuckets = null;
+        // 非热类型分类器 <TypeKey, 属性表>；
+        protected Dictionary<int, IAttributes> _classifier = null;
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// TypeKey: static
         // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
         private static readonly System.Type[] s_fastTypes =
         {
@@ -16,15 +23,8 @@ namespace Xease.CoreGame
             typeof(double),
             typeof(float),
         };
-
-        // 常用类型下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
-        protected readonly IAttributes[] _fastBuckets = new IAttributes[s_fastTypes.Length];
-        // 非热类型分类器 <TypeKey, 属性表>；首次写入懒创建
-        protected Dictionary<int, IAttributes> _classifier = new ();
-
         // 进程内仅非热类型单调分配稠密 TypeKey
         private static int s_nextTypeKey = s_fastTypes.Length;
-
         private static class TypeKeyOf<T>
         {
             // -1 = 非热类型，走 _classifier
@@ -45,10 +45,23 @@ namespace Xease.CoreGame
                 return -1;
             }
         }
+        
+        //////////////////////////////////////////////////////////////////////////
+        public AttributesComponent()
+        {
+            _fastBuckets = new IAttributes[s_fastTypes.Length];
+            _classifier = new ();
+        }
+        
 
         /// <summary>按值类型桶写入属性；桶不存在则创建，同名已存在则失败。</summary>
         public bool SetAttribute<TValue>(int attrName, IModifyValue<TValue> multValue)
         {
+            if (multValue == null)
+            {
+                WLogger.LogError($"SetAttribute  multValue == null， attrName={attrName}");
+                return false;
+            }
             var modifiers = getAttributesByType<TValue>();
             if (modifiers == null)
             {
@@ -81,7 +94,6 @@ namespace Xease.CoreGame
             {
                 return modifier;
             }
-
             return null;
         }
 
@@ -93,7 +105,6 @@ namespace Xease.CoreGame
             {
                 return modifiers.Value;
             }
-
             return defaultValue;
         }
 
@@ -105,12 +116,11 @@ namespace Xease.CoreGame
             {
                 return modifiers.DefaultValue;
             }
-
             return defaultValue;
         }
 
-        /// <summary>尝试读取属性当前值；失败时写出 defaulValue。</summary>
-        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaulValue)
+        /// <summary>尝试读取属性当前值；失败时写出 defaultValue。</summary>
+        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaultValue)
         {
             var modifier = GetAttribute<TValue>(attrName);
             if (modifier != null)
@@ -118,8 +128,7 @@ namespace Xease.CoreGame
                 getValue = modifier.Value;
                 return true;
             }
-
-            getValue = defaulValue;
+            getValue = defaultValue;
             return false;
         }
 
@@ -132,7 +141,6 @@ namespace Xease.CoreGame
                 getValue = modifier.Value;
                 return true;
             }
-
             return false;
         }
 
@@ -145,7 +153,6 @@ namespace Xease.CoreGame
                 modifier.AddChange(getValue, flag);
                 return true;
             }
-
             return false;
         }
 
@@ -165,7 +172,6 @@ namespace Xease.CoreGame
                 modifier.RemoveChange(flag);
                 return true;
             }
-
             return false;
         }
 
@@ -216,7 +222,7 @@ namespace Xease.CoreGame
             {
                 if (logError)
                 {
-                    WLogger.LogError("getAttributesByType == null  " + typeof(TValue));
+                    WLogger.LogError($"getAttributesByType == null  TValue={typeof(TValue)}");
                 }
                 return null;
             }

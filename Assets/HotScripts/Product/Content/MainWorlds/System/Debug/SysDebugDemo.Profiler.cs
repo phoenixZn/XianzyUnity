@@ -257,7 +257,7 @@ namespace Xease.CoreGame
         }
         
 
-        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaulValue)
+        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaultValue)
         {
             var modifier = GetAttribute<TValue>(attrName);
             if (modifier != null)
@@ -266,7 +266,7 @@ namespace Xease.CoreGame
                 return true;
             }
 
-            getValue = defaulValue;
+            getValue = defaultValue;
             return false;
         }
 
@@ -403,8 +403,8 @@ namespace Xease.CoreGame
             return defaultValue;
         }
 
-        /// <summary>尝试读取属性当前值；失败时写出 defaulValue。</summary>
-        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaulValue)
+        /// <summary>尝试读取属性当前值；失败时写出 defaultValue。</summary>
+        public bool TryGetValue<TValue>(int attrName, out TValue getValue, TValue defaultValue)
         {
             var modifier = GetAttribute<TValue>(attrName);
             if (modifier != null)
@@ -413,7 +413,7 @@ namespace Xease.CoreGame
                 return true;
             }
 
-            getValue = defaulValue;
+            getValue = defaultValue;
             return false;
         }
 

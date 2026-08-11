@@ -5,22 +5,67 @@ using MackySoft.XPool;
 namespace Xease
 {
     /// <summary>
-    /// 共享对象池服务实现，按 Type 集中管理各类型池。
+    /// 共享对象池服务：热类型走定长桶，其余用稠密 TypeKey 字典，避免 Dictionary&lt;Type, object&gt;。
     /// </summary>
     public class PoolService : IPoolService
     {
-        // 按类型存放 FactoryPool<T>（装箱为 object）
-        private readonly Dictionary<Type, object> _pools = new();
+        // 常用类型数组下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
+        private readonly IPool[] _fastBuckets;
+        // 非热类型分类器 <TypeKey, 池>
+        private Dictionary<int, IPool> _classifier;
+
+        //////////////////////////////////////////////////////////////////////////
+        /// TypeKey: static
+        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
+        private static readonly Type[] s_fastTypes = Array.Empty<Type>();
+        // 进程内单调分配稠密 TypeKey
+        private static int s_nextTypeKey = s_fastTypes.Length;
+        private static class TypeKeyOf<T>
+        {
+            public static readonly int FastSlot = ResolveFastSlot();
+            public static readonly int KeyId = FastSlot >= 0
+                ? -1
+                : System.Threading.Interlocked.Increment(ref s_nextTypeKey) - 1; // 仅 FastSlot < 0 时分配；
+            private static int ResolveFastSlot()
+            {
+                var type = typeof(T);
+                var fastTypes = s_fastTypes;
+                for (int i = 0; i < fastTypes.Length; i++)
+                {
+                    if (type == fastTypes[i]) return i;
+                }
+                return -1;  // -1 = 非热类型
+            }
+        }
+
+        public PoolService()
+        {
+            _fastBuckets = new IPool[s_fastTypes.Length];
+            _classifier = new Dictionary<int, IPool>();
+        }
 
         //////////////////////////////////////////////////////////////////////////
         /// IService:
         public void Shutdown()
         {
-            foreach (var poolObj in _pools.Values)
+            var buckets = _fastBuckets;
+            for (int i = 0; i < buckets.Length; i++)
             {
-                ((IPool)poolObj).Clear();
+                buckets[i]?.Clear();
+                buckets[i] = null;
             }
-            _pools.Clear();
+
+            var classifier = _classifier;
+            if (classifier == null)
+            {
+                return;
+            }
+
+            foreach (var pool in classifier.Values)
+            {
+                pool.Clear();
+            }
+            classifier.Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -32,14 +77,13 @@ namespace Xease
             Action<T> onReturn = null,
             Action<T> onRelease = null) where T : class, new()
         {
-            Type type = typeof(T);
-            if (_pools.ContainsKey(type))
+            if (TryGetStoredPool<T>() != null)
             {
-                G.LogError($"Register pool failed, already exists: {type.FullName}");
+                G.LogError($"Register pool failed, already exists: {typeof(T).FullName}");
                 return;
             }
 
-            _pools[type] = new FactoryPool<T>(capacity, factory, onRent, onReturn, onRelease);
+            StorePool<T>(new FactoryPool<T>(capacity, factory, onRent, onReturn, onRelease));
         }
 
         public T Rent<T>() where T : class, new()
@@ -79,26 +123,52 @@ namespace Xease
 
         public void Clear<T>() where T : class, new()
         {
-            Type type = typeof(T);
-            if (!_pools.TryGetValue(type, out var poolObj))
-            {
-                return;
-            }
-
-            ((IPool)poolObj).Clear();
+            TryGetStoredPool<T>()?.Clear();
         }
 
         public IPool<T> GetPool<T>() where T : class, new()
         {
-            Type type = typeof(T);
-            if (_pools.TryGetValue(type, out var poolObj))
+            var stored = TryGetStoredPool<T>();
+            if (stored != null)
             {
-                return (IPool<T>)poolObj;
+                return (IPool<T>)stored;
             }
 
             var pool = new FactoryPool<T>(IPoolService.DefaultCapacity, () => new T());
-            _pools[type] = pool;
+            StorePool<T>(pool);
             return pool;
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        // 按 FastSlot / TypeKey 取已有池；缺失返回 null
+        private IPool TryGetStoredPool<T>() where T : class, new()
+        {
+            var slot = TypeKeyOf<T>.FastSlot;
+            if (slot >= 0)
+            {
+                return _fastBuckets[slot];
+            }
+
+            if (_classifier == null || !_classifier.TryGetValue(TypeKeyOf<T>.KeyId, out var pool))
+            {
+                return null;
+            }
+            return pool;
+        }
+
+        // 写入热桶或 classifier；调用方保证该类型尚未占用
+        private void StorePool<T>(IPool pool) where T : class, new()
+        {
+            var slot = TypeKeyOf<T>.FastSlot;
+            if (slot >= 0)
+            {
+                _fastBuckets[slot] = pool;
+                return;
+            }
+
+            _classifier ??= new Dictionary<int, IPool>();
+            _classifier.Add(TypeKeyOf<T>.KeyId, pool);
         }
     }
 }

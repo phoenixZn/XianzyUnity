@@ -164,22 +164,22 @@ namespace Xease.CoreGame
             {
                 var t = typeof(T);
                 // class / interface（等价于原 IsClass||IsInterface）
-                if (!t.IsValueType) return RouteObject;
-                if (t == typeof(uint)) return RouteUIntAsInt;
+                if (!t.IsValueType) 
+                    return RouteObject;
+                if (t == typeof(uint)) 
+                    return RouteUIntAsInt;
                 return RouteExact;
             }
         }
-        
-        //Debug Use: 进程内实例创建序号源，构造时递增写入 _createIdx
-        private static int s_nextCreateIdx = 0;
-        private int _createIdx = 0;
+
+        //////////////////////////////////////////////////////////////////////////
+        /// ICanRecycle:
         public bool IsInPool { get; private set; } = false;
 
         public VarEnv()
         {
-            _createIdx = ++s_nextCreateIdx;
         }
-
+        
         public void Construct()
         {
             IsInPool = false;
@@ -191,6 +191,8 @@ namespace Xease.CoreGame
             Clear();
         }
 
+        //////////////////////////////////////////////////////////////////////////
+        /// This:
         private VariablesImp<T> GetVariables<T>(bool autoAdd = false)
         {
             var slot = TypeKeyOf<T>.FastSlot;
