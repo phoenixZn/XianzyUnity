@@ -31,8 +31,9 @@ namespace Xease
             Services.AddService_ValueEvent();
             Services.AddService_SharedPool();
             Services.AddService_Coroutine();
-            Services.AddService_Input();
             Services.AddService_Asset();
+            Services.AddService_GameObjectPools();
+            Services.AddService_Input();
             var svcLogic = Services.AddService_CustomLogic();
             svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
             svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
