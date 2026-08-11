@@ -18,12 +18,40 @@ namespace Xease.CoreGame.Debug
             InitAttributes_SimpleArray();
             InitAttributes_SimpleDic();
         }
+        
+        private void ProfilerExecute_Attributes()
+        {
+            if (ExecuteAcc % 100 == 0)
+            {
+                ProfilerAttributes_Old();
+            }
+
+            if (ExecuteAcc % 100 == 10)
+            {
+                ProfilerAttributes_SimpleArray();
+            }
+
+            if (ExecuteAcc % 100 == 20)
+            {
+                ProfilerAttributes_SimpleDic();
+            }
+
+            if (ExecuteAcc % 100 == 30)
+            {
+                ProfilerAttributes_New();
+            }
+
+            if (ExecuteAcc % 100 == 40)
+            {
+                ProfilerAttributes_NewFastKey();
+            }
+        }
 
         public const int AttrKeyMin = 0;
         public const int AttrKeyMax = 4;
         public const int AttrKeyCount = AttrKeyMax + 1;
         public const int AttrImpListCount = 1000;
-
+        
         //////////////////////////////////////////////////////////////////////////
         private static readonly ProfilerMarker s_attributeMarker = new("ComAttributes.Old");
         private List<DebugAttributesOld> attributesList_old = new(AttrImpListCount);

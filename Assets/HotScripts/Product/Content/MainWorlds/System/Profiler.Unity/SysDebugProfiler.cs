@@ -14,6 +14,7 @@ namespace Xease.CoreGame.Debug
         {
             ExecuteAcc = 0;
             InitAttributes();
+            InitSvcTimer();
         }
         
         public void Execute()
@@ -24,30 +25,15 @@ namespace Xease.CoreGame.Debug
             {
             }
 
-            if (ExecuteAcc % 100 == 0)
-            {
-                ProfilerAttributes_Old();
-            }
-            if (ExecuteAcc % 100 == 10)
-            {
-                ProfilerAttributes_SimpleArray();
-            }
-            if (ExecuteAcc % 100 == 20)
-            {
-                ProfilerAttributes_SimpleDic();
-            }
-            if (ExecuteAcc % 100 == 30)
-            {
-                ProfilerAttributes_New();
-            }
-            if (ExecuteAcc % 100 == 40)
-            {
-                ProfilerAttributes_NewFastKey();
-            }
+            ProfilerSvcTimer();
+            //ProfilerExecute_Attributes();
         }
-        
+
+
+
         public void TearDown()
         {
+            TearDownSvcTimer();
         }
 
     
