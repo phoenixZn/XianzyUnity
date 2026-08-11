@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using Entitas;
-using Unity.Profiling;
+﻿using Entitas;
 
-namespace Xease.CoreGame
+namespace Xease.CoreGame.Debug
 {
     public partial class SysDebugDemo : ECWorldSystem, IInitializeSystem, IExecuteSystem, ITearDownSystem
     {
@@ -15,7 +13,6 @@ namespace Xease.CoreGame
         public void Initialize()
         {
             ExecuteAcc = 0;
-            InitAttributes();
         }
         
         public void Execute()
@@ -25,26 +22,8 @@ namespace Xease.CoreGame
             if (ExecuteAcc == 1)
             {
             }
-
             if (ExecuteAcc % 100 == 0)
             {
-                ProfilerAttributes_Old();
-            }
-            if (ExecuteAcc % 100 == 10)
-            {
-                ProfilerAttributes_SimpleArray();
-            }
-            if (ExecuteAcc % 100 == 20)
-            {
-                ProfilerAttributes_SimpleDic();
-            }
-            if (ExecuteAcc % 100 == 30)
-            {
-                ProfilerAttributes_New();
-            }
-            if (ExecuteAcc % 100 == 40)
-            {
-                ProfilerAttributes_NewFastKey();
             }
         }
         

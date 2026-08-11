@@ -1,5 +1,6 @@
 using System;
 using Xease.CoreGame;
+using Xease.CoreGame.Debug;
 
 namespace Xease.CoreGame
 {
@@ -39,6 +40,7 @@ namespace Xease.CoreGame
                     systems.Add(new SysLife(worlds.LogicWorld));
                     systems.Add(new SysDeathProcess(worlds));
                     systems.Add(new SysDebugDemo(worlds));
+                    systems.Add(new SysDebugProfiler(worlds));
 
                     systems.Add(new SysGameplayInitialize_Main(worlds));
                     systems.Add(new UnitTestSystems_Base(worlds));

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Unity.Profiling;
 using Xease.FP;
 
-namespace Xease.CoreGame
+namespace Xease.CoreGame.Debug
 {
-    public partial class SysDebugDemo
+    public partial class SysDebugProfiler
     {
         //////////////////////////////////////////////////////////////////////////
         /// Debug Action:
@@ -562,7 +562,7 @@ namespace Xease.CoreGame
     /// </summary>
     public class DebugAttributesSimpleArray
     {
-        private const int AttrKeyCount = SysDebugDemo.AttrKeyCount;
+        private const int AttrKeyCount = SysDebugProfiler.AttrKeyCount;
         // key == index，长度
         public readonly MultChangeValue_Last<int>[] IntAttrs = new MultChangeValue_Last<int>[AttrKeyCount];
         public readonly MultChangeValue_Last<double>[] DoubleAttrs = new MultChangeValue_Last<double>[AttrKeyCount];
@@ -589,7 +589,7 @@ namespace Xease.CoreGame
     /// </summary>
     public class DebugAttributesSimpleDic
     {
-        private const int AttrKeyCount = SysDebugDemo.AttrKeyCount;
+        private const int AttrKeyCount = SysDebugProfiler.AttrKeyCount;
         // 无 Type 分类层，直接按值类型分字典
         public readonly Dictionary<int, IModifyValue<int>> IntAttrs = new(AttrKeyCount);
         public readonly Dictionary<int, IModifyValue<double>> DoubleAttrs = new(AttrKeyCount);

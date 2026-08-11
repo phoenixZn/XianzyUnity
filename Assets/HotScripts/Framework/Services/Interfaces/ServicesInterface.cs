@@ -19,14 +19,6 @@ namespace Xease
         void Shutdown();
     }
     
-    //////////////////////////////////////////////////////////////////////////
-    // Service: Timer
-    public interface ITimerService : IService
-    {
-        public int AddTimer(float interval, int times, Action<float, int> cb, bool ignoreTimeScale = false);
-        public bool RemoveTimer(int id);
-        public bool ResetTimer(int id, float interval = -1f);
-    }
 
     //////////////////////////////////////////////////////////////////////////
     // Service: 类型缓存

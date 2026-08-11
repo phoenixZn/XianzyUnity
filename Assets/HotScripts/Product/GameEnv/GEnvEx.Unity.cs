@@ -27,6 +27,7 @@ namespace Xease
             base.Inner_CreateServices();
             
             Services.AddService_TickTime();
+            Services.AddService_Timer();
             Services.AddService_Random(Param.EnvBaseSeed);
             Services.AddService_ValueEvent();
             Services.AddService_SharedPool();
