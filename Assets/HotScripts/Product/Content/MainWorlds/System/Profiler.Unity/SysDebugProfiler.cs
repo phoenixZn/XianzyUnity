@@ -28,8 +28,6 @@ namespace Xease.CoreGame.Debug
         
         public void Update(float dt, float dt_unscaled)
         {
-            dt = 0.01f;
-            dt_unscaled = 0.01f;
             ProfilerSvcTimer(dt, dt_unscaled);
         }
 

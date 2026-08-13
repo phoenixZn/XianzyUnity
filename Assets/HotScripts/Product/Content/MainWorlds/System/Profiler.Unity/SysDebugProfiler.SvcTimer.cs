@@ -9,14 +9,14 @@ namespace Xease.CoreGame.Debug
         /// Debug Action:
         
         // 高频档：10/20/50ms 均分
-        public const int TimerHighFreqCount = 3000;
+        public const int TimerHighFreqCount = 10000;
         // 中频档：100/200/500ms 均分
-        public const int TimerMidFreqCount = 3000;
+        public const int TimerMidFreqCount = 0;
         // 低频档：1s/2s/5s 均分
-        public const int TimerLowFreqCount = 4000;
+        public const int TimerLowFreqCount = 0;
 
         // 与 AddInfiniteTimers 共用的间隔表，保证两实现规格一致
-        private static readonly float[] s_timerHighFreqIntervals = { 0f, 0.01f, 0.02f };
+        private static readonly float[] s_timerHighFreqIntervals = { 1f, };
         private static readonly float[] s_timerMidFreqIntervals = { 0.1f, 0.2f, 0.3f };
         private static readonly float[] s_timerLowFreqIntervals = { 1f, 2f, 3f, 4f };
 
@@ -50,6 +50,8 @@ namespace Xease.CoreGame.Debug
 
         private void ProfilerSvcTimer(float dt, float dt_unscaled)
         {
+            dt = 0.01f;
+            dt_unscaled = 0.01f;
             if (_timerSvc != null)
             {
                 using (s_timerSvcEnvUpdateMarker.Auto())
@@ -98,7 +100,7 @@ namespace Xease.CoreGame.Debug
             for (int i = 0; i < count; i++)
             {
                 float intervalSec = intervalSecs[i % intervalSecs.Length];
-                timer.AddTimer(callback, intervalSec, -1, false);
+                timer.AddTimer(callback, intervalSec, 20, false);
             }
         }
 

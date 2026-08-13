@@ -302,12 +302,13 @@ namespace Xease
                 }
 
                 _residue += deltaSec * 1000.0;
-                // 与下方 while 次数一致：floor(residue/TickMs)；Fire 时 _nowMs 尚未跑完
+                // floor(residue/TickMs)：本帧应推进的刻度数；Fire 时 _nowMs 尚未跑完
                 long tickCount = (long)(_residue / TickMs);
-                _frameEndMs = _nowMs + tickCount * TickMs;
-                while (_residue >= TickMs)
+                long advanceMs = tickCount * TickMs;
+                _frameEndMs = _nowMs + advanceMs;
+                _residue -= advanceMs;
+                for (long i = 0; i < tickCount; i++)
                 {
-                    _residue -= TickMs;
                     TickOne();
                 }
             }
