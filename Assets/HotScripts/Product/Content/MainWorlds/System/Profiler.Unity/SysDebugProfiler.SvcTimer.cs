@@ -7,27 +7,24 @@ namespace Xease.CoreGame.Debug
     {
         //////////////////////////////////////////////////////////////////////////
         /// Debug Action:
-
-        // 帧间固定步进，保证 Profiler 采样可比（约 60fps）
-        private const float TimerProfilerDt = 1f / 60f;
-
-        // 无限循环 Timer 总数（高频 + 中频 + 低频）
-        public const int TimerTotalCount = 2000;
+        
         // 高频档：10/20/50ms 均分
-        public const int TimerHighFreqCount = 400;
+        public const int TimerHighFreqCount = 3000;
         // 中频档：100/200/500ms 均分
-        public const int TimerMidFreqCount = 800;
+        public const int TimerMidFreqCount = 3000;
         // 低频档：1s/2s/5s 均分
-        public const int TimerLowFreqCount = 800;
+        public const int TimerLowFreqCount = 4000;
 
         // 与 AddInfiniteTimers 共用的间隔表，保证两实现规格一致
-        private static readonly float[] s_timerHighFreqIntervals = { 0.01f, 0.02f, 0.05f };
-        private static readonly float[] s_timerMidFreqIntervals = { 0.1f, 0.2f, 0.5f };
-        private static readonly float[] s_timerLowFreqIntervals = { 1f, 2f, 5f };
+        private static readonly float[] s_timerHighFreqIntervals = { 0f, 0.01f, 0.02f };
+        private static readonly float[] s_timerMidFreqIntervals = { 0.1f, 0.2f, 0.3f };
+        private static readonly float[] s_timerLowFreqIntervals = { 1f, 2f, 3f, 4f };
 
-        private static readonly ProfilerMarker s_timerSvcEnvUpdateMarker = new("TimerService.EnvUpdate");
-        private static readonly ProfilerMarker s_gameTimerEnvUpdateMarker = new("GameTimerManager.EnvUpdate");
-
+        private static readonly ProfilerMarker s_timerSvcEnvUpdateMarker = new("TimerService.Tick");
+        private static readonly ProfilerMarker s_gameTimerEnvUpdateMarker = new("TimerService_Old.Tick");
+        private static readonly ProfilerMarker s_timerSvcFireMarker = new("TimerService.FireCall");
+        private static readonly ProfilerMarker s_gameTimerFireMarker = new("TimerService_Old.FireCall");
+        
         // 本地 TimerService 实例，不走 G.Timer
         private TimerService _timerSvc;
         // 对照实现：列表扫描式 GameTimerManager
@@ -51,13 +48,13 @@ namespace Xease.CoreGame.Debug
             FillIdenticalTimers(_gameTimerMgr, OnGameTimerFire);
         }
 
-        private void ProfilerSvcTimer()
+        private void ProfilerSvcTimer(float dt, float dt_unscaled)
         {
             if (_timerSvc != null)
             {
                 using (s_timerSvcEnvUpdateMarker.Auto())
                 {
-                    _timerSvc.EnvUpdate(TimerProfilerDt, TimerProfilerDt);
+                    _timerSvc.EnvUpdate(dt, dt_unscaled);
                 }
             }
 
@@ -65,7 +62,7 @@ namespace Xease.CoreGame.Debug
             {
                 using (s_gameTimerEnvUpdateMarker.Auto())
                 {
-                    _gameTimerMgr.EnvUpdate(TimerProfilerDt, TimerProfilerDt);
+                    _gameTimerMgr.EnvUpdate(dt, dt_unscaled);
                 }
             }
         }
@@ -108,13 +105,20 @@ namespace Xease.CoreGame.Debug
         // TimerService：仅做计数，测量调度开销
         private void OnTimerSvcFire(int execCount)
         {
-            _timerSvcFireCount++;
+            using (s_timerSvcFireMarker.Auto())
+            {
+                _timerSvcFireCount++;
+            }
+            
         }
 
         // GameTimerManager：仅做计数，测量调度开销
         private void OnGameTimerFire(int execCount)
         {
-            _gameTimerFireCount++;
+            using (s_gameTimerFireMarker.Auto())
+            {
+                _gameTimerFireCount++;
+            }
         }
     }
 }

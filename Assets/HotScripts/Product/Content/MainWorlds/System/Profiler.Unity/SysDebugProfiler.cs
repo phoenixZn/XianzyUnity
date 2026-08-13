@@ -2,7 +2,7 @@
 
 namespace Xease.CoreGame.Debug
 {
-    public partial class SysDebugProfiler : ECWorldSystem, IInitializeSystem, IExecuteSystem, ITearDownSystem
+    public partial class SysDebugProfiler : ECWorldSystem, IInitializeSystem, IExecuteSystem, ITearDownSystem, IUpdateSystem
     {
         private int ExecuteAcc = 0;
         
@@ -20,23 +20,26 @@ namespace Xease.CoreGame.Debug
         public void Execute()
         {
             ExecuteAcc++;
-
             if (ExecuteAcc == 1)
             {
             }
-
-            ProfilerSvcTimer();
             //ProfilerExecute_Attributes();
         }
+        
+        public void Update(float dt, float dt_unscaled)
+        {
+            dt = 0.01f;
+            dt_unscaled = 0.01f;
+            ProfilerSvcTimer(dt, dt_unscaled);
+        }
 
-
-
+        
         public void TearDown()
         {
             TearDownSvcTimer();
         }
+        
 
-    
     }
 
 

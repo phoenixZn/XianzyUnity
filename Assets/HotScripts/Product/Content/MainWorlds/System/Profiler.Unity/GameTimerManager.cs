@@ -75,7 +75,7 @@ namespace Xease.CoreGame.Debug
         
 #endregion
 
-        public int AddTimer(Action<int> cb, float interval = 1.0f, int times = 1, bool changeWithTimeDilation = false)
+        public int AddTimer(Action<int> cb, float interval = 1.0f, int times = 1, bool useTimeScale = false)
         {
             if (cb == null)
             {
@@ -86,11 +86,11 @@ namespace Xease.CoreGame.Debug
             var timer = GetTimer();
             timer.id = nextTimerId++;
             timer.interval = interval;
-            timer.nextCallbackTime = GetCurTime(changeWithTimeDilation) + interval;
+            timer.nextCallbackTime = GetCurTime(useTimeScale) + interval;
             timer.callback = cb;
             timer.times = times;
             timer.curTimes = 0;
-            timer.changeWithTimeDilation = changeWithTimeDilation;
+            timer.changeWithTimeDilation = useTimeScale;
             
             if (isTicking)
                 cacheAddTimerList.Add(timer);

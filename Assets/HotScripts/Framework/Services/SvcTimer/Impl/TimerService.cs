@@ -5,6 +5,7 @@ namespace Xease
 {
     /// <summary>
     /// 三级分层时间轮实现：MS(100×10ms) / SEC(60×1s) / MIN(60×1min)，双时间基各自独立。
+    /// 默认 MaxOneFirePerUpdate：同一 EnvUpdate 内每个节点最多回调一次（合并卡顿补票，不降钟）；有限 repeatCount 会摊到后续帧。
     /// </summary>
     public sealed class TimerService : ITimerService, IEnvUpdate
     {
@@ -32,12 +33,29 @@ namespace Xease
         private readonly TimingWheel _scaled;
         // 无视 timeScale 的时间轮
         private readonly TimingWheel _unscaled;
+        // true：每帧每节点最多一次回调；false：catch-up 按刻度补齐 Fire
+        private bool _maxOneFirePerUpdate;
 
-        // 初始化 scaled / unscaled 两套时间轮
-        public TimerService()
+        /// <summary>
+        /// 创建定时器服务。
+        /// </summary>
+        /// <param name="maxOneFirePerUpdate">true=同一 EnvUpdate 内每节点最多 Fire 一次（默认）；false=按刻度 catch-up 补齐回调</param>
+        public TimerService(bool maxOneFirePerUpdate = true)
         {
+            _maxOneFirePerUpdate = maxOneFirePerUpdate;
             _scaled = new TimingWheel(this);
             _unscaled = new TimingWheel(this);
+        }
+
+        /// <summary>
+        /// 为 true 时，同一 EnvUpdate 内每个节点最多 Fire 一次；错过的 tick 不补回调。
+        /// 时间轮时钟仍全量 catch-up。运行时修改只影响后续 Fire 的重挂基准。
+        /// 有限 repeatCount 在卡顿后不会在同一帧打完，剩余次数摊到后续帧。
+        /// </summary>
+        public bool MaxOneFirePerUpdate
+        {
+            get { return _maxOneFirePerUpdate; }
+            set { _maxOneFirePerUpdate = value; }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -59,7 +77,7 @@ namespace Xease
 
         //////////////////////////////////////////////////////////////////////////
         /// IEnvUpdate:
-        // 每帧分别推进 scaled / unscaled 时间轮
+        // 每帧分别推进 scaled / unscaled 时间轮（时钟 catch-up；回调是否合并由 MaxOneFirePerUpdate 决定）
         public void EnvUpdate(float dt, float dt_unscaled)
         {
             _scaled.Advance(dt);
@@ -70,8 +88,9 @@ namespace Xease
         /// ITimerService:
         /// <summary>
         /// 添加定时器；intervalSec 转毫秒后按 TickMs 向下对齐，最小钳制为 TickMs。
+        /// 默认每帧每节点最多回调一次；有限 repeatCount 在卡顿后摊到后续帧，不会一次打完。
         /// </summary>
-        public int AddTimer(Action<int> callback, float intervalSec = 1f, int repeatCount = 1, bool useUnscaled = false)
+        public int AddTimer(Action<int> callback, float intervalSec = 1f, int repeatCount = 1, bool useTimeScale = false)
         {
             if (callback == null)
             {
@@ -99,14 +118,14 @@ namespace Xease
             node.RepeatCount = repeatCount;
             node.ExecutedCount = 0;
             node.Callback = callback;
-            node.UseUnscaled = useUnscaled;
+            node.UseTimeScale = useTimeScale;
             node.IsCanceled = false;
             node.Cycle = 0;
             node.Next = null;
 
             _nodes[id] = node;
 
-            var wheel = useUnscaled ? _unscaled : _scaled;
+            var wheel = useTimeScale ? _scaled : _unscaled;
             node.ExpireTime = wheel.NowMs + intervalMs;
             wheel.Schedule(node);
             return id;
@@ -168,13 +187,14 @@ namespace Xease
             node.ExpireTime = 0;
             node.Cycle = 0;
             node.Callback = null;
-            node.UseUnscaled = false;
+            node.UseTimeScale = false;
             node.IsCanceled = true;
             node.Next = null;
             _pool.Push(node);
         }
 
-        // 触发回调；支持回调内 Remove 自身；按需重新挂载或回收
+        // 触发回调；支持回调内 Remove 自身；按需重新挂载或回收。
+        // MaxOneFirePerUpdate 时到期点跳到本帧终点+interval，避免 catch-up 连射；关闭则仍按 NowMs 补齐。
         private void Fire(TimerNode node)
         {
             if (node.IsCanceled)
@@ -202,8 +222,9 @@ namespace Xease
                 return;
             }
 
-            var wheel = node.UseUnscaled ? _unscaled : _scaled;
-            node.ExpireTime = wheel.NowMs + node.IntervalMs;
+            var wheel = node.UseTimeScale ? _scaled : _unscaled;
+            long baseMs = _maxOneFirePerUpdate ? wheel.FrameEndMs : wheel.NowMs;
+            node.ExpireTime = baseMs + node.IntervalMs;
             node.Cycle = 0;
             wheel.Schedule(node);
         }
@@ -235,7 +256,7 @@ namespace Xease
             // 超长定时器剩余整小时轮次
             public int Cycle;
             public Action<int> Callback;
-            public bool UseUnscaled;
+            public bool UseTimeScale;
             // 惰性删除标记
             public bool IsCanceled;
             // 槽内单向链表
@@ -249,6 +270,8 @@ namespace Xease
             private readonly TimerService _owner;
             // 逻辑当前时间（整数毫秒）
             private long _nowMs;
+            // 本帧 Advance 结束后的逻辑时钟；Fire 合并时用作重挂基准
+            private long _frameEndMs;
             // 亚毫秒残差，避免 float dt 截断漂移
             private double _residue;
             private readonly TimerNode[] _msSlots = new TimerNode[MsSlotCount];
@@ -267,7 +290,10 @@ namespace Xease
             // 当前逻辑时钟（毫秒）
             public long NowMs => _nowMs;
 
-            // 累加流逝时间并 catch-up 按 TickMs 推进
+            // 本帧 Advance 终点（毫秒）；与 TickOne 次数一致
+            public long FrameEndMs => _frameEndMs;
+
+            // 累加流逝时间并 catch-up 按 TickMs 推进；预先记下本帧逻辑终点供 Fire 合并重挂
             public void Advance(float deltaSec)
             {
                 if (deltaSec <= 0f)
@@ -276,6 +302,9 @@ namespace Xease
                 }
 
                 _residue += deltaSec * 1000.0;
+                // 与下方 while 次数一致：floor(residue/TickMs)；Fire 时 _nowMs 尚未跑完
+                long tickCount = (long)(_residue / TickMs);
+                _frameEndMs = _nowMs + tickCount * TickMs;
                 while (_residue >= TickMs)
                 {
                     _residue -= TickMs;
@@ -345,6 +374,7 @@ namespace Xease
                 _secCursor = 0;
                 _minCursor = 0;
                 _nowMs = 0;
+                _frameEndMs = 0;
                 _residue = 0;
             }
 
