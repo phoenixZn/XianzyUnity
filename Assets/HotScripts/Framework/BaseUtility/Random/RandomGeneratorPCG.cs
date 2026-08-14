@@ -127,14 +127,35 @@ namespace Xease
         }
 
         /// <summary>
+        /// 生成区间 [<paramref name="minValue"/>, <paramref name="maxValue"/>] 内的随机整数。
+        /// </summary>
+        /// <param name="minValue">下界（包含）。</param>
+        /// <param name="maxValue">上界（包含）。</param>
+        /// <returns>落在 [<paramref name="minValue"/>, <paramref name="maxValue"/>] 内的随机整数。</returns>
+        public int NextInclusive(int minValue, int maxValue)
+        {
+            if (maxValue < minValue)
+                maxValue = minValue;
+
+            long span = (long) maxValue - minValue + 1;
+            // 覆盖全部 2^32 个 int 时无法用 uint 上界，直接重解释 32 位输出。
+            if (span == 1L << 32)
+                return unchecked((int) PCG32());
+
+            return (int) (minValue + PCG32((uint) span));
+        }
+
+        /// <summary>
         /// 生成区间 [0.0f, 1.0f) 内的随机单精度浮点数（近似均匀）。
         /// </summary>
         /// <returns>[0.0f, 1.0f) 内的随机浮点数。</returns>
         public float NextFloat()
         {
-            // 先在 [0, bound) 取整数再缩放；避免 BitConverter 或原始 uint→float 技巧。
-            int bound = int.MaxValue / 2 - 1;
-            return Next(bound) * 1.0f / bound; // 近似 [0, 1) 上均匀
+            // 旧实现：bound 超出 float32 精确整数范围，会泄漏 1.0f。
+            // int bound = int.MaxValue / 2 - 1;
+            // return Next(bound) * 1.0f / bound;
+            // 取高 24 位再 / 2^24，保证结果 ∈ [0, 1)，且每个 float 值对应唯一整数。
+            return (PCG32() >> 8) * (1.0f / (1 << 24));
         }
 
         /// <summary>

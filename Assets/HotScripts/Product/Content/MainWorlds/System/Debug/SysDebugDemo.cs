@@ -24,6 +24,7 @@ namespace Xease.CoreGame.Debug
 
             if (ExecuteAcc == 1)
             {
+                TestRandomRange();
             }
             if (ExecuteAcc % 10 == 1)
             {

@@ -20,7 +20,7 @@ namespace Xease
 
         public int RandInt(int min_value, int max_value)
         {
-            return _generator.Next(min_value, max_value + 1);
+            return _generator.NextInclusive(min_value, max_value);
         }
 
         public float RandFloat(float minValue, float maxValue)
