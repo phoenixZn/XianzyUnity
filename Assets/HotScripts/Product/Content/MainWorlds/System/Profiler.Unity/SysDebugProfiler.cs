@@ -13,8 +13,8 @@ namespace Xease.CoreGame.Debug
         public void Initialize()
         {
             ExecuteAcc = 0;
-            InitAttributes();
-            InitSvcTimer();
+            //InitAttributes();
+            //InitSvcTimer();
         }
         
         public void Execute()
@@ -28,10 +28,9 @@ namespace Xease.CoreGame.Debug
         
         public void Update(float dt, float dt_unscaled)
         {
-            UpdateSvcTimer(dt, dt_unscaled);
+            //ProfilerExecute_SvcTimer(dt, dt_unscaled);
         }
 
-        
         public void TearDown()
         {
             TearDownSvcTimer();

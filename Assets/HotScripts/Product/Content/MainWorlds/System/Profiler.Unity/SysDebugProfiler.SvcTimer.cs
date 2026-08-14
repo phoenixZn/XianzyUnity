@@ -55,7 +55,7 @@ namespace Xease.CoreGame.Debug
             FillIdenticalTimers(_gameTimerMgr, OnGameTimerFire);
         }
 
-        private void UpdateSvcTimer(float dt, float dt_unscaled)
+        private void ProfilerExecute_SvcTimer(float dt, float dt_unscaled)
         {
             TryRefillOneShotTimers(dt);
             if (_timerSvc != null)

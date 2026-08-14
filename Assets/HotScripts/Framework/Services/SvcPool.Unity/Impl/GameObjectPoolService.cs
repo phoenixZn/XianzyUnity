@@ -25,6 +25,7 @@
  *    - 重复 Release：以租出表为准告警并忽略，防嵌套入池。
  *    - Clear(prefab|name|全部)：Destroy 空闲实例并移除分类节点；
  *      PrefabName[Rented] 无子节点才拆，仍有租出实例则保留以免误杀；全部时保留根节点。
+ *      已租出记录仍留在租出表；之后 Return 若子池已拆（或已换新实例）则 Destroy，不报 not rented。
  *    - 池键：prefab.name（项目保证预制体名全局唯一）。
  */
 
@@ -113,6 +114,16 @@ namespace Xease
             if (!_rentedByInstanceId.TryGetValue(instanceId, out PrefabPool pool))
             {
                 G.LogError($"GameObjectPoolService.Return not rented: {instance.name}");
+                UnityObject.Destroy(instance);
+                return;
+            }
+
+            _rentedByInstanceId.Remove(instanceId);
+
+            // Clear 已拆子池（或同名子池已重建）：实例仍由调用方持有，不能再入队
+            if (!IsLivePool(pool))
+            {
+                UnityObject.Destroy(instance);
                 return;
             }
 
@@ -122,7 +133,6 @@ namespace Xease
                 G.LogError($"GameObjectPoolService.Return already pooled: {instance.name}");
             }
 
-            _rentedByInstanceId.Remove(instanceId);
             pool.Return(instance);
         }
 
@@ -189,7 +199,6 @@ namespace Xease
         {
             if (_poolsByName.Count == 0)
             {
-                _rentedByInstanceId.Clear();
                 return;
             }
 
@@ -199,9 +208,6 @@ namespace Xease
             {
                 RemovePool(snapshot[i]);
             }
-
-            _poolsByName.Clear();
-            _rentedByInstanceId.Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -304,34 +310,20 @@ namespace Xease
             return pool;
         }
 
-        // 销毁子池内实例与二级节点，并清理索引
+        // 子池仍登记且为同一实例；Clear 后同名会新建 PrefabPool
+        private bool IsLivePool(PrefabPool pool)
+        {
+            return pool != null
+                && _poolsByName.TryGetValue(pool.PrefabName, out PrefabPool live)
+                && ReferenceEquals(live, pool);
+        }
+
+        // 销毁空闲实例与二级节点并从表移除子池；已租出记录留给后续 Return 识别「子池已拆」
         private void RemovePool(PrefabPool pool)
         {
             if (pool == null)
             {
                 return;
-            }
-
-            // 去掉仍指向该子池的租出记录（对象已借出由调用方持有）
-            if (_rentedByInstanceId.Count > 0)
-            {
-                List<int> toRemove = null;
-                foreach (KeyValuePair<int, PrefabPool> kv in _rentedByInstanceId)
-                {
-                    if (kv.Value != pool)
-                    {
-                        continue;
-                    }
-                    toRemove ??= new List<int>();
-                    toRemove.Add(kv.Key);
-                }
-                if (toRemove != null)
-                {
-                    for (int i = 0; i < toRemove.Count; i++)
-                    {
-                        _rentedByInstanceId.Remove(toRemove[i]);
-                    }
-                }
             }
 
             pool.ReleaseInstances(0);

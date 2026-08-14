@@ -20,7 +20,7 @@ namespace Xease
 
         
         /// <summary>
-        /// 归还实例；先失活再挂回二级节点。重复归还或已在池内则忽略。
+        /// 归还实例；先失活再挂回二级节点。重复归还或未租出则告警并 Destroy。所属子池已被 Clear 时 Destroy 实例，不报未租出。
         /// </summary>
         void Return(GameObject instance);
 
@@ -35,7 +35,7 @@ namespace Xease
         void ApplySettings(IReadOnlyDictionary<string, int> maxSizeByPrefabName);
 
         /// <summary>
-        /// 清空指定预制体对应子池（Destroy 空闲实例并移除分类节点；无子节点的 PrefabName[Rented] 一并拆掉）。
+        /// 清空指定预制体对应子池（Destroy 空闲实例并移除分类节点；无子节点的 PrefabName[Rented] 一并拆掉）。已租出实例不销毁，后续 Return 再 Destroy。
         /// </summary>
         void Clear(GameObject prefab);
 

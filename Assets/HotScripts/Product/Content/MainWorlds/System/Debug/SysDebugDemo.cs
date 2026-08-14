@@ -25,16 +25,17 @@ namespace Xease.CoreGame.Debug
             if (ExecuteAcc == 1)
             {
             }
-            if (ExecuteAcc % 20 == 1)
+            if (ExecuteAcc % 10 == 1)
             {
                 RentDemoGoAsync("ActorCube").Forget();
             }
-            if (ExecuteAcc % 20 == 10)
+            if (ExecuteAcc % 10 == 5)
             {
-                RentDemoGoAsync("ActorSphere").Forget();
+                RentDemoGoAsync("ActorSphere");
             }
             if (ExecuteAcc % 100 == 50)
             {
+                G.GameObjectPool_Core.Clear("ActorSphere");
             }
 
         }
