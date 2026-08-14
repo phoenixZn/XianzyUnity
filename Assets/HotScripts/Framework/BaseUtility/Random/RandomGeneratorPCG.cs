@@ -140,15 +140,11 @@ namespace Xease
         /// <summary>
         /// 生成区间 [<paramref name="minValue"/>, <paramref name="maxValue"/>) 内的随机浮点数。
         /// </summary>
-        /// <param name="minValue">下界；若为负会被钳制为 0。</param>
-        /// <param name="maxValue">上界。</param>
+        /// <param name="minValue">下界（包含），可为负。</param>
+        /// <param name="maxValue">上界（不包含）。</param>
         /// <returns>落在 [<paramref name="minValue"/>, <paramref name="maxValue"/>) 内的随机浮点数。</returns>
         public float NextFloat(float minValue, float maxValue)
         {
-            // 此重载将下界钳制到 0（与 XML 说明一致）。
-            if (minValue < 0)
-                minValue = 0;
-
             if (maxValue < minValue)
                 maxValue = minValue;
 

@@ -62,15 +62,17 @@ namespace Xease
             {
                 if (handle.IsDone)
                 {
-                    callback.Invoke(handle);
+                    callback?.Invoke(handle);
                     return handle;
                 }
-                handle.Completed += callback;
+                if (callback != null)
+                    handle.Completed += callback;
             }
             else
             {
                 handle = DefaultPackage.LoadAssetAsync(location, priority);
-                handle.Completed += callback;
+                if (callback != null)
+                    handle.Completed += callback;
                 _assetHandles.Add(location, handle);
             }
 
@@ -83,15 +85,17 @@ namespace Xease
             {
                 if (handle.IsDone)
                 {
-                    onCompleted.Invoke(handle);
+                    onCompleted?.Invoke(handle);
                     return handle;
                 }
-                handle.Completed += onCompleted;
+                if (onCompleted != null)
+                    handle.Completed += onCompleted;
             }
             else
             {
                 handle = DefaultPackage.LoadAssetAsync(location, typeof(T), priority);
-                handle.Completed += onCompleted;
+                if (onCompleted != null)
+                    handle.Completed += onCompleted;
                 _assetHandles.Add(location, handle);
             }
 

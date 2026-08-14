@@ -455,7 +455,14 @@ namespace Xease
                         continue;
                     }
 
-                    _owner.Fire(head);
+                    try
+                    {
+                        _owner.Fire(head);
+                    }
+                    catch (Exception ex)
+                    {
+                        G.LogError($"[TimerService] TimerID:{head.Id} callback exception: {ex}");
+                    }
                     head = next;
                 }
             }
