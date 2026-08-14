@@ -28,7 +28,7 @@ namespace Xease.CoreGame.Debug
         
         public void Update(float dt, float dt_unscaled)
         {
-            ProfilerSvcTimer(dt, dt_unscaled);
+            UpdateSvcTimer(dt, dt_unscaled);
         }
 
         

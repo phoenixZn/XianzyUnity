@@ -22,9 +22,13 @@ namespace Xease
         private const long MinSpan = 3_600_000;
         // 超长定时器固定挂载的分钟槽下标
         private const int OverflowMinSlot = MinSlotCount - 1;
+        // 节点池上限；超出则丢弃归还节点，避免峰值后常驻膨胀
+        private const int PoolCap = 1024;
+        // 构造时预热数量，摊平首批 AddTimer 的分配
+        private const int PoolWarm = 256;
 
         // 节点对象池，避免 AddTimer 热路径 new
-        private readonly Stack<TimerNode> _pool = new Stack<TimerNode>(64);
+        private readonly Stack<TimerNode> _pool = new Stack<TimerNode>(PoolCap);
         // ID → 节点，供 O(1) 惰性删除查找
         private readonly Dictionary<int, TimerNode> _nodes = new Dictionary<int, TimerNode>(64);
         // 下一枚可用定时器 ID（从 1 起，0 表示无效）
@@ -45,6 +49,11 @@ namespace Xease
             _maxOneFirePerUpdate = maxOneFirePerUpdate;
             _scaled = new TimingWheel(this);
             _unscaled = new TimingWheel(this);
+            // 预热节点，摊平首批 AddTimer 的分配
+            for (int i = 0; i < PoolWarm; i++)
+            {
+                _pool.Push(new TimerNode());
+            }
         }
 
         /// <summary>
@@ -173,7 +182,7 @@ namespace Xease
             return new TimerNode();
         }
 
-        // 清空节点字段后归还对象池，供后续 AddTimer 复用
+        // 清空节点字段后归还对象池；满 cap 则丢弃，避免峰值后常驻膨胀
         private void RecycleNode(TimerNode node)
         {
             if (node == null)
@@ -190,7 +199,10 @@ namespace Xease
             node.UseTimeScale = false;
             node.IsCanceled = true;
             node.Next = null;
-            _pool.Push(node);
+            if (_pool.Count < PoolCap)
+            {
+                _pool.Push(node);
+            }
         }
 
         // 触发回调；支持回调内 Remove 自身；按需重新挂载或回收。
