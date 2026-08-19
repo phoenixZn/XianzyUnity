@@ -8,8 +8,6 @@ Logs/
 UserSettings/
 
 # Unity 编译产物和项目文件
-*.csproj
-*.sln
 *.sln.DotSettings.user
 *.dll
 *.pdb

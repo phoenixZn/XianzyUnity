@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !CONSOLE_CLIENT
+using System;
 using System.Collections.Generic;
 using Unity.Profiling;
 using Xease.FP;
@@ -638,3 +639,4 @@ namespace Xease.CoreGame.Debug
         public FixPoint GetFixPoint(int key) => FixPointAttrs.TryGetValue(key, out var v) ? v.Value : default;
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if !CONSOLE_CLIENT
 using Unity.Profiling;
 using Xease;
 
@@ -154,3 +155,4 @@ namespace Xease.CoreGame.Debug
         }
     }
 }
+#endif

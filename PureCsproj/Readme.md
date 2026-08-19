@@ -21,7 +21,7 @@ PureCsproj/
 └── PureGameEnv/
     ├── PureGameEnv.csproj    # 主 csproj
     ├── Program.cs            # CLI 入口（冒烟编译 / 运行）
-    ├── *.Shim.cs             # 仅本工程使用的编译期垫片
+    ├── src/shim/             # 仅本工程使用的编译期垫片（*.Shim.cs）
     └── refs/                 # 本机 Unity 托管 DLL（不进 git，需自行拷贝）
 ```
 
@@ -71,8 +71,8 @@ PureCsproj/
 
 除 **Program.cs**（或测试入口）外，仅在此目录放置 **Shim**（编译期最小实现，替代被 exclude 的 Unity 侧代码）：
 
-- 命名建议 `*.Shim.cs`，**不要**写回 `Assets/`
-- 在 csproj 中显式 `<Compile Include="...Shim.cs" />`
+- 命名建议 `*.Shim.cs`，放在 `src/shim/`，**不要**写回 `Assets/`
+- 在 csproj 中用 `<Compile Include="src\shim\**\*.cs" />` 纳入
 
 
 

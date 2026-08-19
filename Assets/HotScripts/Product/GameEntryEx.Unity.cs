@@ -6,6 +6,11 @@ namespace Xease
     {
         partial void TryCreateGameEnv()
         {
+            if (GEnv.Inst != null)
+            {
+                Debug.LogError("TryCreateGameEnv GEnv.Inst != null");
+                return;
+            }
             Debug.Log("初始化游戏环境 GEnv");
             var param = new GEnvParam()
             {

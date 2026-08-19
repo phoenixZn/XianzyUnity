@@ -32,9 +32,9 @@
 
 | 文件 | 作用 |
 |------|------|
-| `DesperateDevs.Utils.Shim.cs` | Entitas 依赖的 `ObjectPool<T>`、`CopyPublicMemberValues` |
-| `KLogger.Shim.cs` | 替代 `Logger.Unity/KLogger` 的最小 `LogError` |
-| `GEnv.Partial.Shim.cs` | 空实现的 `Inner_*`，替代已排除的 `GEnv.Ex.cs` 中与 Unity 资源相关的初始化 |
+| `src/shim/AsyncAssetViewWrapper.Shim.cs` | 替代 `YooAssetView.Unity/AsyncAssetViewWrapper`，供 View 包装器编译通过 |
+
+`SysDebugProfiler` 已迁到 `Assets/.../System/Debug/`，用 `#if CONSOLE_CLIENT` 提供空实现，不再需要工程内 shim。
 
 ## 构建与运行
 
