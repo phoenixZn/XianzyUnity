@@ -1,6 +1,6 @@
 ﻿namespace Xease.CoreGame
 {
-    public class LogicConfig_BaseEx
+    public partial class LogicConfigBase
     {
         
     }
