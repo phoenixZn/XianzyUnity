@@ -1,7 +1,7 @@
 ﻿namespace Xease.CoreGame
 {
     
-    public class CustomLogicService : ICustomLogicService
+    public partial class CustomLogicService : ICustomLogicService
     {
         private CustomLogicFactory _factory;
 
@@ -9,11 +9,7 @@
         {
             _factory = new CustomLogicFactory();
         }
-
-        public void Init()
-        {
-        }
-
+        
         public void Dispose()
         {
             _factory.Dispose();

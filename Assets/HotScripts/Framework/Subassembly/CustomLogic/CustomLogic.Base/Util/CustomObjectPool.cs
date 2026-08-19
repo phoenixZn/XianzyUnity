@@ -12,26 +12,44 @@ namespace Xease.CoreGame
 
     public class CLNodesPool<T> where T : class, ICanRecycle
     {
-        private Dictionary<System.Type, Queue<T>> m_pool = new();
-        private int _limit = 200;
+        // Queue 缺省初始容量
+        public const int DefaultCapacity = 32;
+        // 按类型分桶的对象队列
+        private Dictionary<System.Type, Queue<T>> _pool = new();
+        // 单类型入池上限；Cache 数量超过时抬高
+        private int _maxCount = 1024;
 
         public void Clear()
         {
-            m_pool.Clear();
+            _pool.Clear();
         }
 
-        public void Cache<CT>(int count = 1) where CT : T, new()
+        /// <summary>
+        /// 预创建指定数量的对象入池；count 大于当前上限时抬高本实例 _maxCount。
+        /// </summary>
+        /// <param name="count">预创建数量；≤0 则跳过。</param>
+        /// <param name="extraInit">new 之后、入池之前的额外初始化；可为 null。</param>
+        public void Cache<CT>(int count = 1, Action<CT> extraInit = null) where CT : T, new()
         {
-            System.Type type = typeof(CT);
+            if (count <= 0)
+                return;
 
-            if (!m_pool.ContainsKey(type))
+            // 预热数量超过当前上限时抬升，避免随后 Destroy 丢弃多余对象
+            if (count > _maxCount)
+                _maxCount = count;
+
+            System.Type type = typeof(CT);
+            if (!_pool.TryGetValue(type, out var queue))
             {
-                m_pool.Add(type, new Queue<T>());
+                queue = new Queue<T>(Math.Max(DefaultCapacity, count));
+                _pool.Add(type, queue);
             }
 
             for (int i = 0; i < count; i++)
             {
-                m_pool[type].Enqueue(new CT());
+                var obj = new CT();
+                extraInit?.Invoke(obj);
+                queue.Enqueue(obj);
             }
         }
 
@@ -40,10 +58,10 @@ namespace Xease.CoreGame
             System.Type type = typeof(CT);
             CT res;
             Queue<T> queue = null;
-            if (!m_pool.TryGetValue(type, out queue))
+            if (!_pool.TryGetValue(type, out queue))
             {
                 queue = new Queue<T>();
-                m_pool.Add(type, queue);
+                _pool.Add(type, queue);
             }
 
             if (queue.Count > 0)
@@ -63,10 +81,10 @@ namespace Xease.CoreGame
         {
             CT res;
             Queue<T> queue = null;
-            if (!m_pool.TryGetValue(type, out queue))
+            if (!_pool.TryGetValue(type, out queue))
             {
                 queue = new Queue<T>();
-                m_pool.Add(type, queue);
+                _pool.Add(type, queue);
             }
 
             if (queue.Count > 0)
@@ -99,13 +117,13 @@ namespace Xease.CoreGame
             }
 
             obj.Destroy();
-            if (!m_pool.TryGetValue(type, out var queue))
+            if (!_pool.TryGetValue(type, out var queue))
             {
                 queue = new Queue<T>();
-                m_pool.Add(type, queue);
+                _pool.Add(type, queue);
             }
 
-            if (queue.Count < _limit)
+            if (queue.Count < _maxCount)
             {
                 queue.Enqueue(obj);
             }

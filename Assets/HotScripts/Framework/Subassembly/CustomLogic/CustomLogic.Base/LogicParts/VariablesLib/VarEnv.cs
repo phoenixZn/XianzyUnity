@@ -191,6 +191,35 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         /// This:
+
+        /// <summary>
+        /// 预创建 s_fastTypes 对应的 IVariables 热桶；Clear/Destroy 只清字典、桶实例保留。
+        /// 须与 s_fastTypes 保持同步。
+        /// </summary>
+        public void WarmupFastBuckets()
+        {
+            GetVariables<int>(true);
+            GetVariables<bool>(true);
+            GetVariables<float>(true);
+            GetVariables<double>(true);
+            GetVariables<long>(true);
+            GetVariables<object>(true);
+
+#if UNITY_EDITOR
+            int warmed = 0;
+            var buckets = _fastBuckets;
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                if (buckets[i] != null)
+                {
+                    warmed++;
+                }
+            }
+            CLogger.LogAssert(warmed == s_fastTypes.Length,
+                $"VarEnv.WarmupFastBuckets 与 s_fastTypes 不同步: warmed={warmed}, expected={s_fastTypes.Length}");
+#endif
+        }
+
         private VariablesImp<T> GetVariables<T>(bool autoAdd = false)
         {
             var slot = TypeKeyOf<T>.FastSlot;

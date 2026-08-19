@@ -44,6 +44,7 @@ namespace Xease
             svcLogic.AddConfigContainer(new LogicConfig_Subobject(LogicContainerKey.LogicConfigs_Subobject));
             svcLogic.AddConfigContainer(new LogicConfig_Buff(LogicContainerKey.LogicConfigs_Buff));
             svcLogic.AddConfigContainer(new LogicConfig_Supply(LogicContainerKey.LogicConfigs_Supply));
+            svcLogic.BaseWarmup();
         }
 
         protected override void Inner_CreateModules()
