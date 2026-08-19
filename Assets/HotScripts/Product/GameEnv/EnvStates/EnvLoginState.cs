@@ -25,9 +25,10 @@ namespace Xease
         {
             return base.CheckTransitions();
         }
-
+        
         //////////////////////////////////////////////////////////////////////////
         /// Test Code
+#if !CONSOLE_CLIENT
         const float ButtonWidth = 480f;
         const float ButtonHeight = 112f;
         const int ButtonFontSize = 48;
@@ -49,7 +50,6 @@ namespace Xease
                 return _loginButtonStyle;
             }
         }
-
         public void OnEnvGUI()
         {
             var x = (Screen.width - ButtonWidth) * 0.5f;
@@ -61,5 +61,11 @@ namespace Xease
             }
             GUILayout.EndArea();
         }
+#else
+        public void OnEnvGUI()
+        {
+        }
+#endif
+
     }
 }

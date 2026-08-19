@@ -1,4 +1,6 @@
-﻿using Cysharp.Threading.Tasks;
+﻿#if !CONSOLE_CLIENT
+using Cysharp.Threading.Tasks;
+#endif
 using Entitas;
 using UnityEngine;
 
@@ -26,6 +28,7 @@ namespace Xease.CoreGame.Debug
             {
                 TestRandomRange();
             }
+#if !CONSOLE_CLIENT
             if (ExecuteAcc % 10 == 1)
             {
                 RentDemoGoAsync("ActorCube").Forget();
@@ -38,6 +41,7 @@ namespace Xease.CoreGame.Debug
             {
                 G.GameObjectPool_Core.Clear("ActorSphere");
             }
+#endif
 
         }
         
@@ -46,6 +50,7 @@ namespace Xease.CoreGame.Debug
 
         }
 
+#if !CONSOLE_CLIENT
         // Execute 首帧触发：异步租 ActorCube，摆到位姿后再激活（Rent 交出未激活实例）
         private async UniTaskVoid RentDemoGoAsync(string path)
         {
@@ -72,6 +77,7 @@ namespace Xease.CoreGame.Debug
             }, 1);
 
         }
+#endif
 
     }
 }

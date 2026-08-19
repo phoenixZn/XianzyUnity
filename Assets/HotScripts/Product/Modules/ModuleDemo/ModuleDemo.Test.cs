@@ -7,6 +7,7 @@ namespace Xease
     {
         //////////////////////////////////////////////////////////////////////////
         /// Test GUI
+#if !CONSOLE_CLIENT
         private int clickCount = 0;
         public void OnEnvGUI()
         {
@@ -82,5 +83,10 @@ namespace Xease
             // 3. 结束滚动视图
             GUILayout.EndScrollView();
         }
+#else
+        public void OnEnvGUI()
+        {
+        }
+#endif
     }
 }

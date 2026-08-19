@@ -16,6 +16,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Program.cs" />
     <Compile Include="DesperateDevs.Utils.Shim.cs" />
     <Compile Include="GEnv.Partial.Shim.cs" />
+    <Compile Include="SysDebugProfiler.Shim.cs" />
+    <Compile Include="AsyncAssetViewWrapper.Shim.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\*.cs">
       <Link>Framework\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>

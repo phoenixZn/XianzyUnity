@@ -6,7 +6,9 @@ namespace DesperateDevs.Utils
 {
     /// <summary>
     /// Minimal stand-in for Entitas-bundled DesperateDevs.Utils (not shipped as sources in this repo).
-    /// Lives only in PureGameEnv; behavior matches constructor usage in Entitas Context.
+    /// Lives only in PureGameEnv for the old Entitas/Entitas tree that still uses this namespace.
+    /// Entitas Runtime 1.14.1 uses DesperateDevs.Caching / Reflection from
+    /// Assets/HotScripts/Framework/Subassembly/Entitas/Dependency/DesperateDevs/ — do not redeclare those types here.
     /// </summary>
     public sealed class ObjectPool<T>
     {

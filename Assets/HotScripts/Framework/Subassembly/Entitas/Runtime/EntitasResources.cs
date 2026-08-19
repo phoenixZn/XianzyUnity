@@ -12,7 +12,7 @@ namespace Entitas {
             //     version = reader.ReadToEnd();
             // }
 
-            return "1.13.0";
+            return "1.14.1";
         }
     }
 }
