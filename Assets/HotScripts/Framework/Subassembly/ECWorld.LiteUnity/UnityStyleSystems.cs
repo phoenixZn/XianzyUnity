@@ -76,6 +76,41 @@ namespace Xease.CoreGame
             return base.Add(system);
         }
 
+        /// <summary>
+        /// 从 Unity 风格系统列表与基类 Entitas Systems 中移除指定 system。
+        /// </summary>
+        public override void Remove(ISystem system)
+        {
+            _systems.Remove(system);
+
+            if (system is IFixedUpdateSystem fixedUpdateSystem)
+            {
+                _fixedUpdateSystemList.Remove(fixedUpdateSystem);
+            }
+
+            if (system is IUpdateSystem updateSystem)
+            {
+                _updateSystemList.Remove(updateSystem);
+            }
+
+            if (system is ILateUpdateSystem lateUpdateSystem)
+            {
+                _lateUpdateSystemList.Remove(lateUpdateSystem);
+            }
+
+            if (system is IGizmosSystem gizmosSystem)
+            {
+                _gizmosSystemList.Remove(gizmosSystem);
+            }
+
+            if (system is IUnityGUI unityGUISystem)
+            {
+                _unityGUISystemList.Remove(unityGUISystem);
+            }
+
+            base.Remove(system);
+        }
+
         public void FixedUpdate(float fdt, float fdt_unscaled)
         {
             foreach (var item in _fixedUpdateSystemList)

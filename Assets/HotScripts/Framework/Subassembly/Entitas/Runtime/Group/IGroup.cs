@@ -36,6 +36,7 @@ namespace Entitas
 
         TEntity[] GetEntities();
         List<TEntity> GetEntities(List<TEntity> buffer);
+        List<TEntity> GetEntities(List<TEntity> buffer, ref int bufferVersion);
         TEntity GetSingleEntity();
 
         IEnumerable<TEntity> AsEnumerable();

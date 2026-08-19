@@ -34,6 +34,7 @@ namespace Entitas
         TEntity[] _entitiesCache;
         TEntity _singleEntityCache;
         string _toStringCache;
+        public int CacheVersion { get; private set; }
 
         /// Use context.GetGroup(matcher) to get a group of entities which match
         /// the specified matcher.
@@ -95,6 +96,7 @@ namespace Entitas
                 {
                     _entitiesCache = null;
                     _singleEntityCache = null;
+                    CacheVersion++;
                     entity.Retain(this);
                 }
 
@@ -117,6 +119,7 @@ namespace Entitas
             {
                 _entitiesCache = null;
                 _singleEntityCache = null;
+                CacheVersion++;
                 entity.Release(this);
             }
 
@@ -130,6 +133,7 @@ namespace Entitas
             {
                 _entitiesCache = null;
                 _singleEntityCache = null;
+                CacheVersion++;
                 OnEntityRemoved?.Invoke(this, entity, index, component);
                 entity.Release(this);
             }
@@ -153,6 +157,17 @@ namespace Entitas
         /// Fills the buffer with all entities which are currently in this group.
         public List<TEntity> GetEntities(List<TEntity> buffer)
         {
+            buffer.Clear();
+            buffer.AddRange(_entities);
+            return buffer;
+        }
+        
+        public List<TEntity> GetEntities(List<TEntity> buffer, ref int bufferVersion) {
+            if (bufferVersion == CacheVersion)
+            {
+                return buffer;
+            }
+            bufferVersion = CacheVersion;
             buffer.Clear();
             buffer.AddRange(_entities);
             return buffer;
