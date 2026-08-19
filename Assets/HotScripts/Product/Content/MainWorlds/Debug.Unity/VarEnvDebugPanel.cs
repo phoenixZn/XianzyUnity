@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 
 /// <summary>
-/// Inspector 用 VarEnv 分桶类型勾选过滤：All 主控 + 10 类 bucket，可独立嵌入或作为 VarEnvDebugPanel 子块。
+/// Inspector 用 VarEnv 分桶类型勾选过滤：All 主控 + 9 类 bucket，可独立嵌入或作为 VarEnvDebugPanel 子块。
 /// </summary>
 [Serializable]
 public class VarEnvDebugBucketFilterInspector
@@ -37,11 +37,6 @@ public class VarEnvDebugBucketFilterInspector
     [LabelText("bool")]
     [OnValueChanged(nameof(OnTypeChanged))]
     public bool Bool = true;
-
-    [ToggleLeft]
-    [LabelText("string")]
-    [OnValueChanged(nameof(OnTypeChanged))]
-    public bool String = true;
 
     [ToggleLeft]
     [LabelText("Vector3")]
@@ -97,11 +92,6 @@ public class VarEnvDebugBucketFilterInspector
             return Bool;
         }
 
-        if (bucketType == typeof(string))
-        {
-            return String;
-        }
-
         if (bucketType == typeof(Vector3))
         {
             return Vector3;
@@ -155,7 +145,6 @@ public class VarEnvDebugBucketFilterInspector
         Float = enabled;
         Long = enabled;
         Bool = enabled;
-        String = enabled;
         Vector3 = enabled;
         Vector2 = enabled;
         Object = enabled;
@@ -174,7 +163,6 @@ public class VarEnvDebugBucketFilterInspector
             && Float
             && Long
             && Bool
-            && String
             && Vector3
             && Vector2
             && Object

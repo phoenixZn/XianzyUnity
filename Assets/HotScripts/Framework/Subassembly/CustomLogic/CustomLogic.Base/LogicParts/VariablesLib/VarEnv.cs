@@ -6,14 +6,12 @@ namespace Xease.CoreGame
 {
     public interface IVariables
     {
-        // 分桶值类型，供友元遍历识别
         System.Type VarType { get; }
         bool HasVar(string id);
         bool ClearVar(string key);
         void Clear();
         void CopyTo(VarEnv env, bool skipSameKey = true, bool logSameKey = true);
-        // 非必要慎用
-        void ForeachCollect(Action<string, object> onCollect);
+        void ForeachCollect(Action<string, object> onCollect);  // 非必要慎用
     }
 
     /// <summary>

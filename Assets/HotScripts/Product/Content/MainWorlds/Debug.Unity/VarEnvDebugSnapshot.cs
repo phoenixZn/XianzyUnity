@@ -81,10 +81,6 @@ public static class VarEnvDebugSnapshot // 借助 IVarEnvFriend 友元 API 只�
         {
             CollectBucket((VariablesImp<bool>)variables, vfriend, bucketType, displayList);
         }
-        else if (bucketType == typeof(string))
-        {
-            CollectBucket((VariablesImp<string>)variables, vfriend, bucketType, displayList);
-        }
         else if (bucketType == typeof(Vector3))
         {
             CollectBucket((VariablesImp<Vector3>)variables, vfriend, bucketType, displayList);

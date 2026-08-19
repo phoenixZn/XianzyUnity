@@ -84,6 +84,8 @@ PureCsproj/
 - `UnityEngine.SharedInternalsModule.dll`
 - `UnityEngine.dll`
 
+CLI 运行时需要这些 DLL 出现在输出目录：csproj 中对应 `<Reference>` 使用 `<Private>true</Private>`（仅编译不运行时可保持 `false`）。
+
 
 ### 5. 构建产物与版本控制
 

@@ -33,18 +33,15 @@
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(MSBuildThisFileDirectory)refs\UnityEngine.CoreModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>true</Private>
     </Reference>
     <Reference Include="UnityEngine.SharedInternalsModule">
       <HintPath>$(MSBuildThisFileDirectory)refs\UnityEngine.SharedInternalsModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>true</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(MSBuildThisFileDirectory)refs\UnityEngine.dll</HintPath>
-      <Private>false</Private>
+      <Private>true</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\GEnv.Ex.cs" />
   </ItemGroup>
 </Project>

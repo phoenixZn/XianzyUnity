@@ -18,13 +18,13 @@
 - `UnityEngine.SharedInternalsModule.dll`
 - `UnityEngine.dll`
 
-`refs/*.dll` 已加入根目录 `.gitignore`，需各环境自行拷贝。
+`refs/*.dll` 已加入根目录 `.gitignore`，需各环境自行拷贝。csproj 将这三份 DLL **复制到输出目录**（`Private=true`），以便 CLI 运行时 `Assembly.GetTypes` 能解析 `UnityEngine` 引用。
 
 ## 源码范围与排除
 
 - **包含**：`Assets/HotScripts/Framework`、`Assets/HotScripts/Product` 下全部 `.cs`（通配 include）。
 - **排除（与 XEditor.UnityPartingTool 语义一致）**：路径段以 `.Unity` 结尾的目录内所有 `.cs`；以及 `*.Unity.cs`。
-- **额外排除**：`Assets/HotScripts/Product/GEnv.Ex.cs`（依赖 `Services.Unity` 中的 `AssetService` / `AppConfig`，按方案不引入 YooAsset 等程序集）。
+- `*.Unity.cs` 与 `.Unity` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`。
 
 ## PureGameEnv 内 shim（未改 Unity 源码）
 
@@ -33,6 +33,7 @@
 | 文件 | 作用 |
 |------|------|
 | `src/shim/AsyncAssetViewWrapper.Shim.cs` | 替代 `YooAssetView.Unity/AsyncAssetViewWrapper`，供 View 包装器编译通过 |
+| `src/shim/GameEntry.Shim.cs` | 替代 `GameEntry.Unity` / `GameEntryEx.Unity` / `GEnvEx.Unity`：命令行初始化 GEnv 并提供 FixedUpdate/Update/LateUpdate |
 
 `SysDebugProfiler` 已迁到 `Assets/.../System/Debug/`，用 `#if CONSOLE_CLIENT` 提供空实现，不再需要工程内 shim。
 
@@ -43,9 +44,11 @@ dotnet build PureCsproj/PureGameEnv/PureGameEnv.csproj -c Debug
 dotnet run --project PureCsproj/PureGameEnv/PureGameEnv.csproj
 ```
 
+`Program` 会构造 `GameEntry` 并以 20ms 步长调用 FixedUpdate/Update/LateUpdate。Ctrl+C 后销毁 GEnv 并退出。无 GUI 时环境停在 `ES_Login`。
+
 ## 当前编译结果
 
-- **已通过**：`dotnet build`（Debug）0 error；存在来自 `EnvStateBase.cs` 的 **CS0414** 警告（字段赋值未使用），与 Unity 侧一致、未在 PureGameEnv 中屏蔽。
+- **已通过**：`dotnet build`（Debug）0 error；冒烟运行可见 `GameEntryInit` → Services/Modules → `ES_EnvInit` → `ES_Login`。
 
 ## 后续治理方向（按需）
 

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 namespace PureGameEnv
 {
@@ -9,16 +10,27 @@ namespace PureGameEnv
         private static void Main(string[] args)
         {
             Console.WriteLine("PureGameEnv: smoke build / run.");
-            _ = typeof(Xease.GEnv);
             if (args.Length > 0)
             {
                 Console.WriteLine(string.Join(" ", args));
             }
 
+            Console.CancelKeyPress += (_, e) =>
+            {
+                isWorking = false;
+                e.Cancel = true;
+            };
+
+            var gameEntry = Xease.GameEntry.GameEntryInit();
             while (isWorking)
             {
-                
+                gameEntry.FixedUpdate();
+                gameEntry.Update();
+                gameEntry.LateUpdate();
+                Thread.Sleep(20);
             }
+
+            gameEntry.Destroy();
         }
     }
 }
