@@ -41,14 +41,14 @@ namespace Xease.CoreGame
 
         public static StreamReader XmlResToStreamReader(string resPath)
         {
-            UnityEngine.TextAsset textAssert = GetTextAsset(resPath);
-            if (textAssert == null)
+            UnityEngine.TextAsset textAsset = GetTextAsset(resPath);
+            if (textAsset == null)
             {
-                CLogger.LogError("XmlResToStreamReader textAssert == null  resPath:" + resPath);
+                CLogger.LogError("XmlResToStreamReader textAsset == null  resPath:" + resPath);
                 return null;
             }
 
-            Stream stm = BytesToStream(textAssert.bytes);
+            Stream stm = BytesToStream(textAsset.bytes);
             if (stm == null)
             {
                 CLogger.LogError("XmlResToStreamReader BytesToStream == null  resPath:" + resPath);

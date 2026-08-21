@@ -67,7 +67,7 @@ namespace Xease.CoreGame
         public string mTrueStateID;
         public string mFalseStateID;
         public float mCfgCheckInterval;
-        public float mCheckCDRemian;
+        public float mCheckCDRemain;
         public ConditionNodeBase mConditionNode;
 
 
@@ -76,7 +76,7 @@ namespace Xease.CoreGame
             mTrueStateID = null;
             mFalseStateID = null;
             mCfgCheckInterval = 0f;
-            mCheckCDRemian = 0f;
+            mCheckCDRemain = 0f;
             mConditionNode = null;
         }
 
@@ -93,7 +93,7 @@ namespace Xease.CoreGame
 
             // 扩展配置：条件检查间隔，对于某些计算量比较大的条件检查，不能每帧都做
             mCfgCheckInterval = theCfg.CheckInterval;
-            mCheckCDRemian = 0f;
+            mCheckCDRemain = 0f;
         }
 
         public override void Destroy()
@@ -104,7 +104,7 @@ namespace Xease.CoreGame
             mTrueStateID = null;
             mFalseStateID = null;
             mCfgCheckInterval = 0f;
-            mCheckCDRemian = 0f;
+            mCheckCDRemain = 0f;
             base.Destroy();
         }
 
@@ -142,9 +142,9 @@ namespace Xease.CoreGame
                 tickCnd.Update(dt);
             }
 
-            if (mCheckCDRemian > 0)
+            if (mCheckCDRemain > 0)
             {
-                mCheckCDRemian -= dt;
+                mCheckCDRemain -= dt;
             }
 
             return dt;
@@ -162,9 +162,9 @@ namespace Xease.CoreGame
                 return Inner_CheckTransition();
             }
 
-            if (mCheckCDRemian <= 0)
+            if (mCheckCDRemain <= 0)
             {
-                mCheckCDRemian = mCfgCheckInterval;
+                mCheckCDRemain = mCfgCheckInterval;
                 return Inner_CheckTransition();
             }
 

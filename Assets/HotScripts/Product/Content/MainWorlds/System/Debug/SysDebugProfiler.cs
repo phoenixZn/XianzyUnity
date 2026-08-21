@@ -4,6 +4,8 @@ namespace Xease.CoreGame.Debug
 {
     public partial class SysDebugProfiler : ECWorldSystem, IInitializeSystem, IExecuteSystem, ITearDownSystem, IUpdateSystem
     {
+        private int ExecuteAcc = 0;
+        
         public SysDebugProfiler(ECWorlds worlds) : base(worlds)
         {
         }
@@ -16,6 +18,7 @@ namespace Xease.CoreGame.Debug
 
         public void Execute()
         {
+            ExecuteAcc++;
         }
 
         public void Update(float dt, float dt_unscaled)
@@ -26,8 +29,6 @@ namespace Xease.CoreGame.Debug
         {
         }
 #else
-        private int ExecuteAcc = 0;
-
         public void Initialize()
         {
             ExecuteAcc = 0;
@@ -38,9 +39,6 @@ namespace Xease.CoreGame.Debug
         public void Execute()
         {
             ExecuteAcc++;
-            if (ExecuteAcc == 1)
-            {
-            }
             //ProfilerExecute_Attributes();
         }
         

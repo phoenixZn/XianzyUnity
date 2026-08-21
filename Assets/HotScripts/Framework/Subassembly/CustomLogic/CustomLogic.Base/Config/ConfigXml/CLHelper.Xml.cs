@@ -54,7 +54,7 @@ namespace Xease.CoreGame
             XmlElement cusNode = node as XmlElement;
             if (cusNode == null)
             {
-                CLogger.LogAssert(false, "CustomLogicConfig PraseNodeCfg ParseError  cusNode as XmlElement == null");
+                CLogger.LogAssert(false, "CustomLogicConfig CreateNodeCfg ParseError cusNode as XmlElement == null");
                 return null;
             }
 

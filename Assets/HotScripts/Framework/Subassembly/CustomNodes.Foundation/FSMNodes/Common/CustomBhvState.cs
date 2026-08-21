@@ -42,9 +42,9 @@ namespace Xease.CoreGame
     /// </summary>
     public class CustomBhvState : StateNode
     {
-        protected BehaviorNodeBase mBhv = null;
-        protected BehaviorNodeBase mExitBhv = null;
-        protected bool CS_IsStateBhvEnd = false;
+        protected BehaviorNodeBase _bhv = null;
+        protected BehaviorNodeBase _exitBhv = null;
+        protected bool _isStateBhvEnd = false;
 
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
@@ -57,69 +57,69 @@ namespace Xease.CoreGame
 
             if (theCfg.Bhv != null)
             {
-                mBhv = mContext.Factory.CreateCustomNode(theCfg.Bhv, context) as BehaviorNodeBase;
-                mBhv.Deactivate();
+                _bhv = mContext.Factory.CreateCustomNode(theCfg.Bhv, context) as BehaviorNodeBase;
+                _bhv.Deactivate();
             }
 
             if (theCfg.ExitBhv != null)
             {
-                mExitBhv = mContext.Factory.CreateCustomNode(theCfg.ExitBhv, context) as BehaviorNodeBase;
-                mExitBhv.Deactivate();
+                _exitBhv = mContext.Factory.CreateCustomNode(theCfg.ExitBhv, context) as BehaviorNodeBase;
+                _exitBhv.Deactivate();
             }
         }
 
         public override void Destroy()
         {
-            mContext.Factory.DestroyCustomNode(mBhv);
-            mBhv = null;
+            mContext.Factory.DestroyCustomNode(_bhv);
+            _bhv = null;
 
-            mContext.Factory.DestroyCustomNode(mExitBhv);
-            mExitBhv = null;
+            mContext.Factory.DestroyCustomNode(_exitBhv);
+            _exitBhv = null;
 
-            CS_IsStateBhvEnd = false;
+            _isStateBhvEnd = false;
             base.Destroy();
         }
 
         public override void Activate()
         {
             base.Activate();
-            mBhv?.Activate();
+            _bhv?.Activate();
         }
 
         public override void Deactivate()
         {
             base.Deactivate();
-            mBhv?.Deactivate();
+            _bhv?.Deactivate();
         }
 
         public override void CollectInterfaceInChildren<T>(ref List<T> interfaceList)
         {
             base.CollectInterfaceInChildren(ref interfaceList);
-            if (mBhv != null)
+            if (_bhv != null)
             {
-                TraverseCollectInterface<T>(ref interfaceList, mBhv);
+                TraverseCollectInterface<T>(ref interfaceList, _bhv);
             }
-            // if (mExitBhv != null)    //结束行为，激活状态只在瞬间。无需处理外部输入
+            // if (_exitBhv != null)    //结束行为，激活状态只在瞬间。无需处理外部输入
             // {
-            //     TraverseCollectInterface<T>(ref interfaceList, mExitBhv);    
+            //     TraverseCollectInterface<T>(ref interfaceList, _exitBhv);    
             // }
         }
 
         public override float Update(float dt)
         {
             base.Update(dt);
-            if (mBhv != null)
+            if (_bhv != null)
             {
-                mBhv.Update(dt);
-                if (!CS_IsStateBhvEnd && mBhv.IsNodeCanStop())
+                _bhv.Update(dt);
+                if (!_isStateBhvEnd && _bhv.IsNodeCanStop())
                 {
-                    CS_IsStateBhvEnd = true;
+                    _isStateBhvEnd = true;
                     OnNodeLogicEnd();
                 }
             }
             else
             {
-                CS_IsStateBhvEnd = true;
+                _isStateBhvEnd = true;
             }
 
             return dt;
@@ -130,29 +130,29 @@ namespace Xease.CoreGame
         {
             base.Enter();
 
-            if (mBhv != null)
+            if (_bhv != null)
             {
-                mBhv.Reset();
-                mBhv.Activate();
+                _bhv.Reset();
+                _bhv.Activate();
             }
 
-            mExitBhv?.Reset();
-            CS_IsStateBhvEnd = false;
+            _exitBhv?.Reset();
+            _isStateBhvEnd = false;
         }
 
         public override void Exit()
         {
-            if (mBhv != null)
+            if (_bhv != null)
             {
-                mBhv.Deactivate();
+                _bhv.Deactivate();
             }
 
-            if (mExitBhv != null)
+            if (_exitBhv != null)
             {
                 //ExitNode中只能执行能够立即完成的节点，原则上不该有持续性节点
-                mExitBhv.Activate();
-                mExitBhv.Update(1000f);
-                mExitBhv.Deactivate();
+                _exitBhv.Activate();
+                _exitBhv.Update(1000f);
+                _exitBhv.Deactivate();
             }
 
             base.Exit();
@@ -160,7 +160,7 @@ namespace Xease.CoreGame
 
         public override string CheckTransitions()
         {
-            if (!CS_IsStateBhvEnd)
+            if (!_isStateBhvEnd)
             {
                 return null;
             }
