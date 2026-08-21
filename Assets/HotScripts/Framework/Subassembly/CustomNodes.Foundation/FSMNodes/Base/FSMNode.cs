@@ -306,6 +306,11 @@ namespace Xease.CoreGame
             if (mCurrentState == null)
             {
                 TransToState(mDefaultStateID);
+                if (mCurrentState == null)
+                {
+                    this.LogError($"FSMNode.Update: 当前状态为空且默认状态无效，DefaultStateID={mDefaultStateID}");
+                    return dt;
+                }
             }
 
             //先检查全局的Transitions
@@ -337,13 +342,8 @@ namespace Xease.CoreGame
                     break; //如果没有状态转移
                 }
 
-                var mGoalState = FindState(goalStateID);
-                if (mGoalState != null)
-                {
-                    mCurrentState.Exit();
-                    mCurrentState = mGoalState;
-                    mCurrentState.Enter();
-                }
+                // 与全局转移同一路径，保证 RecordCurStateIDTo 写入黑板
+                TransToState(goalStateID);
             }
 
             return mCurrentState.Update(dt);
@@ -376,7 +376,6 @@ namespace Xease.CoreGame
             }
 
             mCurrentState?.Exit();
-
             mCurrentState = goalState;
             mCurrentState.Enter();
 

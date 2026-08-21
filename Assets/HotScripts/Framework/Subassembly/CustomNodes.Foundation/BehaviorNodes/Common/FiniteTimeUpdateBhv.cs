@@ -77,10 +77,11 @@ namespace Xease.CoreGame
             Init();
         }
 
-        public override float Update(float dt)
+        // 走基类 FiniteTimeBhv 时间片：仅 duration 未结束时 Tick，结束后自然停
+        protected override float OnUpdate(float dt)
         {
-            mCfg.TickAction.Invoke(this, dt);
-            return base.Update(dt);
+            mCfg.TickAction?.Invoke(this, dt);
+            return dt;
         }
     }
 }

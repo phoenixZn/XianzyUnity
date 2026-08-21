@@ -130,8 +130,8 @@ namespace Xease.CoreGame
                     dt_remain = sub_dt_remain;
                 }
 
-                var canStopBhv = bhv as INeedStopCheck;
-                if (canStopBhv != null && canStopBhv.CanStop())
+                // 无 INeedStopCheck 视为瞬时完成，与 SequenceBhv / IsNodeCanStop 约定对齐
+                if (bhv.IsNodeCanStop())
                 {
                     bhv.Deactivate();
                 }
