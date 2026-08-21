@@ -72,6 +72,7 @@ namespace Xease.CoreGame
                 if (!xmlNodeCfg.ParseFromXml(node))
                 {
                     node.LogError(nodeTypeStr);
+                    return null;
                 }
             }
 

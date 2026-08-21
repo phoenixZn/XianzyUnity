@@ -10,12 +10,20 @@ namespace Xease.CoreGame
     /// </summary>
     public static partial class XmlHelper
     {
+        /// <summary>
+        /// 从资源路径加载 XmlDocument；读取失败返回 null，成功路径会释放 StreamReader。
+        /// </summary>
         public static XmlDocument LoadXmlDocFromResPath(string resPath)
         {
-            StreamReader sr = XmlResToStreamReader(resPath);
-            XmlDocument doc = new XmlDocument();
-            doc.Load(sr);
-            return doc;
+            using (var sr = XmlResToStreamReader(resPath))
+            {
+                if (sr == null)
+                    return null;
+
+                var doc = new XmlDocument();
+                doc.Load(sr);
+                return doc;
+            }
         }
 
         public static Stream BytesToStream(byte[] bytes)
