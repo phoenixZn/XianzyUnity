@@ -89,8 +89,8 @@ namespace Xease.CoreGame
             if (logic == null)
             {
                 G.LogError("AddComFSM logic == null");
+                return;
             }
-
             var index = LogicComponentsLookup.ComMainFSM;
             var component = (MainFSMComponent)CreateComponent(index, typeof(MainFSMComponent));
             component.Init(logic);
