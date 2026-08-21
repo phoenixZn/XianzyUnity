@@ -31,16 +31,9 @@ namespace Xease.CoreGame
         public T GetValue(CustomNode node)
         {
             VarEnv varLib = node.VarEnvRef;
-            if (varLib != null && !string.IsNullOrEmpty(VarID))
-            {
-                if (varLib.HasVar<T>(VarID))
-                {
-                    if (varLib.ReadVar<T>(VarID, out var ret))
-                        return ret;
-                }
-            }
-
-            return _defaultValue;
+            if (varLib == null || string.IsNullOrEmpty(VarID))
+                return _defaultValue;
+            return varLib.ReadVar<T>(VarID, out var ret) ? ret : _defaultValue;
         }
 
         //常量解析
@@ -59,8 +52,11 @@ namespace Xease.CoreGame
                 return true;
             }
 
-            //使用常量
-            return ParseByString(str);
+            // 常量解析成功则与变量绑定互斥，避免复用实例仍读黑板
+            if (!ParseByString(str))
+                return false;
+            VarID = null;
+            return true;
         }
 
         public void SetVarID(string varID)
@@ -90,8 +86,10 @@ namespace Xease.CoreGame
 
         public override bool ParseByString(string str)
         {
-            if (int.TryParse(str, out _defaultValue))
+            // 失败时 TryParse 仍会把 out 写成 0，不能直接覆写已有默认值
+            if (int.TryParse(str, out var v))
             {
+                _defaultValue = v;
                 return true;
             }
 
@@ -112,8 +110,10 @@ namespace Xease.CoreGame
 
         public override bool ParseByString(string str)
         {
-            if (long.TryParse(str, out _defaultValue))
+            // 失败时 TryParse 仍会把 out 写成 0，不能直接覆写已有默认值
+            if (long.TryParse(str, out var v))
             {
+                _defaultValue = v;
                 return true;
             }
 
@@ -134,8 +134,10 @@ namespace Xease.CoreGame
 
         public override bool ParseByString(string str)
         {
-            if (float.TryParse(str, out _defaultValue))
+            // 失败时 TryParse 仍会把 out 写成 0，不能直接覆写已有默认值
+            if (float.TryParse(str, out var v))
             {
+                _defaultValue = v;
                 return true;
             }
 
