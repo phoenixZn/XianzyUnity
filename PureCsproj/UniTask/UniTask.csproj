@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>Cysharp.Threading.Tasks</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>UniTask</AssemblyName>
+    <DefineConstants>UNITASK_NETCORE;$(DefineConstants)</DefineConstants>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 主工程 UniTask Runtime；不复制源码，仅 Compile Include -->
+    <UniTaskRuntimeDir>$(MSBuildThisFileDirectory)..\..\Assets\Plugins\UniTask\Runtime</UniTaskRuntimeDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)NetCore\**\*.cs" />
+    <Compile Include="$(UniTaskRuntimeDir)\**\*.cs">
+      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Unity / PlayerLoop / 第三方引擎扩展：NetCore 子集不编入 -->
+    <Compile Remove="$(UniTaskRuntimeDir)\Triggers\**\*.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Linq\UnityExtensions\**\*.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\External\**\*.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\PlayerLoopHelper.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\PlayerLoopTimer.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Internal\PlayerLoopRunner.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Internal\ContinuationQueue.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UniTaskSynchronizationContext.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UniTask.Delay.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UniTask.WaitUntil.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\EnumeratorAsyncExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\CancellationTokenSourceExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\TimeoutController.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UniTask.Bridge.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UnityAsyncExtensions*.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UnityBindingExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UnityAwaitableExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\UnityWebRequestException.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Internal\UnityEqualityComparer.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Internal\UnityWebRequestExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\Internal\DiagnosticsExtensions.cs" />
+    <Compile Remove="$(UniTaskRuntimeDir)\_InternalVisibleTo.cs" />
+  </ItemGroup>
+</Project>

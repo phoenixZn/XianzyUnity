@@ -10,7 +10,7 @@ Unity 工程编译依赖 Editor 管线、程序集定义与大量 Unity 特有 A
 - **筛选规则与 Unity 侧 UnityParting 约定一致**（排除 `.Unity` 目录与 `*.Unity.cs`），保证「纯 C# 视图」与主工程分层语义对齐。
 - **编译期 shim 与最小 Unity 引用**仅存在于本目录，不污染 Unity 源码树。
 
-当前已有一个子工程 `PureGameEnv/`；后续可按同样约定在此目录下继续添加其他纯 C# 验证工程。
+当前已有子工程 `PureGameEnv/`（命令行宿主）与 `UniTask/`（Cysharp UniTask 的 NetCore 子集）。后续可按同样约定在此目录下继续添加其他纯 C# 验证工程。
 
 ## 目录结构
 
@@ -18,8 +18,11 @@ Unity 工程编译依赖 Editor 管线、程序集定义与大量 Unity 特有 A
 PureCsproj/
 ├── Readme.md                 # 本说明
 ├── PureGameEnv.sln           # 可选，IDE 打开用
+├── UniTask/
+│   ├── UniTask.csproj        # 引用 Plugins/UniTask/Runtime 的无 Unity 子集
+│   └── NetCore/              # Cysharp 2.5.10 NetCore 补丁（Yield 等，不改插件）
 └── PureGameEnv/
-    ├── PureGameEnv.csproj    # 主 csproj
+    ├── PureGameEnv.csproj    # 主 csproj（ProjectReference UniTask）
     ├── Program.cs            # CLI 入口（冒烟编译 / 运行）
     ├── src/shim/             # 仅本工程使用的编译期垫片（*.Shim.cs）
     └── refs/                 # 本机 Unity 托管 DLL（不进 git，需自行拷贝）
@@ -90,5 +93,17 @@ CLI 运行时需要这些 DLL 出现在输出目录：csproj 中对应 `<Referen
 ### 5. 构建产物与版本控制
 
 - 忽略：`bin/`、`obj/`、`refs/*.dll`、`refs/*.pdb`
-- 纳入版本控制：`.csproj`、`.sln`、`Program.cs`、Shim 源码
+- 纳入版本控制：`.csproj`、`.sln`、`Program.cs`、Shim 源码、`UniTask/NetCore` 补丁
+
+## UniTask（NetCore 子集）
+
+`PureCsproj/UniTask` 按 Cysharp 官方 `UniTask.NetCore.csproj` 方式，**Compile Include** `Assets/Plugins/UniTask/Runtime`，不复制插件源码、不引用 `UnityEngine`。
+
+- 宏：`UNITASK_NETCORE`（ValueTask 互转；关掉 `UNITY_2018_3_OR_NEWER` 分支）
+- 排除：`Triggers/`、`Linq/UnityExtensions/`、`External/`、PlayerLoop 相关文件、`UnityAsyncExtensions*` 等（见 `UniTask.csproj` 的 `Compile Remove`）
+- 本地补丁：`UniTask/NetCore/UniTask.Yield.cs`、`AsyncEnumerableExtensions.cs`（Cysharp 2.5.10 MIT）
+
+**可用**：`async UniTask` / `UniTaskVoid`、`WhenAll` / `WhenAny`、`UniTaskCompletionSource`、`SwitchToThreadPool`、`Run` / `RunOnThreadPool`、`Yield()`（线程池 / SynchronizationContext）、Linq（非 UnityExtensions）。
+
+**不可用**：`UniTask.Delay` / `DelayFrame` / `NextFrame`、`WaitUntil` / `WaitWhile`、`Yield(PlayerLoopTiming)`、`SwitchToMainThread`、`ToCoroutine`、MonoBehaviour Triggers、uGUI / Addressables 等。命令行 `Update` 循环不会驱动 UniTask 续体。
 

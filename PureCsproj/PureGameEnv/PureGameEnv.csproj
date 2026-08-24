@@ -44,4 +44,8 @@
       <Private>true</Private>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\UniTask\UniTask.csproj" />
+  </ItemGroup>
 </Project>

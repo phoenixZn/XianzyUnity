@@ -16,7 +16,7 @@ PureGameEnv — Unity 托管引用（refs）
 
 PureGameEnv 使用 net5.0（若本机仅有 .NET SDK 5）。安装 .NET 6+ 后可将 PureGameEnv.csproj 中 TargetFramework 改为 net6.0。
 
-工程内 shim（不向 Assets 拷贝）：src/shim/AsyncAssetViewWrapper.Shim.cs；并 Compile Remove Product/GEnv.Ex.cs。IMGUI / UniTask / SysDebugProfiler 走 Assets 内 #if CONSOLE_CLIENT。详见仓库 cursor_doc/PureGameEnv-构建说明.md。
+工程内 shim（不向 Assets 拷贝）：src/shim/AsyncAssetViewWrapper.Shim.cs、GameEntry.Shim.cs。UniTask 由 PureCsproj/UniTask 引用 Plugins/UniTask/Runtime 无 Unity 子集（UNITASK_NETCORE）。详见仓库 cursor_doc/PureGameEnv-构建说明.md。
 
 PowerShell 示例（路径存在时）：
 

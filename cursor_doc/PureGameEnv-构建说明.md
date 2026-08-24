@@ -3,6 +3,7 @@
 ## 位置
 
 - 工程：`PureCsproj/PureGameEnv/PureGameEnv.csproj`
+- UniTask 子集：`PureCsproj/UniTask/UniTask.csproj`（被 PureGameEnv `ProjectReference`）
 - 解决方案（可选）：`PureCsproj/PureGameEnv.sln`
 
 ## 环境与目标框架
@@ -36,6 +37,16 @@
 | `src/shim/GameEntry.Shim.cs` | 替代 `GameEntry.Unity` / `GameEntryEx.Unity` / `GEnvEx.Unity`：命令行初始化 GEnv 并提供 FixedUpdate/Update/LateUpdate |
 
 `SysDebugProfiler` 已迁到 `Assets/.../System/Debug/`，用 `#if CONSOLE_CLIENT` 提供空实现，不再需要工程内 shim。
+
+## UniTask（Unity 无关子集）
+
+`PureCsproj/UniTask` 引用 `Assets/Plugins/UniTask/Runtime` 中与 Unity / PlayerLoop 无关的源码，定义 `UNITASK_NETCORE`，不引用 `UnityEngine.*.dll`。NetCore 补丁（`Yield`、`IAsyncEnumerable` 互转）在 `PureCsproj/UniTask/NetCore/`，不改插件。
+
+**可用**：`async UniTask` / `UniTaskVoid`、`WhenAll` / `WhenAny`、`UniTaskCompletionSource`、`SwitchToThreadPool`、`Run`、`Yield()`（线程池 / 同步上下文）、Linq（除 `Linq/UnityExtensions`）。
+
+**不可用**：`Delay` / `WaitUntil` / `Yield(PlayerLoopTiming)` / `SwitchToMainThread` / Triggers 等依赖 PlayerLoop 的 API。CLI 主循环不会泵 UniTask 续体。
+
+`Program` 启动时会跑一次 `UniTask.Void` + `await UniTask.Yield()` 冒烟。
 
 ## 构建与运行
 
