@@ -4,6 +4,7 @@
 
 - 工程：`PureCsproj/PureGameEnv/PureGameEnv.csproj`
 - UniTask 子集：`PureCsproj/UniTask/UniTask.csproj`（被 PureGameEnv `ProjectReference`）
+- LitMotion 子集：`PureCsproj/LitMotion/LitMotion.csproj`（被 PureGameEnv `ProjectReference`）
 - 解决方案（可选）：`PureCsproj/PureGameEnv.sln`
 
 ## 环境与目标框架
@@ -26,6 +27,7 @@
 - **包含**：`Assets/HotScripts/Framework`、`Assets/HotScripts/Product` 下全部 `.cs`（通配 include）。
 - **排除（与 XEditor.UnityPartingTool 语义一致）**：路径段以 `.Unity` 结尾的目录内所有 `.cs`；以及 `*.Unity.cs`。
 - `*.Unity.cs` 与 `.Unity` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`。
+- LitMotion 源码在 `Assets/AOTScripts/ThirdParty/LitMotion`，不在 HotScripts 通配范围内；CLI 走 `PureCsproj/LitMotion` 的 `ProjectReference`。
 
 ## PureGameEnv 内 shim（未改 Unity 源码）
 
@@ -48,6 +50,18 @@
 
 `Program` 启动时会跑一次 `UniTask.Void` + `await UniTask.Yield()` 冒烟。
 
+## LitMotion（数值 Tween 子集）
+
+`PureCsproj/LitMotion` 引用 `Assets/AOTScripts/ThirdParty/LitMotion/Runtime`，排除 Extensions / PlayerLoop 注入 / Punch-Shake-String / Native 曲线 / Job。`src/shim/` 提供托管 `UpdateRunner`、空 Allocator、`UnsafeUtility.As` 的委托转换，以及 Burst / Mathematics / Collections 编译桩。
+
+`GameEntry.Awake` 设置 `MotionScheduler.DefaultScheduler = MotionScheduler.Manual`，`Update` 中 `ManualMotionDispatcher.Default.Update(G.deltaTime)`（控制台 dt 固定 0.02）。
+
+**可用**：`LMotion.Create` + `WithEase(Ease)` + `Bind` + `WithOnComplete`。
+
+**不可用**：PlayerLoop 默认调度、`WithEase(AnimationCurve)`、`AddTo(GameObject)`、Extensions 绑定。
+
+`Program` 在 `GameEntryInit` 后会创建 `LMotion.Create(0f, 100f, 0.4f)` 冒烟，约 0.4s 内应看到 `LMotion v=` 与 `LMotion OnComplete`。
+
 ## 构建与运行
 
 ```text
@@ -59,7 +73,7 @@ dotnet run --project PureCsproj/PureGameEnv/PureGameEnv.csproj
 
 ## 当前编译结果
 
-- **已通过**：`dotnet build`（Debug）0 error；冒烟运行可见 `GameEntryInit` → Services/Modules → `ES_EnvInit` → `ES_Login`。
+- **已通过**：`dotnet build`（Debug）0 error；冒烟运行可见 `GameEntryInit` → Services/Modules → `ES_EnvInit` → `ES_Login`；LitMotion 冒烟可见 `LMotion v=` 与 `LMotion OnComplete`。
 
 ## 后续治理方向（按需）
 

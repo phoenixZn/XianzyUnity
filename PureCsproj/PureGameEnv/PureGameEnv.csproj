@@ -47,5 +47,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\UniTask\UniTask.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\LitMotion\LitMotion.csproj" />
   </ItemGroup>
 </Project>

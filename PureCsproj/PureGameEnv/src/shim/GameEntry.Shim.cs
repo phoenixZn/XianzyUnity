@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LitMotion;
 using Xease.CoreGame;
 
 namespace Xease
@@ -31,6 +32,9 @@ namespace Xease
 
         void Awake()
         {
+            // CLI 无 PlayerLoop：必须在任何 LMotion.Create 之前切到 Manual，并接管未处理异常
+            MotionScheduler.DefaultScheduler = MotionScheduler.Manual;
+            MotionDispatcher.RegisterUnhandledExceptionHandler(ex => Console.WriteLine(ex));
         }
 
         void Start()
@@ -79,10 +83,14 @@ namespace Xease
         }
 
         /// <summary>
-        /// 对应 Unity Update，转发 GEnv.EnvUpdate。
+        /// 对应 Unity Update：先泵 Manual Motion，再转发 GEnv.EnvUpdate。
         /// </summary>
         public void Update()
         {
+            if (GEnv.Inst != null)
+            {
+                ManualMotionDispatcher.Default.Update(G.deltaTime);
+            }
             GEnv.Inst?.EnvUpdate();
         }
 

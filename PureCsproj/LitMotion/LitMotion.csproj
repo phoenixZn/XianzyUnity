@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>LitMotion</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>9.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>LitMotion</AssemblyName>
+    <NoWarn>$(NoWarn);CS1591;CS0436</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 主工程 LitMotion Runtime；不复制源码，仅 Compile Include -->
+    <LitMotionRuntimeDir>$(MSBuildThisFileDirectory)..\..\Assets\AOTScripts\ThirdParty\LitMotion\Runtime</LitMotionRuntimeDir>
+    <UnityRefsDir>$(MSBuildThisFileDirectory)..\PureGameEnv\refs</UnityRefsDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)src\shim\**\*.cs" />
+    <Compile Include="$(LitMotionRuntimeDir)\**\*.cs">
+      <Link>Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 引擎对象绑定 / PlayerLoop 注入 -->
+    <Compile Remove="$(LitMotionRuntimeDir)\Extensions\**\*.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\External\**\*.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\PlayerLoopHelper.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\MotionHandleLinker.cs" />
+    <!-- Punch / Shake / FixedString（首期） -->
+    <Compile Remove="$(LitMotionRuntimeDir)\LMotion.Punch.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\LMotion.Shake.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\LMotion.CreateString.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Adapters\PunchMotionAdapters.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Adapters\ShakeMotionAdapters.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Adapters\FixedStringMotionAdapters.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Options\PunchOptions.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Options\ShakeOptions.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Options\StringOptions.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\FixedStringHelper.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\FixedStringHelper.Interpolate.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\RichTextParser.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\RichTextSymbol.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\VibrationHelper.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\RandomHelper.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\MotionBuilderExtensions.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\Box.cs" />
+    <!-- Native 曲线 / Burst Job；由 Shim 覆盖的同名类型 -->
+    <Compile Remove="$(LitMotionRuntimeDir)\Collections\NativeAnimationCurve.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Collections\NativeAnimationCurveHelper.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Collections\UnsafeAnimationCurve.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\MotionUpdateJob.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\UpdateRunner.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\RewindableAllocatorFactory.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\ManagedMotionData.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Internal\MotionStorage.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Adapters\PrimitiveMotionAdapters.cs" />
+    <Compile Remove="$(LitMotionRuntimeDir)\Adapters\UnityMotionAdapter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityRefsDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>$(UnityRefsDir)\UnityEngine.SharedInternalsModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityRefsDir)\UnityEngine.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

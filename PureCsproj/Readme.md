@@ -10,7 +10,7 @@ Unity 工程编译依赖 Editor 管线、程序集定义与大量 Unity 特有 A
 - **筛选规则与 Unity 侧 UnityParting 约定一致**（排除 `.Unity` 目录与 `*.Unity.cs`），保证「纯 C# 视图」与主工程分层语义对齐。
 - **编译期 shim 与最小 Unity 引用**仅存在于本目录，不污染 Unity 源码树。
 
-当前已有子工程 `PureGameEnv/`（命令行宿主）与 `UniTask/`（Cysharp UniTask 的 NetCore 子集）。后续可按同样约定在此目录下继续添加其他纯 C# 验证工程。
+当前已有子工程 `PureGameEnv/`（命令行宿主）、`UniTask/`（Cysharp UniTask 的 NetCore 子集）与 `LitMotion/`（数值 Tween 的 Manual + 托管更新核子集）。后续可按同样约定在此目录下继续添加其他纯 C# 验证工程。
 
 ## 目录结构
 
@@ -21,8 +21,11 @@ PureCsproj/
 ├── UniTask/
 │   ├── UniTask.csproj        # 引用 Plugins/UniTask/Runtime 的无 Unity 子集
 │   └── NetCore/              # Cysharp 2.5.10 NetCore 补丁（Yield 等，不改插件）
+├── LitMotion/
+│   ├── LitMotion.csproj      # 引用 AOTScripts/ThirdParty/LitMotion/Runtime 的 CLI 子集
+│   └── src/shim/             # Manual 泵时间 + 托管更新核垫片（不改插件）
 └── PureGameEnv/
-    ├── PureGameEnv.csproj    # 主 csproj（ProjectReference UniTask）
+    ├── PureGameEnv.csproj    # 主 csproj（ProjectReference UniTask / LitMotion）
     ├── Program.cs            # CLI 入口（冒烟编译 / 运行）
     ├── src/shim/             # 仅本工程使用的编译期垫片（*.Shim.cs）
     └── refs/                 # 本机 Unity 托管 DLL（不进 git，需自行拷贝）
@@ -93,7 +96,7 @@ CLI 运行时需要这些 DLL 出现在输出目录：csproj 中对应 `<Referen
 ### 5. 构建产物与版本控制
 
 - 忽略：`bin/`、`obj/`、`refs/*.dll`、`refs/*.pdb`
-- 纳入版本控制：`.csproj`、`.sln`、`Program.cs`、Shim 源码、`UniTask/NetCore` 补丁
+- 纳入版本控制：`.csproj`、`.sln`、`Program.cs`、Shim 源码、`UniTask/NetCore` 补丁、`LitMotion/src/shim`
 
 ## UniTask（NetCore 子集）
 
@@ -106,4 +109,17 @@ CLI 运行时需要这些 DLL 出现在输出目录：csproj 中对应 `<Referen
 **可用**：`async UniTask` / `UniTaskVoid`、`WhenAll` / `WhenAny`、`UniTaskCompletionSource`、`SwitchToThreadPool`、`Run` / `RunOnThreadPool`、`Yield()`（线程池 / SynchronizationContext）、Linq（非 UnityExtensions）。
 
 **不可用**：`UniTask.Delay` / `DelayFrame` / `NextFrame`、`WaitUntil` / `WaitWhile`、`Yield(PlayerLoopTiming)`、`SwitchToMainThread`、`ToCoroutine`、MonoBehaviour Triggers、uGUI / Addressables 等。命令行 `Update` 循环不会驱动 UniTask 续体。
+
+## LitMotion（Manual + 托管更新核）
+
+`PureCsproj/LitMotion` **Compile Include** `Assets/AOTScripts/ThirdParty/LitMotion/Runtime`，不复制插件源码。启动时把 `MotionScheduler.DefaultScheduler` 设为 `Manual`，由 `GameEntry.Update` 泵 `ManualMotionDispatcher.Default.Update(dt)`。Job / Native 分配器由 `src/shim/` 替换为托管 `for`。
+
+- 排除：`Extensions/`、`External/`、`PlayerLoopHelper`、Punch/Shake/FixedString、Native 曲线、`MotionUpdateJob` 等（见 `LitMotion.csproj` 的 `Compile Remove`）
+- Unity 引用：与 PureGameEnv 共用 `refs/` 三份 DLL（`Vector3` 等值类型）
+
+**可用**：`LMotion.Create`（float/double/int/long 与 Vector/Color/Rect 等）、`WithEase(Ease)`、`WithDelay`/`WithLoops`、`Bind(Action<T>)`、`WithOnComplete`、`ManualMotionDispatcher`。
+
+**不可用**：默认 PlayerLoop Scheduler、`WithEase(AnimationCurve)`、`AddTo(GameObject)`、`Extensions` 绑定、Punch/Shake/FixedString。
+
+`Program` 在 `GameEntryInit` 后会跑一次 `LMotion.Create(0f, 100f, 0.4f).WithEase(Ease.OutCubic).Bind(...)` 冒烟。
 
