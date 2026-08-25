@@ -40,7 +40,9 @@ namespace Xease.CoreGame
                     systems.Add(new SysLife(worlds.LogicWorld));
                     systems.Add(new SysDeathProcess(worlds));
                     systems.Add(new SysDebugDemo(worlds));
+#if !CONSOLE_CLIENT
                     systems.Add(new SysDebugProfiler(worlds));
+#endif
 
                     systems.Add(new SysGameplayInitialize_Main(worlds));
                     systems.Add(new UnitTestSystems_Base(worlds));
