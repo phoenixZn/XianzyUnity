@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Xease;
 
 namespace Xease.CoreGame
 {
@@ -112,7 +113,7 @@ namespace Xease.CoreGame
     /// </summary>
     public partial class VarEnv : ICanRecycle
     {
-        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
+        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Bind 同源
         private static readonly System.Type[] s_fastTypes =
         {
             typeof(int),
@@ -123,48 +124,31 @@ namespace Xease.CoreGame
             typeof(object),
         };
 
-        // 常用类型下标直达，绕过 Dictionary；
-        private readonly IVariables[] _fastBuckets = new IVariables[s_fastTypes.Length];
-        // 非热类型分类器 <TypeKey, 变量桶>；
-        private Dictionary<int, IVariables> _varTypeDic = new (4);
+        static VarEnv()
+        {
+            TypeKey<VarEnv>.Bind(s_fastTypes);
+        }
 
-        // 进程内仅非热类型单调分配稠密 TypeKey
-        private static int s_nextTypeKey = s_fastTypes.Length;
+        // 热桶 + 冷分类器；编号空间 TypeKey<VarEnv>
+        private TypeKey<VarEnv>.Store<IVariables> _store = new TypeKey<VarEnv>.Store<IVariables>(4);
 
         // 按T缓存的手工定制读写路由：精确值类型桶 / object 桶 / uint→int
         private const byte RouteExact = 0;
         private const byte RouteObject = 1;
         private const byte RouteUIntAsInt = 2;  //篡改unit到int
 
-        private static class TypeKeyOf<T>
+        private static class TypeRoute<T>
         {
-            // -1 = 非热类型，走 _varTypeDic
-            public static readonly int FastSlot = ResolveFastSlot();
-            // 仅 FastSlot < 0 时分配；热类型 Id 无意义
-            public static readonly int Id = FastSlot >= 0
-                ? -1
-                : System.Threading.Interlocked.Increment(ref s_nextTypeKey) - 1;
             // 按 T 只初始化一次：Exact / Object / UIntAsInt
             public static readonly byte Route = ResolveRoute();
-
-            private static int ResolveFastSlot()
-            {
-                var type = typeof(T);
-                var fastTypes = s_fastTypes;
-                for (int i = 0; i < fastTypes.Length; i++)
-                {
-                    if (type == fastTypes[i]) return i;
-                }
-                return -1;
-            }
 
             private static byte ResolveRoute()
             {
                 var t = typeof(T);
                 // class / interface（等价于原 IsClass||IsInterface）
-                if (!t.IsValueType) 
+                if (!t.IsValueType)
                     return RouteObject;
-                if (t == typeof(uint)) 
+                if (t == typeof(uint))
                     return RouteUIntAsInt;
                 return RouteExact;
             }
@@ -207,7 +191,7 @@ namespace Xease.CoreGame
 
 #if UNITY_EDITOR
             int warmed = 0;
-            var buckets = _fastBuckets;
+            var buckets = _store.FastBuckets;
             for (int i = 0; i < buckets.Length; i++)
             {
                 if (buckets[i] != null)
@@ -215,23 +199,14 @@ namespace Xease.CoreGame
                     warmed++;
                 }
             }
-            CLogger.LogAssert(warmed == s_fastTypes.Length,
-                $"VarEnv.WarmupFastBuckets 与 s_fastTypes 不同步: warmed={warmed}, expected={s_fastTypes.Length}");
+            CLogger.LogAssert(warmed == TypeKey<VarEnv>.FastCount,
+                $"VarEnv.WarmupFastBuckets 与 s_fastTypes 不同步: warmed={warmed}, expected={TypeKey<VarEnv>.FastCount}");
 #endif
         }
 
         private VariablesImp<T> GetVariables<T>(bool autoAdd = false)
         {
-            var slot = TypeKeyOf<T>.FastSlot;
-            IVariables vars;
-            if (slot >= 0)
-            {
-                vars = _fastBuckets[slot];
-            }
-            else if (_varTypeDic == null || !_varTypeDic.TryGetValue(TypeKeyOf<T>.Id, out vars))
-            {
-                vars = null;
-            }
+            var vars = _store.Get<T>();
             if (vars != null)
             {
                 return vars as VariablesImp<T>;
@@ -242,26 +217,14 @@ namespace Xease.CoreGame
             }
 
             var variables = new VariablesImp<T>();
-            StoreVariables(variables);
+            _store.Set<T>(variables);
             return variables;
-        }
-
-        private void StoreVariables<T>(VariablesImp<T> variables)
-        {
-            var slot = TypeKeyOf<T>.FastSlot;
-            if (slot >= 0)
-            {
-                _fastBuckets[slot] = variables;
-                return;
-            }
-            _varTypeDic ??= new Dictionary<int, IVariables>();
-            _varTypeDic.Add(TypeKeyOf<T>.Id, variables);
         }
         
 
         public bool ReadVar<T>(string key, out T value)
         {
-            switch (TypeKeyOf<T>.Route)
+            switch (TypeRoute<T>.Route)
             {
                 case RouteObject:
                 {
@@ -300,7 +263,7 @@ namespace Xease.CoreGame
 
         public void WriteVar<T>(string key, T value)
         {
-            switch (TypeKeyOf<T>.Route)
+            switch (TypeRoute<T>.Route)
             {
                 case RouteObject:
                     GetVariables<object>(true).WriteVar(key, value);
@@ -321,7 +284,7 @@ namespace Xease.CoreGame
         ///IVariables 相关操作 
         public bool HasVar<T>(string key)
         {
-            switch (TypeKeyOf<T>.Route)
+            switch (TypeRoute<T>.Route)
             {
                 case RouteObject:
                     return GetVariables<object>()?.HasVar(key) ?? false;
@@ -333,7 +296,7 @@ namespace Xease.CoreGame
         }
         public bool ClearVar<T>(string key)
         {
-            switch (TypeKeyOf<T>.Route)
+            switch (TypeRoute<T>.Route)
             {
                 case RouteObject:
                     return GetVariables<object>()?.ClearVar(key) ?? false;
@@ -346,15 +309,16 @@ namespace Xease.CoreGame
         
         public void Clear()
         {
-            var buckets = _fastBuckets;
+            var buckets = _store.FastBuckets;
             for (int i = 0; i < buckets.Length; i++)
             {
                 buckets[i]?.Clear();
             }
 
-            if (_varTypeDic != null)
+            var classifier = _store.Classifier;
+            if (classifier != null)
             {
-                foreach (var kv in _varTypeDic)
+                foreach (var kv in classifier)
                 {
                     kv.Value.Clear();
                 }
@@ -363,18 +327,19 @@ namespace Xease.CoreGame
 
         public void CopyTo(in VarEnv env)
         {
-            var buckets = _fastBuckets;
+            var buckets = _store.FastBuckets;
             for (int i = 0; i < buckets.Length; i++)
             {
                 buckets[i]?.CopyTo(env);
             }
 
-            if (_varTypeDic == null)
+            var classifier = _store.Classifier;
+            if (classifier == null)
             {
                 return;
             }
 
-            foreach (var item in _varTypeDic)
+            foreach (var item in classifier)
             {
                 item.Value.CopyTo(env);
             }
@@ -419,8 +384,8 @@ namespace Xease.CoreGame
                 return;
             }
 
-            var buckets = _fastBuckets;
-            var fastTypes = s_fastTypes;
+            var buckets = _store.FastBuckets;
+            var fastTypes = TypeKey<VarEnv>.FastTypes;
             for (int i = 0; i < buckets.Length; i++)
             {
                 var bucket = buckets[i];
@@ -430,12 +395,13 @@ namespace Xease.CoreGame
                 }
             }
 
-            if (_varTypeDic == null)
+            var classifier = _store.Classifier;
+            if (classifier == null)
             {
                 return;
             }
 
-            foreach (var kv in _varTypeDic)
+            foreach (var kv in classifier)
             {
                 var bucket = kv.Value;
                 if (bucket != null)

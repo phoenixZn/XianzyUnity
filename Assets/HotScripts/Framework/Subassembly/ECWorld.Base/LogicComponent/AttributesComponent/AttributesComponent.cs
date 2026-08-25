@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Xease;
 
 namespace Xease.CoreGame
 {
@@ -8,14 +9,7 @@ namespace Xease.CoreGame
     /// </summary>
     public sealed partial class AttributesComponent : LogicComponent
     {
-        // 常用类型数组下标直达，绕过 Dictionary；长度 = s_fastTypes.Length
-        protected readonly IAttributes[] _fastBuckets = null;
-        // 非热类型分类器 <TypeKey, 属性表>；
-        protected Dictionary<int, IAttributes> _classifier = null;
-        
-        //////////////////////////////////////////////////////////////////////////
-        /// TypeKey: static
-        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Resolve 同源
+        // 热类型槽表：下标即 FastSlot；增删只改此处，桶长与 Bind 同源
         private static readonly System.Type[] s_fastTypes =
         {
             typeof(int),
@@ -23,34 +17,18 @@ namespace Xease.CoreGame
             typeof(double),
             typeof(float),
         };
-        // 进程内仅非热类型单调分配稠密 TypeKey
-        private static int s_nextTypeKey = s_fastTypes.Length;
-        private static class TypeKeyOf<T>
-        {
-            // -1 = 非热类型，走 _classifier
-            public static readonly int FastSlot = ResolveFastSlot();
-            // 仅 FastSlot < 0 时分配；热类型 Id 无意义
-            public static readonly int Id = FastSlot >= 0
-                ? -1
-                : System.Threading.Interlocked.Increment(ref s_nextTypeKey) - 1;
 
-            private static int ResolveFastSlot()
-            {
-                var type = typeof(T);
-                var fastTypes = s_fastTypes;
-                for (int i = 0; i < fastTypes.Length; i++)
-                {
-                    if (type == fastTypes[i]) return i;
-                }
-                return -1;
-            }
+        static AttributesComponent()
+        {
+            TypeKey<AttributesComponent>.Bind(s_fastTypes);
         }
-        
+
+        // 热桶 + 冷分类器；编号空间 TypeKey<AttributesComponent>
+        private TypeKey<AttributesComponent>.Store<IAttributes> _store = new TypeKey<AttributesComponent>.Store<IAttributes>();
+
         //////////////////////////////////////////////////////////////////////////
         public AttributesComponent()
         {
-            _fastBuckets = new IAttributes[s_fastTypes.Length];
-            _classifier = new ();
         }
         
 
@@ -66,16 +44,7 @@ namespace Xease.CoreGame
             if (modifiers == null)
             {
                 modifiers = new AttributeModifiers<TValue>();
-                var slot = TypeKeyOf<TValue>.FastSlot;
-                if (slot >= 0)
-                {
-                    _fastBuckets[slot] = modifiers;
-                }
-                else
-                {
-                    _classifier ??= new Dictionary<int, IAttributes>();
-                    _classifier.Add(TypeKeyOf<TValue>.Id, modifiers);
-                }
+                _store.Set<TValue>(modifiers);
             }
             else if (modifiers.ContainsKey(attrName))
             {
@@ -188,14 +157,14 @@ namespace Xease.CoreGame
         /// <summary>清空各类型属性表内容并保留子容器，供组件入池复用。</summary>
         public void Clear()
         {
-            var buckets = _fastBuckets;
+            var buckets = _store.FastBuckets;
             for (int i = 0; i < buckets.Length; i++)
             {
                 var attrs = buckets[i];
                 attrs?.Clear();
             }
 
-            var classifier = _classifier;
+            var classifier = _store.Classifier;
             if (classifier != null)
             {
                 foreach (var attrs in classifier.Values)
@@ -207,17 +176,7 @@ namespace Xease.CoreGame
 
         private AttributeModifiers<TValue> getAttributesByType<TValue>(bool logError = false)
         {
-            var slot = TypeKeyOf<TValue>.FastSlot;
-            IAttributes attrs;
-            if (slot >= 0)
-            {
-                attrs = _fastBuckets[slot];
-            }
-            else if (_classifier == null || !_classifier.TryGetValue(TypeKeyOf<TValue>.Id, out attrs))
-            {
-                attrs = null;
-            }
-
+            var attrs = _store.Get<TValue>();
             if (attrs == null)
             {
                 if (logError)
