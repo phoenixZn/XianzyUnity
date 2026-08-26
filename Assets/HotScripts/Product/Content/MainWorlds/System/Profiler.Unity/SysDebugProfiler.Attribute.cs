@@ -11,7 +11,14 @@ namespace Xease.CoreGame.Debug
     {
         //////////////////////////////////////////////////////////////////////////
         /// Debug Action:
+        //////////////////////////////////////////////////////////////////////////
 
+        // Old:老typeKey字典  48.68 ms
+        // SimpleArray: 数组 5.5 ms
+        // SimpleDic: intKey字典  21.1 ms
+        // New: 新写的type转int  26.1 ms
+        // NewFastKey: 新写的type转int+热数组  14.2 ms
+        
         private void InitAttributes()
         {
             InitAttributes_Old();
@@ -355,7 +362,7 @@ namespace Xease.CoreGame.Debug
         }
 
         // 热桶 + 冷分类器；编号空间 TypeKey<DebugAttributesNew>
-        private TypeKey<DebugAttributesNew>.Store<IAttributes> _store = new TypeKey<DebugAttributesNew>.Store<IAttributes>();
+        private TypeKey<DebugAttributesNew>.Store<IAttributes> _store = new TypeKey<DebugAttributesNew>.Store<IAttributes>(0);
 
         /// <summary>创建对照实例；useFastKeySlots 决定修改器表实现，创建后不可改。</summary>
         public DebugAttributesNew(bool useFastKeySlots = false)

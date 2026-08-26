@@ -121,5 +121,5 @@ CLI 运行时需要这些 DLL 出现在输出目录：csproj 中对应 `<Referen
 
 **不可用**：默认 PlayerLoop Scheduler、`WithEase(AnimationCurve)`、`AddTo(GameObject)`、`Extensions` 绑定、Punch/Shake/FixedString。
 
-`Program` 在 `GameEntryInit` 后会跑一次 `LMotion.Create(0f, 100f, 0.4f).WithEase(Ease.OutCubic).Bind(...)` 冒烟。
+登入 `ES_Main` 后由 `SysDebugDemo` 首帧跑 `LMotion.Create(0f, 100f, 0.4f).WithEase(Ease.OutCubic).Bind(...)` 冒烟。
 

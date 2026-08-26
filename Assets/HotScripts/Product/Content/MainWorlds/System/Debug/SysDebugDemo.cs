@@ -1,8 +1,6 @@
-﻿#if !CONSOLE_CLIENT
-using Cysharp.Threading.Tasks;
-#endif
+﻿using Cysharp.Threading.Tasks;
 using Entitas;
-using UnityEngine;
+using LitMotion;
 
 namespace Xease.CoreGame.Debug
 {
@@ -27,22 +25,9 @@ namespace Xease.CoreGame.Debug
             if (ExecuteAcc == 1)
             {
                 TestRandomRange();
+                SmokeUniTaskYield();
+                SmokeLMotion();
             }
-#if !CONSOLE_CLIENT
-            if (ExecuteAcc % 10 == 1)
-            {
-                RentDemoGoAsync("ActorCube").Forget();
-            }
-            if (ExecuteAcc % 10 == 5)
-            {
-                RentDemoGoAsync("ActorSphere");
-            }
-            if (ExecuteAcc % 100 == 50)
-            {
-                G.GameObjectPool_Core.Clear("ActorSphere");
-            }
-#endif
-
         }
         
         public void TearDown()
@@ -50,34 +35,24 @@ namespace Xease.CoreGame.Debug
 
         }
 
-#if !CONSOLE_CLIENT
-        // Execute 首帧触发：异步租 ActorCube，摆到位姿后再激活（Rent 交出未激活实例）
-        private async UniTaskVoid RentDemoGoAsync(string path)
+        // Yield 走线程池 / SynchronizationContext（CLI）或 PlayerLoop（Unity），不阻塞 Execute
+        private void SmokeUniTaskYield()
         {
-            var testGo = await G.GameObjectPool_Core.RentAsync(path);
-            
-            var x = G.Random.RandFloat(-6f, 6f);
-            var y = G.Random.RandFloat(-8f, 8f);
-            var z = 10;
-            var ry = G.Random.RandFloat(-90f, 90f);
-            testGo.SetPosition(new Vector3(x, y, z))
-                .SetRotation(Quaternion.Euler(0, ry, 0))
-                .SetActiveState(true)
-                .SetScale(Vector3.one);
-            
-            var life = G.Random.RandFloat(2f, 3f);
-            G.Timer.AddTimer(c =>
+            UniTask.Void(async () =>
             {
-                testGo?.SetScale(Vector3.one * 1.5f);
-                G.Timer.AddTimer(c =>
-                {
-                    G.GameObjectPool_Core.Return(testGo);
-                    testGo = null;
-                }, life);
-            }, 1);
-
+                await UniTask.Yield();
+                G.Log("UniTask: Yield completed.");
+            });
         }
-#endif
+
+        // CLI 依赖 GameEntry 已切 Manual 并泵时间；Unity 走默认 PlayerLoop Scheduler
+        private void SmokeLMotion()
+        {
+            LMotion.Create(0f, 100f, 0.4f)
+                .WithEase(Ease.OutCubic)
+                .WithOnComplete(() => G.Log("LMotion OnComplete"))
+                .Bind(v => G.Log($"LMotion v={v}"));
+        }
 
     }
 }

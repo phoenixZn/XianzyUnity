@@ -24,7 +24,7 @@ namespace Xease.CoreGame
         }
 
         // 热桶 + 冷分类器；编号空间 TypeKey<AttributesComponent>
-        private TypeKey<AttributesComponent>.Store<IAttributes> _store = new TypeKey<AttributesComponent>.Store<IAttributes>();
+        private TypeKey<AttributesComponent>.Store<IAttributes> _store = new TypeKey<AttributesComponent>.Store<IAttributes>(0);
 
         //////////////////////////////////////////////////////////////////////////
         public AttributesComponent()

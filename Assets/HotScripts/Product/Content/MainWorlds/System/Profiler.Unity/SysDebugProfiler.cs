@@ -13,14 +13,15 @@ namespace Xease.CoreGame.Debug
         public void Initialize()
         {
             ExecuteAcc = 0;
-            //InitAttributes();
+            InitAttributes();
             //InitSvcTimer();
         }
         
         public void Execute()
         {
             ExecuteAcc++;
-            //ProfilerExecute_Attributes();
+            //ProfilerExecute_GoPool();
+            ProfilerExecute_Attributes();
         }
         
         public void Update(float dt, float dt_unscaled)

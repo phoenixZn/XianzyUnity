@@ -10,7 +10,7 @@ namespace Xease
     public class PoolService : IPoolService
     {
         // 热类型走定长桶，其余走 classifier；无 Bind 时 FastCount=0
-        private TypeKey<PoolService>.Store<IPool> _store = new TypeKey<PoolService>.Store<IPool>();
+        private TypeKey<PoolService>.Store<IPool> _store = new TypeKey<PoolService>.Store<IPool>(0);
 
         //////////////////////////////////////////////////////////////////////////
         /// IService:

@@ -97,7 +97,7 @@ namespace Xease
         /// <summary>
         /// 实例侧热桶 + 冷分类器；作为宿主的 struct 字段持有，避免额外堆对象。
         /// 热路径 FastBuckets[FastSlot]；冷路径 Classifier 以 int Id 为键，不是 Type。
-        /// TValue 按引用类型语义：Get 缺失时返回 null。须经由构造函数创建。
+        /// TValue 按引用类型语义：Get 缺失时返回 null。必须 `new Store(0)`（或更大容量），禁止 `new Store()`。
         /// </summary>
         public struct Store<TValue> where TValue : class
         {
@@ -108,8 +108,9 @@ namespace Xease
 
             /// <summary>
             /// 按当前 FastCount 分配热桶。classifierCapacity &gt; 0 时预建分类器，否则懒创建。
+            /// C# 9 下 `new Store()` 得到 default（FastBuckets 为 null），必须显式传参，例如 `new Store(0)`。
             /// </summary>
-            public Store(int classifierCapacity = 0)
+            public Store(int classifierCapacity)
             {
                 FastBuckets = new TValue[TypeKey<TSpace>.FastCount];
                 Classifier = classifierCapacity > 0
