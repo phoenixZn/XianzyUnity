@@ -12,7 +12,7 @@ namespace Xease.CoreGame
             {
                 WorldName = "Main",
                 WorldsClassType = typeof(MainWorlds),
-                ModeLogicID = 1100001,
+                ModeLogicID = 1900001,
                 CreateRootSystems = (info, worlds) =>
                 {
                     var systems = new UnityStyleSystems();

@@ -14,6 +14,7 @@ namespace Xease.CoreGame
         public const int Op_Y_Release = 10;
         
         public const int Nt_ColliderHit = 101;
+        public const int Nt_ForceDeath = 102;
         public const int Nt_Death = 103;
         public const int Nt_OnHurt = 104;
     }

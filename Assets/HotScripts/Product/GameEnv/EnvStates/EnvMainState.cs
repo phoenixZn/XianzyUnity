@@ -24,6 +24,10 @@ namespace Xease
                 return;
             }
             //TODO：worldInfo 动态的部分加入
+            if (worldInfo is MainWorldCreationInfo mainWorldCreationInfo)
+            {
+                mainWorldCreationInfo.LocalPlayer = new InGamePlayerInfo();
+            }
             modMainWorld.CreateGameWorld(worldInfo);
             modMainWorld.SetActive(true);
         }

@@ -13,6 +13,7 @@ namespace Xease.CoreGame
             DefaultLogicType = typeof(CustomLogic);
             //游戏模式: ID从 1000000 开始
             InitConfigs_Template();
+            InitConfigs_Demo();
         }
 
         private void InitConfigs_Template()
@@ -36,50 +37,31 @@ namespace Xease.CoreGame
             //Main模式标准状态机 模版:
             AddConfig(1100001, new Nodes()
             {
-                //Log("LogicConfig_GameMode：直接使用PVE模式的标准状态 1100001 "),
                 FSM("GST_Loading", new() 
                 {
                     CustomState("GST_Loading", "GST_InitGame",Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("MainMode Loading")),
+                        LogDebug(n => n.Log("GameMode Loading")),
                     })),
                     
                     CustomState("GST_InitGame", "GST_Playing",Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("MainMode InitGame")),
-                        
-                        BeginCall(n =>
-                        {
-                            LogicEntity entity = n.GetLogicWorld().CreateEntity();
-                            var svc = G.CustomLogic;
-                            var genInfo = MainFsmGenInfo.New(svc,
-                                metaWorld: n.GetMetaWorld(),
-                                ownerEntity: entity);
-                            genInfo.LogicConfigID = 3100001;
-                            genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_EntityFSM;
-                            var logic = svc.CreateLogic<EntityMainFSMLogic>(genInfo);
-                            if (logic != null)
-                            {
-                                entity.AddComFSM(logic);
-                            } 
-                        }),
+                        LogDebug(n => n.Log("GameMode InitGame")),
                     })),
                     
                     CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("MainMode Playing")),
+                        LogDebug(n => n.Log("GameMode Playing")),
                     })),
                     
                     CustomState("GST_Pause", Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("MainMode Pause")),
+                        LogDebug(n => n.Log("GameMode Pause")),
                     })),
                     
                 }),
             }).DefaultVar(env =>
             {
-                // env.WriteVar(CvKey.CV_UniMapSpawnDomeWorld, new Vector3(0f, -10.5f, 0f));
-                // env.WriteVar(CvKey.CV_UniMapSpawnPlayerWorld, new Vector3(0f, -9.474f, 0f));
             });
         }
         

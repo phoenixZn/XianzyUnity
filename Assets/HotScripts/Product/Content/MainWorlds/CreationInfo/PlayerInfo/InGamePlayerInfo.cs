@@ -4,8 +4,10 @@ namespace Xease.CoreGame
 {
     public partial class InGamePlayerInfo
     {
-        public PlayerFeaturesContext FeaturesContext = new ();
+        public long PlayerUID { get; private set; }
+        public PlayerFeaturesContext FeaturesContext { get; private set; } = new ();
         public CategoryStatsVolume StatsVolumePlayer { get; private set; }
+        
         private readonly Dictionary<ECategoryVolume, object> _categoryVolumes = new();
         
         public void InitPlayerStats()

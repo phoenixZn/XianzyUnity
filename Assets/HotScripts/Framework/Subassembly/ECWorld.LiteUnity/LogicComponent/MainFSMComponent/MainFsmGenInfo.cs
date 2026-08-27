@@ -39,9 +39,9 @@ namespace Xease.CoreGame
             LogicWorld = logicWorld;
             MetaWorld = metaWorld;
             OwnerEntity = ownerEntity;
-            //OwnerPlayerInfo = ownerEntity.GetPlayerInfo();
-            if (OwnerPlayerInfo == null)
-                KLogger.LogError("MainFsmGenInfo Init 异常, ownerEntity.GetPlayerInfo() 为空 (推导获取失败)");
+            // OwnerPlayerInfo = ownerEntity.GetPlayerInfo();
+            // if (OwnerPlayerInfo == null)
+            //     KLogger.LogError("MainFsmGenInfo Init 异常, ownerEntity.GetPlayerInfo() 为空 (推导获取失败)");
         }
 
         // 黑板 key 已存在时跳过写入并打错误日志

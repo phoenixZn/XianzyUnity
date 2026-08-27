@@ -1,10 +1,21 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Xease.CoreGame
 {
     using Nodes = List<ICustomNodeCfg>;
 
-    
+    public class MainFSMNode : FSMNode, IEntityCommandHandler
+    {
+        public bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
+        {
+            if (cmd.CmdType == EntityCmdType.Nt_ForceDeath)
+                TransToState("MST_Die");
+            return false;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicConfig_EntityFSM : LogicConfigBase
     {
         public LogicConfig_EntityFSM(string name)
@@ -17,6 +28,7 @@ namespace Xease.CoreGame
             InitConfigs_Demo();
         }
 
+        //模板从3100000开始
         private void InitConfigs_Template()
         {
             AddConfig(3100000, new List<ICustomNodeCfg>()
@@ -32,6 +44,14 @@ namespace Xease.CoreGame
                 Templete(3100000),
                 LogDebug(n=>{ n.Log("测试Entity FSM");})
             });
+        }
+
+
+        //////////////////////////////////////////////////////////////////////////
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StateNodeCfg MainState<T>(string stateID) where T : MainStateBase
+        {
+            return new StateNodeCfg() { StateID = stateID, StateClass = typeof(T) };
         }
     }
 }

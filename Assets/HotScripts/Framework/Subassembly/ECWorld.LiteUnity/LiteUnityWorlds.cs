@@ -53,8 +53,11 @@ namespace Xease.CoreGame
                     typeof(SysCommandSend),
                     typeof(SysCommandReceive),
                     typeof(SysGameModeUpdate),
+                    typeof(SysMainFSM),
                     typeof(SysViewLoader),
                     typeof(SysSyncViewTransform),
+                    typeof(SysLife),
+                    typeof(SysDeathProcess),
                 };
                 VerifyRequiredSystemOrder(requiredTypes);
             }

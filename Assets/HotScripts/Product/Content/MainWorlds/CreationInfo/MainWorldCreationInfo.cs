@@ -6,5 +6,7 @@
         {
         }
         public int ModeLogicID { get; set; }
+
+        public InGamePlayerInfo LocalPlayer;
     }
 }
