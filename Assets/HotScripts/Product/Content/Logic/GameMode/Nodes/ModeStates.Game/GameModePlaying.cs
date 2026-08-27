@@ -41,7 +41,7 @@ namespace Xease.CoreGame
             var nextID = base.CheckTransitions();
             if (nextID != null)
             {
-                CLogger.Log($"GameModePlaying nextID={nextID}");
+                this.Log($"GameModePlaying nextID={nextID}");
             }
             return nextID;
         }

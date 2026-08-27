@@ -5,6 +5,7 @@ namespace Xease.CoreGame
     
     public static partial class CLogger
     {
+        
 #if CONSOLE_CLIENT
         public static void AssertBreak()
         {
@@ -13,18 +14,22 @@ namespace Xease.CoreGame
 
         public static void Log(string info)
         {
+            Console.WriteLine($"[Info] {msg}"),
         }
 
         public static void LogInfo(string info)
         {
+            Console.WriteLine($"[Info] {msg}"),
         }
 
         public static void LogError(string info)
         {
+            Console.WriteLine($"[Error] {msg}"),
         }
 
         public static void LogDebug(string info)
         {
+            Console.WriteLine($"[Debug] {msg}"),
         }
         
 #else
@@ -49,6 +54,7 @@ namespace Xease.CoreGame
         {
             UnityEngine.Debug.LogError(info);
         }
+        
         public static void LogDebug(string info)
         {
             string line = string.Format("{0}{1}{2}", "<color=#22BB00FF>", info, "</color>");
