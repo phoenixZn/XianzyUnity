@@ -56,6 +56,17 @@ namespace Xease.CoreGame
             return RelationDic;
         }
 
+        /// <summary>
+        /// 原地改 dic 后通知 Group/Collector；同实例 Replace，不进组件池、不 Dispose。
+        /// Add/Remove 组件本身已会派发，无需再调。
+        /// </summary>
+        public void NotifyChanged()
+        {
+            if (_hostEntity == null)
+                return;
+            _hostEntity.ReplaceComponent(LogicComponentsLookup.ComUnityObjectRelated, this);
+        }
+
         //////////////////////////////////////////////////////////////////////////
         /// LogicComponent：override
 
@@ -80,27 +91,14 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 登记一个 GameObject InstanceID。已被其他 entity 占用则失败。
-        /// 同一 entity 重复 Bind 只更新 relation。首次登记会 Add 组件并由 Index 全量接收。
+        /// 登记一个 GameObject InstanceID。同一 entity 重复 Bind 只更新 relation。
+        /// 首次 AddComponent；已有组件则原地改 dic 后 NotifyChanged。
         /// </summary>
         public bool BindUnityObject(int instanceId, int relation = UnityObjectRelation.Unknown)
         {
             if (instanceId == 0)
             {
                 WLogger.LogError("BindUnityObject instanceId == 0");
-                return false;
-            }
-
-            var relatedIndex = OwnerWorld?.IndexUnityObjectRelated;
-            if (relatedIndex == null)
-            {
-                WLogger.LogError("BindUnityObject 未注册 UnityObjectRelatedEntityIndex");
-                return false;
-            }
-
-            if (relatedIndex.TryGetEntity(instanceId, out var owner) && owner != this)
-            {
-                WLogger.LogError($"BindUnityObject instanceId={instanceId} 已绑定其他 entity");
                 return false;
             }
 
@@ -113,20 +111,23 @@ namespace Xease.CoreGame
                 return true;
             }
 
-            var dic = comUnityObjectRelated.EnsureRelationDic();
-            if (dic.ContainsKey(instanceId))
+            var related = comUnityObjectRelated;
+            var dic = related.EnsureRelationDic();
+            if (dic.TryGetValue(instanceId, out var oldRelation))
             {
+                if (oldRelation == relation)
+                    return true;
                 dic[instanceId] = relation;
+                related.NotifyChanged();
                 return true;
             }
 
-            if (!relatedIndex.AddKey(instanceId, this))
-            {
-                WLogger.LogError($"BindUnityObject instanceId={instanceId} 索引写入失败");
+            var relatedIndex = OwnerWorld?.IndexUnityObjectRelated;
+            if (relatedIndex != null && !relatedIndex.AddKey(instanceId, this))
                 return false;
-            }
 
             dic[instanceId] = relation;
+            related.NotifyChanged();
             return true;
         }
 
@@ -145,14 +146,15 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 解除一个 InstanceID。dic 清空时移除组件（Group 事件再卸剩余键，此时已空）。
+        /// 解除一个 InstanceID。dic 清空时 Remove 组件；否则 NotifyChanged。
         /// </summary>
         public bool UnbindUnityObject(int instanceId)
         {
             if (!hasComUnityObjectRelated)
                 return false;
 
-            var dic = comUnityObjectRelated.EnsureRelationDic();
+            var related = comUnityObjectRelated;
+            var dic = related.EnsureRelationDic();
             if (!dic.Remove(instanceId))
                 return false;
 
@@ -160,6 +162,8 @@ namespace Xease.CoreGame
 
             if (dic.Count == 0)
                 RemoveComUnityObjectRelated();
+            else
+                related.NotifyChanged();
 
             return true;
         }
@@ -175,26 +179,12 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 换绑 InstanceID（变身/换模型/上下载具）。先检查 newId 冲突，再 Unbind old、Bind new。
-        /// oldId 与 newId 相同则只更新 relation。
+        /// 换绑 InstanceID（变身/换模型/上下载具）。oldId 与 newId 相同则只更新 relation。
         /// </summary>
         public bool RebindUnityObject(int oldId, int newId, int relation = UnityObjectRelation.Unknown)
         {
             if (oldId == newId)
                 return BindUnityObject(newId, relation);
-
-            var relatedIndex = OwnerWorld?.IndexUnityObjectRelated;
-            if (relatedIndex == null)
-            {
-                WLogger.LogError("RebindUnityObject 未注册 UnityObjectRelatedEntityIndex");
-                return false;
-            }
-
-            if (relatedIndex.TryGetEntity(newId, out var owner) && owner != this)
-            {
-                WLogger.LogError($"RebindUnityObject newId={newId} 已绑定其他 entity");
-                return false;
-            }
 
             if (oldId != 0)
                 UnbindUnityObject(oldId);

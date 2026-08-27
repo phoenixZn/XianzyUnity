@@ -39,9 +39,15 @@ namespace Xease.CoreGame
                 //Log("LogicConfig_GameMode：直接使用PVE模式的标准状态 1100001 "),
                 FSM("GST_Loading", new() 
                 {
-                    CustomState("GST_Loading", Seq(new Nodes()
+                    CustomState("GST_Loading", "GST_InitGame",Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("Main Mode Loading")),
+                        LogDebug(n => n.Log("MainMode Loading")),
+                    })),
+                    
+                    CustomState("GST_InitGame", "GST_Playing",Seq(new Nodes()
+                    {
+                        LogDebug(n => n.Log("MainMode InitGame")),
+                        
                         BeginCall(n =>
                         {
                             LogicEntity entity = n.GetLogicWorld().CreateEntity();
@@ -61,12 +67,12 @@ namespace Xease.CoreGame
                     
                     CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("Main Mode Playing")),
+                        LogDebug(n => n.Log("MainMode Playing")),
                     })),
                     
                     CustomState("GST_Pause", Seq(new Nodes()
                     {
-                        LogDebug(n => n.Log("Main Mode Pause")),
+                        LogDebug(n => n.Log("MainMode Pause")),
                     })),
                     
                 }),

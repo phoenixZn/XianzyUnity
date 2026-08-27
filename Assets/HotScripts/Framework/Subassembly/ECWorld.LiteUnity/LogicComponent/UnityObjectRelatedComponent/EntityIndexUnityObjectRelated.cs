@@ -74,7 +74,8 @@ namespace Xease.CoreGame
 
     /// <summary>
     /// GameObject InstanceID → 唯一 LogicEntity 的反向主键索引。
-    /// 增量 Bind/Unbind 走 AddKey/RemoveKey；组件 Add/Remove 时由 Group 事件按 RelationDic 全量登记。不经 getKeys，避免 ToArray。
+    /// 增量 Bind/Unbind 走 AddKey/RemoveKey；组件 Add/Remove 时由 Group 事件按 RelationDic 全量登记。
+    /// ReplaceComponent(this) 触发的 Added/Removed 跳过，避免全量重建。不经 getKeys，避免 ToArray。
     /// </summary>
     public sealed class UnityObjectRelatedEntityIndex : IEntityIndex
     {
@@ -85,6 +86,8 @@ namespace Xease.CoreGame
         readonly IGroup<LogicEntity> _group;
         // instanceID -> entity；1 个 GO 只能对应 1 个 entity
         readonly Dictionary<int, LogicEntity> _goToEntity;
+        // 已 Retain 的 entity；LogicWorld 用 UnsafeAERC，不能靠 owners.Contains 去重
+        readonly HashSet<LogicEntity> _retainedEntities;
         // 缓存委托，保证 -= 与 += 为同一实例
         readonly GroupChanged<LogicEntity> _onAdded;
         readonly GroupChanged<LogicEntity> _onRemoved;
@@ -96,6 +99,7 @@ namespace Xease.CoreGame
         {
             _group = group;
             _goToEntity = new Dictionary<int, LogicEntity>();
+            _retainedEntities = new HashSet<LogicEntity>(EntityEqualityComparer<LogicEntity>.comparer);
             _onAdded = OnEntityAdded;
             _onRemoved = OnEntityRemoved;
             Activate();
@@ -137,7 +141,7 @@ namespace Xease.CoreGame
         /// This：
 
         /// <summary>
-        /// 增量登记一个 InstanceID。已被其他 entity 占用时返回 false；已是本 entity 则视为成功。
+        /// 增量登记一个 InstanceID。已是本 entity 则成功；已被其他 entity 占用则打错误日志并失败。
         /// 不 Retain；Retain 只在 Group OnEntityAdded 做一次。
         /// </summary>
         public bool AddKey(int instanceId, LogicEntity entity)
@@ -146,7 +150,12 @@ namespace Xease.CoreGame
                 return false;
 
             if (_goToEntity.TryGetValue(instanceId, out var existing))
-                return ReferenceEquals(existing, entity);
+            {
+                if (ReferenceEquals(existing, entity))
+                    return true;
+                WLogger.LogError($"UnityObjectRelatedEntityIndex instanceId={instanceId} 已绑定其他 entity");
+                return false;
+            }
 
             _goToEntity.Add(instanceId, entity);
             return true;
@@ -189,21 +198,26 @@ namespace Xease.CoreGame
 
         void OnEntityAdded(IGroup<LogicEntity> group, LogicEntity entity, int index, IComponent component)
         {
+            // ReplaceComponent(this) 也会触发 Added；键已由 AddKey/RemoveKey 维护，避免全量重建和重复 Retain
+            if (_retainedEntities.Contains(entity))
+                return;
+
             var related = component as UnityObjectRelatedComponent ?? entity.comUnityObjectRelated;
             if (related == null || related.RelationDic == null)
                 return;
 
             foreach (var kv in related.RelationDic)
-            {
-                if (!AddKey(kv.Key, entity))
-                    WLogger.LogError($"UnityObjectRelatedEntityIndex 冲突 instanceId={kv.Key}");
-            }
+                AddKey(kv.Key, entity);
 
             RetainEntity(entity);
         }
 
         void OnEntityRemoved(IGroup<LogicEntity> group, LogicEntity entity, int index, IComponent component)
         {
+            // 同实例 Replace 时仍持有组件；真 Remove 后 HasComponent 为 false
+            if (entity.HasComponent(LogicComponentsLookup.ComUnityObjectRelated))
+                return;
+
             // previous 组件在 DisposeOnRemove.Clear 之前仍持完整 dic
             var related = component as UnityObjectRelatedComponent;
             if (related != null && related.RelationDic != null)
@@ -217,32 +231,23 @@ namespace Xease.CoreGame
 
         void Clear()
         {
-            foreach (var entity in _goToEntity.Values)
-                ReleaseEntity(entity);
+            foreach (var entity in _retainedEntities)
+                entity.Release(this);
+            _retainedEntities.Clear();
             _goToEntity.Clear();
         }
 
         void RetainEntity(LogicEntity entity)
         {
-            if (entity.aerc is SafeAERC safeAerc)
-            {
-                if (!safeAerc.owners.Contains(this))
-                    entity.Retain(this);
+            if (!_retainedEntities.Add(entity))
                 return;
-            }
-
             entity.Retain(this);
         }
 
         void ReleaseEntity(LogicEntity entity)
         {
-            if (entity.aerc is SafeAERC safeAerc)
-            {
-                if (safeAerc.owners.Contains(this))
-                    entity.Release(this);
+            if (!_retainedEntities.Remove(entity))
                 return;
-            }
-
             entity.Release(this);
         }
     }
