@@ -14,22 +14,22 @@ namespace Xease.CoreGame
 
         public static void Log(string info)
         {
-            Console.WriteLine($"[Info] {msg}"),
+            Console.WriteLine($"[Info] {info}");
         }
 
         public static void LogInfo(string info)
         {
-            Console.WriteLine($"[Info] {msg}"),
+            Console.WriteLine($"[Info] {info}");
         }
 
         public static void LogError(string info)
         {
-            Console.WriteLine($"[Error] {msg}"),
+            Console.WriteLine($"[Error] {info}");
         }
 
         public static void LogDebug(string info)
         {
-            Console.WriteLine($"[Debug] {msg}"),
+            Console.WriteLine($"[Debug] {info}");
         }
         
 #else

@@ -1,3 +1,5 @@
+using System;
+
 namespace Xease.CoreGame
 {
     public static partial class WLogger
@@ -7,15 +9,15 @@ namespace Xease.CoreGame
 #if CONSOLE_CLIENT
         public static void Log(string info)
         {
-            Console.WriteLine($"[Info] {msg}"),
+            Console.WriteLine($"[Info] {info}");
         }
         public static void LogError(string info)
         {
-            Console.WriteLine($"[Error] {msg}"),
+            Console.WriteLine($"[Error] {info}");
         }
         public static void LogWarning(string info)
         {
-            Console.WriteLine($"[Warning] {msg}"),
+            Console.WriteLine($"[Warning] {info}");
         }
 #else
         public static void Log(string info)
