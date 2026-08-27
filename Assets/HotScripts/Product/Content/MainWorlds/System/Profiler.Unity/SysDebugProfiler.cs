@@ -13,7 +13,7 @@ namespace Xease.CoreGame.Debug
         public void Initialize()
         {
             ExecuteAcc = 0;
-            InitAttributes();
+            //InitAttributes();
             //InitSvcTimer();
         }
         
@@ -21,7 +21,7 @@ namespace Xease.CoreGame.Debug
         {
             ExecuteAcc++;
             //ProfilerExecute_GoPool();
-            ProfilerExecute_Attributes();
+            //ProfilerExecute_Attributes();
         }
         
         public void Update(float dt, float dt_unscaled)
@@ -31,7 +31,7 @@ namespace Xease.CoreGame.Debug
 
         public void TearDown()
         {
-            TearDownSvcTimer();
+            //TearDownSvcTimer();
         }
 
     }

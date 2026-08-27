@@ -7,7 +7,7 @@ namespace Xease.CoreGame
     }
 
     //////////////////////////////////////////////////////////////////////////
-    public class GameStatePlaying : CustomBhvState
+    public class GameModePlaying : CustomBhvState
     {
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
@@ -41,7 +41,7 @@ namespace Xease.CoreGame
             var nextID = base.CheckTransitions();
             if (nextID != null)
             {
-                CLogger.Log($"PveStateGamePlaying nextID={nextID}");
+                CLogger.Log($"GameModePlaying nextID={nextID}");
             }
             return nextID;
         }

@@ -49,7 +49,7 @@ namespace Xease.CoreGame
                         LogDebug(n => n.Log("GameMode InitGame")),
                     })),
                     
-                    CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()
+                    CustomState<GameModePlaying>("GST_Playing", Seq(new Nodes()
                     {
                         LogDebug(n => n.Log("GameMode Playing")),
                     })),

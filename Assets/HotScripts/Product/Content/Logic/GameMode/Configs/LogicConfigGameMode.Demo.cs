@@ -28,7 +28,7 @@ namespace Xease.CoreGame
                         BeginCall(CreateDemoEntity_Enemys),
                     })),
                     
-                    CustomState<GameStatePlaying>("GST_Playing", Seq(new Nodes()
+                    CustomState<DemoModePlaying>("GST_Playing", Seq(new Nodes()
                     {
                         LogDebug(n => n.Log("MainMode Playing")),
                     })),
