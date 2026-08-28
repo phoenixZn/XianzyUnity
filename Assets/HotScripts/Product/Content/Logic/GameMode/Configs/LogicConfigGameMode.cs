@@ -29,8 +29,6 @@ namespace Xease.CoreGame
                 // //结束相关
                 // SaveEventToVar<EvtInGameSumUp>("CV_EvtInGameSumUp"),
                 // SaveEventToVar<EvtGameLevelCompleted>("CV_EvtGameLevelCompleted"),
-                //输入状态机：
-                //InputFSMTemplate.CommonInputFSM,
             });
             
             //////////////////////////////////////////////////////////////////////////

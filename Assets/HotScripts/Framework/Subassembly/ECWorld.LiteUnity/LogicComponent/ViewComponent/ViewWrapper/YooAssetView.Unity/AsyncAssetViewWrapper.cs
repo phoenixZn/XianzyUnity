@@ -38,6 +38,9 @@ namespace Xease.CoreGame
         // Asset 配置（具体类 API）
         public string AssetLocation => _assetLocation;
 
+        // Instantiate 出的实例；未加载或已释放为 null
+        public GameObject Instance => _instance;
+
         public void SetAssetLocation(string assetLocation)
         {
             // 换 location 时静默丢弃进行中的加载，避免旧资源落地

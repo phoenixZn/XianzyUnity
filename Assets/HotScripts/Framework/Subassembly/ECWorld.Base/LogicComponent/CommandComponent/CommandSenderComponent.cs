@@ -84,7 +84,11 @@ namespace Xease.CoreGame
         public void SendCmd(EntityCommand cmd)
         {
             if (!hasComCommandSender)
+            {
+                WLogger.LogError("entity.SendCmd but !hasComCommandSender");
                 return;
+            }
+                
             var index = LogicComponentsLookup.ComCommandSender;
             if (comCommandSender.PreHandleSilentlyAndImmediately(cmd))
             {

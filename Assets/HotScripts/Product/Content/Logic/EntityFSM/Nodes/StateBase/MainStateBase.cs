@@ -60,14 +60,10 @@
         {
             if (cmd.CmdType == EntityCmdType.Nt_Death)
             {
+                this.Log($"{StateID}.HandleEntityCommand Nt_Death: -> MST_Die");
                 ChooseNextState("MST_Die");
                 return false;
             }
-            
-            // if (_ownerEntity?.comLocomotion?.Locomotion is IEntityCommandHandler handler)
-            // {
-            //     return handler.HandleEntityCommand(entity, cmd);
-            // }
             return false;
         }
         

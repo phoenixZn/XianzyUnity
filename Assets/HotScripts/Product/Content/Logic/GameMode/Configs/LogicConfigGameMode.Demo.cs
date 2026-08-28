@@ -37,8 +37,9 @@ namespace Xease.CoreGame
                     {
                         LogDebug(n => n.Log("MainMode Pause")),
                     })),
-                    
                 }),
+                Bhv<DemoTouchInputBhv>(),
+                
             }).DefaultVar(env =>
             {
             });

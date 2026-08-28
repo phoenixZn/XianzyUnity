@@ -18,16 +18,16 @@ namespace Xease.CoreGame
     //////////////////////////////////////////////////////////////////////////
     public struct CustomNodeContext
     {
-        public CustomLogicGenInfo GenInfo;
-        public CustomLogic Logic;
+        public CustomLogicGenInfo GenInfo { get; private set; }
+        public CustomLogic Logic { get; private set; }
 
-        public VarEnv VarEnvImp;
+        public VarEnv VarEnvImp { get; private set; }
 
         //模板配置库（静态配置get），支持通过ID复用一整个配置当模板
-        public ILogicConfigContainer ConfigContainer;
+        public ILogicConfigContainer ConfigContainer { get; private set; }
 
         //逻辑节点工厂（运行时逻辑节点get）
-        public CustomLogicFactory Factory;
+        public CustomLogicFactory Factory { get; private set; }
 
         public CustomNodeContext(CustomLogicGenInfo genInfo, CustomLogic logic, VarEnv varEnvImp, ILogicConfigContainer container, CustomLogicFactory factory)
         {
@@ -53,10 +53,10 @@ namespace Xease.CoreGame
     //////////////////////////////////////////////////////////////////////////
     public class CustomNode : ICustomNode
     {
-        private static int sCreationIndexAcc = 0;
         private bool mIsActive = false;
         protected CustomNodeContext mContext;
 
+        // 当前 Logic 树内的节点序号，由根 Logic.CreationIndex 递增分配
         public int CreationIndex { get; private set; }
 
         //运行时变量环境（黑板）
@@ -88,6 +88,7 @@ namespace Xease.CoreGame
             IsInPool = true;
             Deactivate();
             mContext.Clear();
+            CreationIndex = 0;
         }
 
 
@@ -95,7 +96,9 @@ namespace Xease.CoreGame
         /// ICustomNode:
         public virtual void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
-            CreationIndex = ++sCreationIndexAcc;
+            // 按所属 Logic 树递增分配
+            var idx = context.Logic.CreationIndex++;
+            CreationIndex = idx;
             mContext = context;
             Activate();
         }
@@ -178,12 +181,16 @@ namespace Xease.CoreGame
             return defaultV;
         }
 
+        public bool TryGetVar<T>(string key, out T value)
+        {
+            return VarEnvRef.ReadVar<T>(key, out value);
+        }
+        
         public bool HasVar<T>(string key)
         {
             return VarEnvRef.HasVar<T>(key);
         }
-        
-        
+
         public T GetRootLogic<T>() where T : CustomLogic
         {
             if (mContext.Logic is T theLogic)

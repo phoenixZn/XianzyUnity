@@ -8,6 +8,11 @@
         //////////////////////////////////////////////////////////////////////////
         /// CustomBhvState：override
 
+        public override void Destroy()
+        {
+            base.Destroy();
+        }
+
         /// <summary>
         /// 进入即请求销毁，避免停在 Die 残留 GO。
         /// </summary>

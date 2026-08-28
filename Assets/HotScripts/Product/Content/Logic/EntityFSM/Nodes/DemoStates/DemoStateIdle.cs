@@ -15,6 +15,13 @@ namespace Xease.CoreGame
         //////////////////////////////////////////////////////////////////////////
         /// CustomBhvState：override
 
+        public override void Destroy()
+        {
+            _wait = 0f;
+            _elapsed = 0f;
+            base.Destroy();
+        }
+
         /// <summary>
         /// 进入时抽取本次待机时长。
         /// </summary>

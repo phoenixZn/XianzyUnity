@@ -10,7 +10,11 @@ namespace Xease.CoreGame
         public bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
         {
             if (cmd.CmdType == EntityCmdType.Nt_ForceDeath)
+            {
+                if (G.IsDev)
+                    this.Log("MainFSMNode Nt_ForceDeath");
                 TransToState("MST_Die");
+            }
             return false;
         }
     }

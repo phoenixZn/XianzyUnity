@@ -4,18 +4,24 @@ using Xease;
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo 出生：挂 Transform、异步加载 View，完成后进入 Idle。
+    /// Demo 出生：挂 Transform、异步加载 ActorCube+ActorSphere，就绪后绑定 Collider GO 再进入 Idle。
     /// </summary>
     public class DemoStateBorn : MainStateBase
     {
-        // YooAsset location，与 GoPool 演示预制体一致
-        private const string DemoViewAsset = "ActorCube";
+        // YooAsset location
+        private const string DemoViewAssetCube = "ActorCube";
+        private const string DemoViewAssetSphere = "ActorSphere";
 
         //////////////////////////////////////////////////////////////////////////
         /// CustomBhvState：override
 
+        public override void Destroy()
+        {
+            base.Destroy();
+        }
+
         /// <summary>
-        /// 随机落点并请求异步加载表现；GO 位姿由 Transform 同步。
+        /// 随机落点并请求异步加载两套表现；GO 位姿由 Transform 同步。
         /// </summary>
         public override void Enter()
         {
@@ -28,12 +34,13 @@ namespace Xease.CoreGame
                 G.Random.RandFloat(-10f, 10f),
                 0f);
             _ownerEntity.SetPosition(pos);
-            _ownerEntity.RequestViewLoad(DemoViewAsset);
-            _ownerEntity.RequestViewLoad("ActorSphere");
+            _ownerEntity.AddComCommandSender(new EntityCmdPreHandler_SimpleImmediately());
+            _ownerEntity.RequestViewLoad(DemoViewAssetCube);
+            _ownerEntity.RequestViewLoad(DemoViewAssetSphere);
         }
 
         /// <summary>
-        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle。
+        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle；全部成功则绑定 Collider。
         /// </summary>
         public override float Update(float dt)
         {
@@ -42,8 +49,12 @@ namespace Xease.CoreGame
                 return dt;
 
             if (!allReady)
-                this.LogError($"DemoStateBorn View load failed, asset={DemoViewAsset}");
+            {
+                ChooseNextState("MST_Idle");
+                return dt;
+            }
 
+            BindActorSphereUnityObjects();
             ChooseNextState("MST_Idle");
             return dt;
         }
@@ -65,14 +76,42 @@ namespace Xease.CoreGame
             allReady = true;
             for (int i = 0; i < acquirables.Count; ++i)
             {
-                var state = acquirables[i].LoadState;
+                var acquirable = acquirables[i];
+                var state = acquirable.LoadState;
                 if (state == ViewLoadState.None || state == ViewLoadState.Loading)
                     return false;
-                if (state != ViewLoadState.Ready)
-                    allReady = false;
+                if (state == ViewLoadState.Ready)
+                    continue;
+
+                allReady = false;
+                // 已结束且非 Ready：点出具体资源，避免笼统报一个名字
+                var asset = acquirable is AsyncAssetViewWrapper w ? w.AssetLocation : acquirable.GetType().Name;
+                this.LogError($"DemoStateBorn View load failed, asset={asset}, state={state}");
             }
 
             return true;
+        }
+
+        // 所有已加载 View 下的 Collider GO 都 Bind，射线命中任意碰撞盒都能反查 entity
+        private void BindActorSphereUnityObjects()
+        {
+            if (_ownerEntity == null || !_ownerEntity.hasComView)
+                return;
+
+            var wrappers = _ownerEntity.comView.Wrappers;
+            for (int i = 0; i < wrappers.Count; ++i)
+            {
+                if (wrappers[i] is not AsyncAssetViewWrapper asyncWrapper)
+                    continue;
+
+                var go = asyncWrapper.Instance;
+                if (go == null)
+                    continue;
+
+                var colliders = go.GetComponentsInChildren<Collider>(true);
+                for (int c = 0; c < colliders.Length; ++c)
+                    _ownerEntity.BindUnityObject(colliders[c].gameObject);
+            }
         }
     }
 }
