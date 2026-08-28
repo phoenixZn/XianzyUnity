@@ -2,9 +2,7 @@ using Xease;
 
 namespace Xease.CoreGame
 {
-    /// <summary>
-    /// Demo Playing：进入时刷 10 个 entity，订阅空格事件后每次再补刷 1 个。
-    /// </summary>
+
     public class DemoModePlaying : CustomBhvState
     {
         //////////////////////////////////////////////////////////////////////////
@@ -24,9 +22,6 @@ namespace Xease.CoreGame
             base.Destroy();
         }
 
-        /// <summary>
-        /// 刷 10 个 Demo entity，并开始监听空格补刷。
-        /// </summary>
         public override void Enter()
         {
             base.Enter();

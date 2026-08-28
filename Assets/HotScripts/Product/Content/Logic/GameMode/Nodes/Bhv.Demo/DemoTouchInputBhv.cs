@@ -4,7 +4,7 @@ using Xease;
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo 空格按下；Playing 订阅后创建 1 个 entity。
+    /// Demo 空格按下；
     /// </summary>
     public struct EvtDemoSpacePressed : IValueEvent
     {
@@ -18,7 +18,6 @@ namespace Xease.CoreGame
         //////////////////////////////////////////////////////////////////////////
         /// BehaviorNodeBase：override
 
-        // 空格只发信号，Playing 订阅后刷怪；左键按下发线，命中后发 Nt_Death
         protected override float OnUpdate(float dt)
         {
             if (G.Input.GetKeyDown(KeyCode.Space))
