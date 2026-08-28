@@ -222,7 +222,11 @@ namespace Xease.CoreGame
         }
         
 
-        public bool ReadVar<T>(string key, out T value)
+        /// <summary>
+        /// 按类型读取黑板变量；未命中时 <paramref name="value"/> 为 <paramref name="defaultV"/>。
+        /// </summary>
+        /// <returns>命中返回 true；未命中返回 false。</returns>
+        public bool ReadVar<T>(string key, out T value, T defaultV = default)
         {
             switch (TypeRoute<T>.Route)
             {
@@ -257,7 +261,7 @@ namespace Xease.CoreGame
                 }
             }
 
-            value = default;
+            value = defaultV;
             return false;
         }
 

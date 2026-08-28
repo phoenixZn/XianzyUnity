@@ -176,14 +176,16 @@ namespace Xease.CoreGame
 
         public T GetVar<T>(string key, T defaultV = default)
         {
-            if (VarEnvRef.ReadVar<T>(key, out var value))
-                return value;
-            return defaultV;
+            VarEnvRef.ReadVar<T>(key, out var value, defaultV);
+            return value;
         }
 
-        public bool TryGetVar<T>(string key, out T value)
+        /// <summary>
+        /// 尝试读取黑板变量；未命中时 <paramref name="value"/> 为 <paramref name="defaultV"/>。
+        /// </summary>
+        public bool TryGetVar<T>(string key, out T value, T defaultV = default)
         {
-            return VarEnvRef.ReadVar<T>(key, out value);
+            return VarEnvRef.ReadVar<T>(key, out value, defaultV);
         }
         
         public bool HasVar<T>(string key)
