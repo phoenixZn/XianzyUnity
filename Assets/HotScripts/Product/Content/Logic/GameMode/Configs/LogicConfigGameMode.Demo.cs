@@ -24,8 +24,6 @@ namespace Xease.CoreGame
                     CustomState("GST_InitGame", "GST_Playing",Seq(new Nodes()
                     {
                         LogDebug(n => n.Log("DemoMode InitGame")),
-                        
-                        BeginCall(CreateDemoEntity_Enemys),
                     })),
                     
                     CustomState<DemoModePlaying>("GST_Playing", Seq(new Nodes()
@@ -43,36 +41,6 @@ namespace Xease.CoreGame
             }).DefaultVar(env =>
             {
             });
-        }
-
-        private static void CreateDemoEntity_Enemys(CustomNode n)
-        {
-            InGamePlayerInfo playerInfo = null;
-            if (n.GetGenInfo<GameModeGenInfo>().WorldCreationInfo is MainWorldCreationInfo mainWorldCreationInfo)
-            {
-                playerInfo = mainWorldCreationInfo.LocalPlayer;
-            }
-            if (playerInfo == null)
-                n.LogError("playerInfo == null");
-
-            for (int i = 0; i < 10; i++)
-            {
-                LogicEntity entity = n.GetLogicWorld().CreateEntity();
-                entity.AddComOwnerPlayer(playerInfo);
-
-                var svc = G.CustomLogic;
-                var genInfo = MainFsmGenInfo.New(svc,
-                    metaWorld: n.GetMetaWorld(),
-                    ownerEntity: entity);
-                genInfo.LogicConfigID = 3900001;
-                genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_EntityFSM;
-                var logic = svc.CreateLogic<EntityMainFSMLogic>(genInfo);
-                if (logic != null)
-                {
-                    entity.AddComFSM(logic);
-                }
-                
-            }
         }
     }
 }

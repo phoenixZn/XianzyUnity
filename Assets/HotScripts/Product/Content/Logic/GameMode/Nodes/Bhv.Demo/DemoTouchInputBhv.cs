@@ -4,16 +4,26 @@ using Xease;
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo 点击：屏幕射线命中已绑定 GO 时给对应 entity 挂死亡组件。
+    /// Demo 空格按下；Playing 订阅后创建 1 个 entity。
+    /// </summary>
+    public struct EvtDemoSpacePressed : IValueEvent
+    {
+    }
+
+    /// <summary>
+    /// Demo 输入：空格发 EvtDemoSpacePressed；左键射线命中已绑定 GO 时发死亡命令。
     /// </summary>
     public class DemoTouchInputBhv : BehaviorNodeBase
     {
         //////////////////////////////////////////////////////////////////////////
         /// BehaviorNodeBase：override
 
-        // 左键按下发线；命中后 TryGetEntityWithUnityObjectRelated → AddComDeath
+        // 空格只发信号，Playing 订阅后刷怪；左键按下发线，命中后发 Nt_Death
         protected override float OnUpdate(float dt)
         {
+            if (G.Input.GetKeyDown(KeyCode.Space))
+                G.ValueEvent.Dispatch(new EvtDemoSpacePressed());
+
             if (!G.Input.GetKeyDown(KeyCode.Mouse0))
                 return dt;
 
