@@ -197,7 +197,8 @@ namespace Xease.CoreGame
         {
             if (entity == null)
                 return;
-            var wrapper = ViewWrapperBase.RentFromPool<T>();
+            var wrapper = G.SharedPool.Rent<T>();
+            wrapper.Reset();
             wrapper.SetAssetLocation(assetLocation);
             entity.SetComView(wrapper);
         }

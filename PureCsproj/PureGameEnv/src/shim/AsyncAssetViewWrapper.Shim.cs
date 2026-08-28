@@ -29,7 +29,7 @@ namespace Xease.CoreGame
         public GameObject Instance => null;
 
         /// <summary>
-        /// SharedPool 工厂用无参构造。
+        /// 无参构造；满足 RequestViewLoad 泛型 new() 约束。
         /// </summary>
         public AsyncAssetViewWrapper()
         {
@@ -60,9 +60,15 @@ namespace Xease.CoreGame
         }
 
         // 按本类型归还 SharedPool
-        protected override void ReturnToPool()
+        protected override void RecycleInstance()
         {
             G.SharedPool.Return(this);
+        }
+
+        // Reset 时清 location
+        protected override void OnReset()
+        {
+            AssetLocation = null;
         }
     }
 }

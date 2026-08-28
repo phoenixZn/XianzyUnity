@@ -28,7 +28,7 @@ namespace Xease.CoreGame
         private readonly Action<AssetHandle> _onAssetLoaded;
 
         /// <summary>
-        /// SharedPool 工厂用无参构造；资源路径经 SetAssetLocation 配置。
+        /// 无参构造；资源路径经 SetAssetLocation 配置。
         /// </summary>
         public AsyncAssetViewWrapper()
         {
@@ -78,7 +78,7 @@ namespace Xease.CoreGame
             if (assetSvc == null)
             {
                 CancelPendingAcquire(notifyFailure: false);
-                ReleaseOwnedView();
+                ReleaseOwnedAsset();
                 BindProxy(NullViewTransformProxy.Instance);
                 ctx.Complete(true);
                 return;
@@ -124,7 +124,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            ReleaseOwnedView();
+            ReleaseOwnedAsset();
             _instance = Object.Instantiate(prefab);
             BindProxy(UnityViewTransformProxy.Rent(_instance.transform));
             InvokePendingCompleted(true);
@@ -160,7 +160,7 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         /// ViewWrapperBase:
-        protected override void ReleaseOwnedView()
+        protected override void ReleaseOwnedAsset()
         {
             if (_instance == null)
                 return;
@@ -176,13 +176,13 @@ namespace Xease.CoreGame
         }
 
         // 按本类型归还 SharedPool
-        protected override void ReturnToPool()
+        protected override void RecycleInstance()
         {
             G.SharedPool.Return(this);
         }
 
-        // 还池后再租出时清加载态与实例引用
-        protected override void OnPrepareFromPool()
+        // Reset 时清加载态与实例引用
+        protected override void OnReset()
         {
             _assetLocation = null;
             _instance = null;
