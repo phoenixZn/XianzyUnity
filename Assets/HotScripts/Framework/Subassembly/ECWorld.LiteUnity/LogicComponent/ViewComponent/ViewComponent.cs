@@ -32,6 +32,33 @@ namespace Xease.CoreGame
     }
 
     /// <summary>
+    /// 可配置资源定位地址的 View 包装；供 RequestViewLoad 约束与失败日志读取，不进入 IViewAcquirable。
+    /// </summary>
+    public interface IViewAssetLocatable
+    {
+        /// <summary>
+        /// 当前资源定位地址；未配置时为 null 或空。
+        /// </summary>
+        string AssetLocation { get; }
+
+        /// <summary>
+        /// 写入待获取的资源定位地址；换地址时应丢弃进行中的加载。
+        /// </summary>
+        void SetAssetLocation(string assetLocation);
+    }
+
+    /// <summary>
+    /// 持有可绑定的 Unity GameObject；供 BindUnityObject 等消费，不进入加载策略。
+    /// </summary>
+    public interface IViewGameObjectHolder
+    {
+        /// <summary>
+        /// 已就绪的 GameObject；未加载或已释放为 null。
+        /// </summary>
+        GameObject Instance { get; }
+    }
+
+    /// <summary>
     /// Acquire 请求/结果袋：请求字段由调用方填写；结果字段由策略在回调前写入。
     /// </summary>
     public struct ViewAcquireContext
@@ -190,10 +217,10 @@ namespace Xease.CoreGame
     public static partial class EntityExtension
     {
         /// <summary>
-        /// 从 SharedPool 租用指定 AsyncAssetViewWrapper 子类并请求加载 assetLocation。
+        /// 从 SharedPool 租用指定 View 包装并请求加载 assetLocation。
         /// </summary>
         public static void RequestViewLoad<T>(this LogicEntity entity, string assetLocation)
-            where T : AsyncAssetViewWrapper, new()
+            where T : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, new()
         {
             if (entity == null)
                 return;

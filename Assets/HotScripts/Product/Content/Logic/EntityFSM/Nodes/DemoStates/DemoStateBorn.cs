@@ -36,7 +36,7 @@ namespace Xease.CoreGame
             _ownerEntity.SetPosition(pos);
             _ownerEntity.AddComCommandSender(new EntityCmdPreHandler_SimpleImmediately());
             _ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetCube);
-            _ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetSphere);
+            _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetSphere);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Xease.CoreGame
 
                 allReady = false;
                 // 已结束且非 Ready：点出具体资源，避免笼统报一个名字
-                var asset = acquirable is AsyncAssetViewWrapper w ? w.AssetLocation : acquirable.GetType().Name;
+                var asset = acquirable is IViewAssetLocatable loc ? loc.AssetLocation : acquirable.GetType().Name;
                 this.LogError($"DemoStateBorn View load failed, asset={asset}, state={state}");
             }
 
@@ -101,10 +101,10 @@ namespace Xease.CoreGame
             var wrappers = _ownerEntity.comView.Wrappers;
             for (int i = 0; i < wrappers.Count; ++i)
             {
-                if (wrappers[i] is not AsyncAssetViewWrapper asyncWrapper)
+                if (wrappers[i] is not IViewGameObjectHolder holder)
                     continue;
 
-                var go = asyncWrapper.Instance;
+                var go = holder.Instance;
                 if (go == null)
                     continue;
 

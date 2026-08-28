@@ -1,47 +1,48 @@
 using System;
 using UnityEngine;
 using YooAsset;
+using Xease;
 using Object = UnityEngine.Object;
 
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// 异步Asset加载,ViewWrapper
+    /// 异步 Asset 加载后从 Battle GameObject 池租用实例的 ViewWrapper；释放时 Return 而非 Destroy。
     /// </summary>
-    public class AsyncAssetViewWrapper : ViewWrapperBase, IViewAcquirable
+    public class PooledAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
     {
         /*
-         异步 Asset 加载策略：持有 Instantiate 出的 GameObject，释放时 Destroy。
-         AssetLocation / RequestLoad 为本类具体 API，不进入 IViewAcquirable。
+         异步 Asset 加载策略：持有池租出的 GameObject，释放时 Return 到 GameObjectPool_Battle。
+         AssetLocation 属 IViewAssetLocatable，Instance 属 IViewGameObjectHolder，不进入 IViewAcquirable。
          同实例连载时 last-wins：退订旧 handle 回调，仅当前 pending 落地并回调。
         */
         private string _assetLocation;
         private GameObject _instance;
-        
+
         // 当前关心的加载句柄；被 supersede 时仅退订，不 Release（留 Loader 缓存）
         private AssetHandle _pendingHandle;
-        
+
         // 仅当前 pending 的 Acquire 回调上下文
         private ViewAcquireContext _pendingCtx;
-        
+
         // 实例级缓存，避免每次 BeginAcquire 分配闭包
         private readonly Action<AssetHandle> _onAssetLoaded;
 
         /// <summary>
         /// 无参构造；资源路径经 SetAssetLocation 配置。
         /// </summary>
-        public AsyncAssetViewWrapper()
+        public PooledAssetViewWrapper()
         {
             _onAssetLoaded = OnAssetLoaded;
         }
 
         //////////////////////////////////////////////////////////////////////////
-        // Asset 配置（具体类 API）
+        /// IViewAssetLocatable:
         public string AssetLocation => _assetLocation;
 
-        // Instantiate 出的实例；未加载或已释放为 null
-        public GameObject Instance => _instance;
-
+        /// <summary>
+        /// 写入待获取的资源定位地址；换地址时静默丢弃进行中的加载。
+        /// </summary>
         public void SetAssetLocation(string assetLocation)
         {
             // 换 location 时静默丢弃进行中的加载，避免旧资源落地
@@ -51,6 +52,10 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
+        /// IViewGameObjectHolder:
+        public GameObject Instance => _instance;
+
+        //////////////////////////////////////////////////////////////////////////
         /// IViewWrapper:
         public override bool IsReady => LoadState == ViewLoadState.Ready;
 
@@ -58,6 +63,9 @@ namespace Xease.CoreGame
         /// IViewAcquirable:
         public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
 
+        /// <summary>
+        /// 由 SysViewLoader 推进加载状态。
+        /// </summary>
         public void SetLoadState(ViewLoadState loadState)
         {
             LoadState = loadState;
@@ -66,6 +74,9 @@ namespace Xease.CoreGame
         public bool HasPendingAcquire =>
             LoadState == ViewLoadState.None && !string.IsNullOrEmpty(_assetLocation);
 
+        /// <summary>
+        /// 经 AssetSvc 异步加载预制体，再从 Battle 池 Rent；失败或无池则 Complete(false)。
+        /// </summary>
         public void BeginAcquire(ViewAcquireContext ctx)
         {
             if (IsDisposed)
@@ -74,8 +85,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            var assetSvc = GEnv.Inst?.Services?.AssetSvc;
-            if (assetSvc == null)
+            if (G.Asset == null)
             {
                 CancelPendingAcquire(notifyFailure: false);
                 ReleaseOwnedAsset();
@@ -84,11 +94,19 @@ namespace Xease.CoreGame
                 return;
             }
 
+            if (G.GameObjectPool_Battle == null)
+            {
+                WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
+                CancelPendingAcquire(notifyFailure: false);
+                ctx.Complete(false);
+                return;
+            }
+
             // last-wins：退订旧 handle，不回调旧 ctx
             CancelPendingAcquire(notifyFailure: false);
             _pendingCtx = ctx;
             // IsDone 时会在 return 前同步 Invoke 并已清 pending；仅异步未完成时挂上返回值
-            var handle = assetSvc.LoadAssetAsync<GameObject>(_assetLocation, _onAssetLoaded);
+            var handle = G.Asset.LoadAssetAsync<GameObject>(_assetLocation, _onAssetLoaded);
             if (handle != null && !handle.IsDone)
                 _pendingHandle = handle;
         }
@@ -111,7 +129,7 @@ namespace Xease.CoreGame
 
             if (handle == null || handle.Status != EOperationStatus.Succeed)
             {
-                WLogger.LogError($"AsyncAssetViewWrapper load failed: {_assetLocation}");
+                WLogger.LogError($"PooledAssetViewWrapper load failed: {_assetLocation}");
                 InvokePendingCompleted(false);
                 return;
             }
@@ -119,13 +137,27 @@ namespace Xease.CoreGame
             var prefab = handle.AssetObject as GameObject;
             if (prefab == null)
             {
-                WLogger.LogError($"AsyncAssetViewWrapper asset is not GameObject: {_assetLocation}");
+                WLogger.LogError($"PooledAssetViewWrapper asset is not GameObject: {_assetLocation}");
+                InvokePendingCompleted(false);
+                return;
+            }
+
+            if (G.GameObjectPool_Battle == null)
+            {
+                WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
                 InvokePendingCompleted(false);
                 return;
             }
 
             ReleaseOwnedAsset();
-            _instance = Object.Instantiate(prefab);
+            _instance = G.GameObjectPool_Battle.Rent(prefab);
+            if (_instance == null)
+            {
+                WLogger.LogError($"PooledAssetViewWrapper rent failed: {_assetLocation}");
+                InvokePendingCompleted(false);
+                return;
+            }
+
             BindProxy(UnityViewTransformProxy.Rent(_instance.transform));
             InvokePendingCompleted(true);
         }
@@ -165,7 +197,11 @@ namespace Xease.CoreGame
             if (_instance == null)
                 return;
 
-            Object.Destroy(_instance);
+            if (G.GameObjectPool_Battle != null)
+                G.GameObjectPool_Battle.Return(_instance);
+            else
+                Object.Destroy(_instance);
+
             _instance = null;
         }
 

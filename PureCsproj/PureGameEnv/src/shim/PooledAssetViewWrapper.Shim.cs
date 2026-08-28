@@ -3,10 +3,10 @@ using UnityEngine;
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// 替代 LiteUnity 下 ViewWrapper.Unity/AsyncAssetViewWrapper（依赖 YooAsset，已从本工程排除）；
+    /// 替代 LiteUnity 下 ViewWrapper.Unity/PooledAssetViewWrapper（依赖 YooAsset / GO 池，已从本工程排除）；
     /// 供 ViewComponent.RequestViewLoad 泛型约束编译通过，不加载真实资源。
     /// </summary>
-    public class AsyncAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
+    public class PooledAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
     {
         /// <summary>
         /// 纯 C# 工程不持有 AssetLocation 加载态。
@@ -31,7 +31,7 @@ namespace Xease.CoreGame
         /// <summary>
         /// 无参构造；满足 RequestViewLoad 泛型 new() 约束。
         /// </summary>
-        public AsyncAssetViewWrapper()
+        public PooledAssetViewWrapper()
         {
         }
 
