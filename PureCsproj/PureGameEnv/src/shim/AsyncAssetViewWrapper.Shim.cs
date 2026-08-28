@@ -1,8 +1,10 @@
+using UnityEngine;
+
 namespace Xease.CoreGame
 {
     /// <summary>
     /// 替代 LiteUnity 下 YooAssetView.Unity/AsyncAssetViewWrapper（依赖 YooAsset，已从本工程排除）；
-    /// 供 ViewComponent.SetComView 默认包装器编译通过，不加载真实资源。
+    /// 供 ViewComponent.RequestViewLoad 泛型约束编译通过，不加载真实资源。
     /// </summary>
     public class AsyncAssetViewWrapper : ViewWrapperBase, IViewAcquirable
     {
@@ -17,10 +19,28 @@ namespace Xease.CoreGame
         public bool HasPendingAcquire => false;
 
         /// <summary>
-        /// 与 Assets 侧相同的构造签名；location 在纯 C# 工程中忽略。
+        /// 记录 location，纯 C# 工程不据此加载。
         /// </summary>
-        public AsyncAssetViewWrapper(string assetLocation = null)
+        public string AssetLocation { get; private set; }
+
+        /// <summary>
+        /// 纯 C# 工程无实例对象。
+        /// </summary>
+        public GameObject Instance => null;
+
+        /// <summary>
+        /// SharedPool 工厂用无参构造。
+        /// </summary>
+        public AsyncAssetViewWrapper()
         {
+        }
+
+        /// <summary>
+        /// 记录 location，不触发真实加载。
+        /// </summary>
+        public void SetAssetLocation(string assetLocation)
+        {
+            AssetLocation = assetLocation;
         }
 
         /// <summary>
@@ -37,6 +57,12 @@ namespace Xease.CoreGame
         public void SetLoadState(ViewLoadState state)
         {
             LoadState = state;
+        }
+
+        // 按本类型归还 SharedPool
+        protected override void ReturnToPool()
+        {
+            G.SharedPool.Return(this);
         }
     }
 }

@@ -35,8 +35,8 @@ namespace Xease.CoreGame
                 0f);
             _ownerEntity.SetPosition(pos);
             _ownerEntity.AddComCommandSender(new EntityCmdPreHandler_SimpleImmediately());
-            _ownerEntity.RequestViewLoad(DemoViewAssetCube);
-            _ownerEntity.RequestViewLoad(DemoViewAssetSphere);
+            _ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetCube);
+            _ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetSphere);
         }
 
         /// <summary>

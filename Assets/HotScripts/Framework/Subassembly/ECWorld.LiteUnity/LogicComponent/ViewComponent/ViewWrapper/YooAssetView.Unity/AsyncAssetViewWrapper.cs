@@ -27,11 +27,12 @@ namespace Xease.CoreGame
         // 实例级缓存，避免每次 BeginAcquire 分配闭包
         private readonly Action<AssetHandle> _onAssetLoaded;
 
-        public AsyncAssetViewWrapper(string assetLocation = null)
+        /// <summary>
+        /// SharedPool 工厂用无参构造；资源路径经 SetAssetLocation 配置。
+        /// </summary>
+        public AsyncAssetViewWrapper()
         {
             _onAssetLoaded = OnAssetLoaded;
-            if (!string.IsNullOrEmpty(assetLocation))
-                SetAssetLocation(assetLocation);
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -125,8 +126,7 @@ namespace Xease.CoreGame
 
             ReleaseOwnedView();
             _instance = Object.Instantiate(prefab);
-            var proxy = new UnityViewTransformProxy(_instance.transform);
-            BindProxy(proxy);
+            BindProxy(UnityViewTransformProxy.Rent(_instance.transform));
             InvokePendingCompleted(true);
         }
 
@@ -172,6 +172,22 @@ namespace Xease.CoreGame
         protected override void OnDisposed()
         {
             CancelPendingAcquire(notifyFailure: true);
+            LoadState = ViewLoadState.None;
+        }
+
+        // 按本类型归还 SharedPool
+        protected override void ReturnToPool()
+        {
+            G.SharedPool.Return(this);
+        }
+
+        // 还池后再租出时清加载态与实例引用
+        protected override void OnPrepareFromPool()
+        {
+            _assetLocation = null;
+            _instance = null;
+            _pendingHandle = null;
+            _pendingCtx = default;
             LoadState = ViewLoadState.None;
         }
     }

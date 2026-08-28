@@ -173,7 +173,7 @@ namespace Xease.CoreGame
             get { return HasComponent(LogicComponentsLookup.ComView); }
         }
 
-        public void SetComView(string assetLocation, IViewWrapper viewWrapper = null)
+        public void SetComView(IViewWrapper viewWrapper)
         {
             var index = LogicComponentsLookup.ComView;
             if (!hasComView)
@@ -182,20 +182,24 @@ namespace Xease.CoreGame
                 component.Init();
                 AddComponent(index, component);
             }
-
-            var wrapper = viewWrapper ?? new AsyncAssetViewWrapper(assetLocation);
-            comView.AddViewWrapper(wrapper);
+            comView.AddViewWrapper(viewWrapper);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
     public static partial class EntityExtension
     {
-        public static void RequestViewLoad(this LogicEntity entity, string assetLocation)
+        /// <summary>
+        /// 从 SharedPool 租用指定 AsyncAssetViewWrapper 子类并请求加载 assetLocation。
+        /// </summary>
+        public static void RequestViewLoad<T>(this LogicEntity entity, string assetLocation)
+            where T : AsyncAssetViewWrapper, new()
         {
             if (entity == null)
                 return;
-            entity.SetComView(assetLocation);
+            var wrapper = ViewWrapperBase.RentFromPool<T>();
+            wrapper.SetAssetLocation(assetLocation);
+            entity.SetComView(wrapper);
         }
     }
 
