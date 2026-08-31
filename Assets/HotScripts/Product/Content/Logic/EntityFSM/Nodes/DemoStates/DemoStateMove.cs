@@ -79,7 +79,8 @@ namespace Xease.CoreGame
         {
             if (cmd.CmdType == EntityCmdType.Nt_Death)
             {
-                this.Log($"{StateID}.HandleEntityCommand Nt_Death: pending until arrive");
+                if (this.isDebug())
+                    this.Log($"{StateID}.HandleEntityCommand Nt_Death: pending until arrive");
                 _pendingDeath = true;
                 return true;
             }

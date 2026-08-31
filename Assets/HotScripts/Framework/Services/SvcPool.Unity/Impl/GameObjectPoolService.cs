@@ -27,7 +27,8 @@
  *    - Clear(prefab|name|全部)：Destroy 空闲实例并移除分类节点；
  *      PrefabName[Rented] 无子节点才拆，仍有租出实例则保留以免误杀；全部时保留根节点。
  *      已租出记录仍留在租出表；之后 Return 若子池已拆（或已换新实例）则 Destroy，不报 not rented。
- *    - 池键：prefab.name（项目保证预制体名全局唯一）。
+ *    - 热路径池键：prefab.GetInstanceID()（避免 Object.name 每次分配 string）。
+ *      名字仍要求全局唯一，仅供 Clear(string) / Setting / Hierarchy 二级节点；只在新建子池时读一次 .name。
  */
 
 using System;
@@ -50,8 +51,10 @@ namespace Xease
         private readonly string _rootName;
         // 池根 Transform（DontDestroyOnLoad）
         private Transform _root;
-        // prefab.name → 子池（项目保证名唯一）
+        // prefab.name → 子池（Clear(string) / Setting / 二级节点；项目保证名唯一）
         private readonly Dictionary<string, PrefabPool> _poolsByName = new();
+        // prefab.GetInstanceID() → 子池（Rent 热路径，0 字符串分配）
+        private readonly Dictionary<int, PrefabPool> _poolsByPrefabId = new();
         // 已租出 instance.InstanceID → 所属子池
         private readonly Dictionary<int, PrefabPool> _rentedByInstanceId = new();
         // PrefabName → maxSize；仅影响新建子池
@@ -179,7 +182,12 @@ namespace Xease
                 return;
             }
 
-            Clear(prefab.name);
+            if (!_poolsByPrefabId.TryGetValue(prefab.GetInstanceID(), out PrefabPool pool))
+            {
+                return;
+            }
+
+            RemovePool(pool);
         }
 
         public void Clear(string prefabName)
@@ -215,17 +223,28 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         /// IGameObjectRentAsync:
         /// <summary>
-        /// 经 G.Asset 异步加载 location 对应预制体，再走同步 Rent（未激活，挂该类型 PrefabName[Rented]）；句柄留在 Asset 默认组，池不 Release。
+        /// 经 G.Asset 加载 location 对应预制体再同步 Rent；句柄已完成时走 UniTask.FromResult，不分配状态机。
         /// </summary>
-        public async UniTask<GameObject> RentAsync(string assetLocation, CancellationToken cancellationToken = default)
+        public UniTask<GameObject> RentAsync(string assetLocation, CancellationToken cancellationToken = default)
         {
-            GameObject prefab = await LoadPrefabAsync(assetLocation, cancellationToken, "RentAsync");
-            if (prefab == null)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return null;
+                return UniTask.FromCanceled<GameObject>(cancellationToken);
             }
 
-            return Rent(prefab);
+            AssetHandle handle = BeginLoadPrefab(assetLocation, "RentAsync");
+            if (handle == null)
+            {
+                return UniTask.FromResult<GameObject>(null);
+            }
+
+            if (handle.IsDone)
+            {
+                GameObject prefab = ResolvePrefab(handle, assetLocation, "RentAsync");
+                return UniTask.FromResult(prefab == null ? null : Rent(prefab));
+            }
+
+            return WaitAndRentAsync(handle, assetLocation, cancellationToken);
         }
 
         /// <summary>
@@ -248,28 +267,44 @@ namespace Xease
         }
 
         /// <summary>
-        /// 经 G.Asset 异步加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄留在 Asset 默认组，池不 Release。
+        /// 经 G.Asset 加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄已完成时不分配加载状态机。
         /// </summary>
-        public async UniTask PrewarmAsync(string assetLocation, int count, CancellationToken cancellationToken = default)
+        public UniTask PrewarmAsync(string assetLocation, int count, CancellationToken cancellationToken = default)
         {
             if (count <= 0)
             {
-                return;
+                return UniTask.CompletedTask;
             }
 
-            GameObject prefab = await LoadPrefabAsync(assetLocation, cancellationToken, "PrewarmAsync");
-            if (prefab == null)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return;
+                return UniTask.FromCanceled(cancellationToken);
             }
 
-            await PrewarmAsync(prefab, count, cancellationToken);
+            AssetHandle handle = BeginLoadPrefab(assetLocation, "PrewarmAsync");
+            if (handle == null)
+            {
+                return UniTask.CompletedTask;
+            }
+
+            if (handle.IsDone)
+            {
+                GameObject prefab = ResolvePrefab(handle, assetLocation, "PrewarmAsync");
+                if (prefab == null)
+                {
+                    return UniTask.CompletedTask;
+                }
+
+                return PrewarmAsync(prefab, count, cancellationToken);
+            }
+
+            return WaitAndPrewarmAsync(handle, assetLocation, count, cancellationToken);
         }
 
         //////////////////////////////////////////////////////////////////////////
         /// This：
-        // 经 G.Asset 加载预制体；失败返回 null，取消抛 OperationCanceledException；句柄留 Default 组不 Release
-        private async UniTask<GameObject> LoadPrefabAsync(string assetLocation, CancellationToken cancellationToken, string logOp)
+        // 启动或取出 location 句柄；失败返回 null 并打日志。不 Release 句柄。
+        private AssetHandle BeginLoadPrefab(string assetLocation, string logOp)
         {
             if (string.IsNullOrEmpty(assetLocation))
             {
@@ -283,36 +318,25 @@ namespace Xease
                 return null;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var handle = G.Asset.LoadAssetAsync<GameObject>(assetLocation, null);
+            AssetHandle handle = G.Asset.LoadAssetAsync<GameObject>(assetLocation, null);
             if (handle == null)
             {
                 G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
-                return null;
             }
 
-            // 等 Provider.Task，避免 HandleBase 当 IEnumerator.ToUniTask 时 yield Provider 每帧 Warning
-            // 取消只结束本次等待，不 Release 句柄（Default 组缓存供后续 Rent 共用）
-            if (!handle.IsDone)
-            {
-                var loadTask = handle.Task;
-                if (loadTask == null)
-                {
-                    G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
-                    return null;
-                }
+            return handle;
+        }
 
-                await loadTask.AsUniTask().AttachExternalCancellation(cancellationToken);
-            }
-
+        // 句柄已完成后校验预制体；失败返回 null。
+        private GameObject ResolvePrefab(AssetHandle handle, string assetLocation, string logOp)
+        {
             if (_root == null)
             {
                 G.LogError($"GameObjectPoolService.{logOp} service already shutdown");
                 return null;
             }
 
-            if (handle.Status != EOperationStatus.Succeed)
+            if (handle == null || handle.Status != EOperationStatus.Succeed)
             {
                 G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
                 return null;
@@ -328,6 +352,45 @@ namespace Xease
             return prefab;
         }
 
+        // 等 Provider.Task；取消只结束本次等待，不 Release 句柄
+        private async UniTask<GameObject> WaitPrefabAsync(AssetHandle handle, string assetLocation, CancellationToken cancellationToken, string logOp)
+        {
+            var loadTask = handle.Task;
+            if (loadTask == null)
+            {
+                G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
+                return null;
+            }
+
+            // 避免 HandleBase 当 IEnumerator.ToUniTask 时 yield Provider 每帧 Warning
+            await loadTask.AsUniTask().AttachExternalCancellation(cancellationToken);
+            return ResolvePrefab(handle, assetLocation, logOp);
+        }
+
+        // 等待加载完成后 Rent；仅未完成句柄走此路径
+        private async UniTask<GameObject> WaitAndRentAsync(AssetHandle handle, string assetLocation, CancellationToken cancellationToken)
+        {
+            GameObject prefab = await WaitPrefabAsync(handle, assetLocation, cancellationToken, "RentAsync");
+            if (prefab == null)
+            {
+                return null;
+            }
+
+            return Rent(prefab);
+        }
+
+        // 等待加载完成后 Prewarm；仅未完成句柄走此路径
+        private async UniTask WaitAndPrewarmAsync(AssetHandle handle, string assetLocation, int count, CancellationToken cancellationToken)
+        {
+            GameObject prefab = await WaitPrefabAsync(handle, assetLocation, cancellationToken, "PrewarmAsync");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            await PrewarmAsync(prefab, count, cancellationToken);
+        }
+
         // 确保根节点存在并挂 DontDestroyOnLoad
         private void EnsureRoot()
         {
@@ -341,13 +404,26 @@ namespace Xease
             _root = go.transform;
         }
 
-        // 按 prefab.name 取或建子池；capacity 来自 Setting 或 DefaultMaxSize
+        // 按 InstanceID 取或建子池；.name 仅新建时读取。capacity 来自 Setting 或 DefaultMaxSize
         private PrefabPool GetOrCreatePool(GameObject prefab)
         {
             EnsureRoot();
-            string prefabName = prefab.name;
-            if (_poolsByName.TryGetValue(prefabName, out PrefabPool existing))
+            int prefabId = prefab.GetInstanceID();
+            if (_poolsByPrefabId.TryGetValue(prefabId, out PrefabPool existing))
             {
+                return existing;
+            }
+
+            string prefabName = prefab.name;
+            if (_poolsByName.TryGetValue(prefabName, out existing))
+            {
+                // 同名预制体换了 InstanceID：只保留新 ID，避免 RemovePool 漏删旧键
+                if (existing.PrefabInstanceId != prefabId)
+                {
+                    _poolsByPrefabId.Remove(existing.PrefabInstanceId);
+                    existing.PrefabInstanceId = prefabId;
+                    _poolsByPrefabId[prefabId] = existing;
+                }
                 return existing;
             }
 
@@ -357,16 +433,17 @@ namespace Xease
                 maxSize = configured;
             }
 
-            var pool = new PrefabPool(prefab, maxSize, _root, prefabName);
+            var pool = new PrefabPool(prefab, maxSize, _root, prefabName, prefabId);
             _poolsByName.Add(prefabName, pool);
+            _poolsByPrefabId.Add(prefabId, pool);
             return pool;
         }
 
-        // 子池仍登记且为同一实例；Clear 后同名会新建 PrefabPool
+        // 子池仍按 InstanceID 登记且为同一实例；Clear 后同名会新建 PrefabPool
         private bool IsLivePool(PrefabPool pool)
         {
             return pool != null
-                && _poolsByName.TryGetValue(pool.PrefabName, out PrefabPool live)
+                && _poolsByPrefabId.TryGetValue(pool.PrefabInstanceId, out PrefabPool live)
                 && ReferenceEquals(live, pool);
         }
 
@@ -381,6 +458,7 @@ namespace Xease
             pool.ReleaseInstances(0);
             pool.DestroyCategory();
             _poolsByName.Remove(pool.PrefabName);
+            _poolsByPrefabId.Remove(pool.PrefabInstanceId);
         }
 
         /// <summary>
@@ -392,13 +470,16 @@ namespace Xease
             private Transform _category;
             // 与分类节点平级的租出挂点：PrefabName[Rented]
             private Transform _rentedRoot;
-            // 预制体名（主容器键 / Hierarchy / Setting）
+            // 预制体名（Clear(string) / Hierarchy / Setting）
             public string PrefabName { get; }
+            // 预制体 InstanceID（热路径池键；同名换 ID 时由外层改写）
+            public int PrefabInstanceId { get; set; }
 
-            public PrefabPool(GameObject original, int capacity, Transform poolRoot, string prefabName)
+            public PrefabPool(GameObject original, int capacity, Transform poolRoot, string prefabName, int prefabInstanceId)
                 : base(original, capacity)
             {
                 PrefabName = prefabName;
+                PrefabInstanceId = prefabInstanceId;
 
                 var categoryGo = new GameObject(prefabName);
                 categoryGo.transform.SetParent(poolRoot, false);

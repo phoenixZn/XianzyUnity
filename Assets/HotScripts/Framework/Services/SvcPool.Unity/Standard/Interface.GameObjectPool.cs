@@ -57,7 +57,8 @@ namespace Xease
     public interface IGameObjectRentAsync
     {
         /// <summary>
-        /// 经 G.Asset 异步加载 location 对应预制体，再走同步 Rent（未激活，挂该类型 PrefabName[Rented]）；句柄留在 Asset 默认组，池不 Release。
+        /// 经 G.Asset 加载 location 对应预制体，再走同步 Rent（未激活，挂该类型 PrefabName[Rented]）；句柄留在 Asset 默认组，池不 Release。
+        /// 句柄已完成时同步 Rent，以 UniTask.FromResult 返回，不分配异步状态机。
         /// </summary>
         /// <param name="assetLocation">YooAsset 资源定位地址</param>
         /// <param name="cancellationToken">仅取消本次等待，不释放句柄；已取消则抛 OperationCanceledException</param>
@@ -73,7 +74,8 @@ namespace Xease
         UniTask PrewarmAsync(GameObject prefab, int count, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 经 G.Asset 异步加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄留在 Asset 默认组，池不 Release。
+        /// 经 G.Asset 加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄留在 Asset 默认组，池不 Release。
+        /// 句柄已完成时不分配加载状态机。
         /// </summary>
         /// <param name="assetLocation">YooAsset 资源定位地址</param>
         /// <param name="count">目标补齐数量</param>

@@ -9,11 +9,11 @@ namespace Xease.CoreGame
         {
             if (!(context.GenInfo is MainFsmGenInfo))
             {
-                G.Log($"EntityMainFSMLogic InitializeNode GenInfo is not MainFsmGenInfo, GenInfo={context.GenInfo.GetType()}");
+                G.LogError($"EntityMainFSMLogic InitializeNode GenInfo is not MainFsmGenInfo, GenInfo={context.GenInfo.GetType()}");
             }
             
             base.InitializeNode(cfg, context);
-            G.Log($"MainFSM LogicConfigID={context.GenInfo.LogicConfigID}");
+            //G.Log($"MainFSM LogicConfigID={context.GenInfo.LogicConfigID}");
         }
 
         public override void Destroy()

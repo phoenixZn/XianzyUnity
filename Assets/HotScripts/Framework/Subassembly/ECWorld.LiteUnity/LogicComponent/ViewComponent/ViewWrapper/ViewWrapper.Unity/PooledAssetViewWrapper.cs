@@ -1,20 +1,19 @@
 using System;
 using UnityEngine;
 using YooAsset;
-using Xease;
 using Object = UnityEngine.Object;
 
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// 异步 Asset 加载后从 Battle GameObject 池租用实例的 ViewWrapper；释放时 Return 而非 Destroy。
+    /// 经 Asset 回调加载预制体后 Rent Battle 池实例的 ViewWrapper；释放时 Return 而非 Destroy。
     /// </summary>
     public class PooledAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
     {
         /*
-         异步 Asset 加载策略：持有池租出的 GameObject，释放时 Return 到 GameObjectPool_Battle。
-         AssetLocation 属 IViewAssetLocatable，Instance 属 IViewGameObjectHolder，不进入 IViewAcquirable。
-         同实例连载时 last-wins：退订旧 handle 回调，仅当前 pending 落地并回调。
+         加载策略：G.Asset.LoadAssetAsync 缓存回调，IsDone 时同步 Invoke 再 Rent；未完成才挂 Completed。
+         释放时 Return 到 GameObjectPool_Battle。AssetLocation / Instance 不进入 IViewAcquirable。
+         同实例连载 last-wins：退订旧 handle，仅当前 pending 落地并回调。
         */
         private string _assetLocation;
         private GameObject _instance;
@@ -26,14 +25,14 @@ namespace Xease.CoreGame
         private ViewAcquireContext _pendingCtx;
 
         // 实例级缓存，避免每次 BeginAcquire 分配闭包
-        private readonly Action<AssetHandle> _onAssetLoaded;
+        private readonly Action<AssetHandle> _onPrefabLoaded;
 
         /// <summary>
         /// 无参构造；资源路径经 SetAssetLocation 配置。
         /// </summary>
         public PooledAssetViewWrapper()
         {
-            _onAssetLoaded = OnAssetLoaded;
+            _onPrefabLoaded = OnPrefabLoaded;
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -75,7 +74,7 @@ namespace Xease.CoreGame
             LoadState == ViewLoadState.None && !string.IsNullOrEmpty(_assetLocation);
 
         /// <summary>
-        /// 经 AssetSvc 异步加载预制体，再从 Battle 池 Rent；失败或无池则 Complete(false)。
+        /// 加载 location 对应预制体并租用 Battle 池实例；失败或无池则 Complete(false)。句柄已完成时同步回调，不走 UniTask。
         /// </summary>
         public void BeginAcquire(ViewAcquireContext ctx)
         {
@@ -106,12 +105,20 @@ namespace Xease.CoreGame
             CancelPendingAcquire(notifyFailure: false);
             _pendingCtx = ctx;
             // IsDone 时会在 return 前同步 Invoke 并已清 pending；仅异步未完成时挂上返回值
-            var handle = G.Asset.LoadAssetAsync<GameObject>(_assetLocation, _onAssetLoaded);
-            if (handle != null && !handle.IsDone)
+            var handle = G.Asset.LoadAssetAsync<GameObject>(_assetLocation, _onPrefabLoaded);
+            if (handle == null)
+            {
+                WLogger.LogError($"PooledAssetViewWrapper load failed: {_assetLocation}");
+                InvokePendingCompleted(false);
+                return;
+            }
+
+            if (!handle.IsDone)
                 _pendingHandle = handle;
         }
 
-        private void OnAssetLoaded(AssetHandle handle)
+        // 预制体就绪后 Rent；陈旧回调丢弃。失败不租用，避免泄漏
+        private void OnPrefabLoaded(AssetHandle handle)
         {
             // 陈旧回调（理论上已退订；防御）
             if (_pendingHandle != null && !ReferenceEquals(handle, _pendingHandle))
@@ -123,6 +130,13 @@ namespace Xease.CoreGame
 
             if (IsDisposed)
             {
+                InvokePendingCompleted(false);
+                return;
+            }
+
+            if (G.GameObjectPool_Battle == null)
+            {
+                WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
                 InvokePendingCompleted(false);
                 return;
             }
@@ -142,22 +156,16 @@ namespace Xease.CoreGame
                 return;
             }
 
-            if (G.GameObjectPool_Battle == null)
-            {
-                WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
-                InvokePendingCompleted(false);
-                return;
-            }
-
-            ReleaseOwnedAsset();
-            _instance = G.GameObjectPool_Battle.Rent(prefab);
-            if (_instance == null)
+            var instance = G.GameObjectPool_Battle.Rent(prefab);
+            if (instance == null)
             {
                 WLogger.LogError($"PooledAssetViewWrapper rent failed: {_assetLocation}");
                 InvokePendingCompleted(false);
                 return;
             }
 
+            ReleaseOwnedAsset();
+            _instance = instance;
             BindProxy(UnityViewTransformProxy.Rent(_instance.transform));
             InvokePendingCompleted(true);
         }
@@ -175,7 +183,7 @@ namespace Xease.CoreGame
         private void CancelPendingAcquire(bool notifyFailure)
         {
             if (_pendingHandle != null && !_pendingHandle.IsDone)
-                _pendingHandle.Completed -= _onAssetLoaded;
+                _pendingHandle.Completed -= _onPrefabLoaded;
 
             _pendingHandle = null;
 
@@ -217,7 +225,7 @@ namespace Xease.CoreGame
             G.SharedPool.Return(this);
         }
 
-        // Reset 时清加载态与实例引用
+        // Reset 时清加载态、句柄与实例引用
         protected override void OnReset()
         {
             _assetLocation = null;

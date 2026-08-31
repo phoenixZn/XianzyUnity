@@ -68,7 +68,11 @@ namespace Xease.CoreGame
             int id = node.GenInfo.LogicConfigID;
             CLogger.LogInfo($"Logic[ {id} ]({node.CreationIndex}): {logMsg}");
         }
-        
+
+        public static bool isDebug(this CustomNode node)
+        {
+            return false;
+        }
     }
     
 

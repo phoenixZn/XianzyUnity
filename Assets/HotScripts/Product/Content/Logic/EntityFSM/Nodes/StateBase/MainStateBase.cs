@@ -60,7 +60,8 @@
         {
             if (cmd.CmdType == EntityCmdType.Nt_Death)
             {
-                this.Log($"{StateID}.HandleEntityCommand Nt_Death: -> MST_Die");
+                if (this.isDebug())
+                    this.Log($"{StateID}.HandleEntityCommand Nt_Death: -> MST_Die");
                 ChooseNextState("MST_Die");
                 return false;
             }
