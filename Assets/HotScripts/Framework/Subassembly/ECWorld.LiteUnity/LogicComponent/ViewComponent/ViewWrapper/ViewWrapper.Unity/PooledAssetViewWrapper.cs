@@ -222,6 +222,7 @@ namespace Xease.CoreGame
         // 按本类型归还 SharedPool
         protected override void RecycleInstance()
         {
+            //G.LogError($"G.SharedPool.Return {_assetLocation}");
             G.SharedPool.Return(this);
         }
 

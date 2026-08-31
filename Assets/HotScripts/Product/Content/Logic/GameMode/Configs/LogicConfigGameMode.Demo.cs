@@ -16,7 +16,7 @@ namespace Xease.CoreGame
                 LogDebug(n=>{ n.Log("Demo GameMode状态机"); }),
                 FSM("GST_Loading", new() 
                 {
-                    CustomState("GST_Loading", "GST_InitGame",Seq(new Nodes()
+                    CustomState<DemoModeLoading>("GST_Loading", "GST_InitGame",Seq(new Nodes()
                     {
                         LogDebug(n => n.Log("DemoMode Loading")),
                     })),

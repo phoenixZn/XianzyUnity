@@ -1,22 +1,25 @@
+using System.Collections.Generic;
 using Entitas;
 
 namespace Xease.CoreGame
 {
-    public class SysLife : IExecuteSystem
+    public class SysLife : ECWorldSystem, IUpdateSystem
     {
-        private readonly LogicWorld mWorld;
-        private readonly IGroup<LogicEntity> mGroup;
-        
-        public SysLife(LogicWorld logicWorld)
+        private readonly IGroup<LogicEntity> _group;
+        // 按 Group.CacheVersion 复用，避免每帧分配
+        private readonly List<LogicEntity> _entityBuffer = new(256);
+        // 与 Group.CacheVersion 对齐，-1 保证首次必填充
+        private int _entityBufferVersion = -1;
+
+        public SysLife(ECWorlds worlds) : base(worlds)
         {
-            mWorld = logicWorld;
-            mGroup = mWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComLife));
+            _group = _logicWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComLife));
         }
         
-        public void Execute()
+        public void Update(float dt, float dt_unscaled)
         {
-            var dt = G.TickTime.deltaTime;
-            foreach (var e in mGroup.GetEntities())
+            var buffer = _group.GetEntities(_entityBuffer, ref _entityBufferVersion);
+            foreach (var e in buffer)
             {
                 var comLife = e.comLife;
                 if (comLife.Duration > 0)

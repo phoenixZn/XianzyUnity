@@ -37,7 +37,7 @@ namespace Xease.CoreGame
                     systems.Add(new SysSyncViewTransform(worlds));
                     //systems.Add(new SysSyncViewAnimator(worlds));
                     // 销毁：
-                    systems.Add(new SysLife(worlds.LogicWorld));
+                    systems.Add(new SysLife(worlds));
                     systems.Add(new SysDeathProcess(worlds));
                     systems.Add(new SysDebugDemo(worlds));
 #if !CONSOLE_CLIENT

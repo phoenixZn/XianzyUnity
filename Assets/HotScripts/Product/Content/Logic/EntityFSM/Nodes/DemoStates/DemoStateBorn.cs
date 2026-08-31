@@ -8,9 +8,9 @@ namespace Xease.CoreGame
     /// </summary>
     public class DemoStateBorn : MainStateBase
     {
-        // YooAsset location
-        private const string DemoViewAssetCube = "ActorCube";
-        private const string DemoViewAssetSphere = "ActorSphere";
+        // YooAsset location；DemoModeLoading 预热与 Born 加载共用
+        internal const string DemoViewAssetCube = "ActorCube";
+        internal const string DemoViewAssetSphere = "ActorSphere";
 
         //////////////////////////////////////////////////////////////////////////
         /// CustomBhvState：override

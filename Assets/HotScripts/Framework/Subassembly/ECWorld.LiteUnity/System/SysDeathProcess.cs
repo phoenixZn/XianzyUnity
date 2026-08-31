@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Entitas;
 
 namespace Xease.CoreGame
@@ -5,6 +6,10 @@ namespace Xease.CoreGame
     public class SysDeathProcess : ECWorldSystem, IUpdateSystem, ITearDownSystem
     {
         private readonly IGroup<LogicEntity> _group;
+        // 按 Group.CacheVersion 复用，避免每帧分配
+        private readonly List<LogicEntity> _entityBuffer = new(256);
+        // 与 Group.CacheVersion 对齐，-1 保证首次必填充
+        private int _entityBufferVersion = -1;
 
         public SysDeathProcess(ECWorlds world) : base(world)
         {
@@ -13,7 +18,8 @@ namespace Xease.CoreGame
 
         public void Update(float dt, float dt_unscaled)
         {
-            foreach (var entity in _group.GetEntities())
+            var buffer = _group.GetEntities(_entityBuffer, ref _entityBufferVersion);
+            foreach (var entity in buffer)
             {
                 var comDeath = entity.comDeath;
                 if (comDeath == null)
