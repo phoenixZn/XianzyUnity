@@ -35,6 +35,42 @@ namespace Xease
         }
 
         //////////////////////////////////////////////////////////////////////////
+        /// IEnvOnGUI:
+        // static GUIStyle _loginButtonStyle; // 缓存「开始」按钮样式，避免每帧 new
+        // static GUIStyle LoginButtonStyle
+        // {
+        //     get
+        //     {
+        //         if (_loginButtonStyle != null)
+        //             return _loginButtonStyle;
+        //
+        //         _loginButtonStyle = new GUIStyle(GUI.skin.button)
+        //         {
+        //             fontSize = 48,
+        //             alignment = TextAnchor.MiddleCenter
+        //         };
+        //         return _loginButtonStyle;
+        //     }
+        // }
+        // const float ButtonWidth = 480f;
+        // const float ButtonHeight = 112f;
+        // /// <summary>
+        // /// 绘制中央「开始」按钮；点击后切到 ES_Main。
+        // /// </summary>
+        // public void OnEnvGUI()
+        // {
+        //     var x = (Screen.width - ButtonWidth) * 0.5f;
+        //     var y = Screen.height * 0.6f;
+        //     GUILayout.BeginArea(new Rect(x, y, ButtonWidth, ButtonHeight));
+        //     if (GUILayout.Button("开始", LoginButtonStyle, GUILayout.Height(ButtonHeight)))
+        //     {
+        //         _nextStateID = EnvStateID.ES_Main;
+        //     }
+        //     GUILayout.EndArea();
+        // }
+
+        
+        //////////////////////////////////////////////////////////////////////////
         /// This：
         // 运行时拼 Overlay Canvas +「开始」按钮；根节点 DDOL，避免异步切场景被清掉
         void CreateLoginUi()
