@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Xease;
 
 namespace Xease.CoreGame
 {
@@ -54,6 +55,7 @@ namespace Xease.CoreGame
 
         public override void DisposeOnRemove()
         {
+            _preHandler?.Recycle();
             _preHandler = null;
             _sendQueue.Clear();
             base.DisposeOnRemove();
@@ -71,6 +73,14 @@ namespace Xease.CoreGame
         public bool hasComCommandSender
         {
             get { return HasComponent(LogicComponentsLookup.ComCommandSender); }
+        }
+
+        /// <summary>
+        /// 从 SharedPool 租用预处理器并挂 CommandSender；移除时 Recycle 归还。
+        /// </summary>
+        public void AddComCommandSender<T>() where T : class, IEntityCommandPreHandler, new()
+        {
+            AddComCommandSender(G.SharedPool.Rent<T>());
         }
 
         public void AddComCommandSender(IEntityCommandPreHandler preHandler = null)

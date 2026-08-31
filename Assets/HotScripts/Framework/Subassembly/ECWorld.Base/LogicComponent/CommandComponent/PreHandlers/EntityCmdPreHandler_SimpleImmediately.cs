@@ -1,5 +1,10 @@
+using Xease;
+
 namespace Xease.CoreGame
 {
+    /// <summary>
+    /// 立即预处理：当前帧把命令交给实体上的 IEntityCommandHandler。实例走 SharedPool。
+    /// </summary>
     public class EntityCmdPreHandler_SimpleImmediately : IEntityCommandPreHandler
     {
         public bool PreHandleCommand(LogicEntity owner, EntityCommand cmd)
@@ -22,6 +27,14 @@ namespace Xease.CoreGame
         {
             //相当于所有命令都先通过PreHandle 当前帧直接执行。 CommandSenderComponent永远静默
             return PreHandleCommand(owner, cmd); 
+        }
+
+        /// <summary>
+        /// 按本类型归还 SharedPool。
+        /// </summary>
+        public void Recycle()
+        {
+            G.SharedPool.Return(this);
         }
     }
 }

@@ -60,11 +60,13 @@ namespace Xease
         {
             GEnv.Inst?.EnvDrawGizmos();
         }
-        
+
+#if DEMO_DEBUG
         void OnGUI()
         {
             GEnv.Inst?.OnEnvGUI();
         }
+#endif
         
         void OnApplicationPause(bool pause)
         {
