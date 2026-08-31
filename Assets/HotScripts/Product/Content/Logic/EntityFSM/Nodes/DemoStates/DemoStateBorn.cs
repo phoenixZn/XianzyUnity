@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Xease;
 
 namespace Xease.CoreGame
 {
@@ -100,18 +99,22 @@ namespace Xease.CoreGame
                 return;
 
             var wrappers = _ownerEntity.comView.Wrappers;
-            for (int i = 0; i < wrappers.Count; ++i)
+            // List 重载 + ListPool：不分配 Collider[]；using/Get(out) 结束时 Release
+            using (UnityEngine.Pool.ListPool<Collider>.Get(out var colliders))
             {
-                if (wrappers[i] is not IViewGameObjectHolder holder)
-                    continue;
+                for (int i = 0; i < wrappers.Count; ++i)
+                {
+                    if (wrappers[i] is not IViewGameObjectHolder holder)
+                        continue;
 
-                var go = holder.Instance;
-                if (go == null)
-                    continue;
+                    var go = holder.Instance;
+                    if (go == null)
+                        continue;
 
-                var colliders = go.GetComponentsInChildren<Collider>(true);
-                for (int c = 0; c < colliders.Length; ++c)
-                    _ownerEntity.BindUnityObject(colliders[c].gameObject);
+                    go.GetComponentsInChildren(true, colliders);
+                    for (int c = 0; c < colliders.Count; ++c)
+                        _ownerEntity.BindUnityObject(colliders[c].gameObject);
+                }
             }
         }
     }
