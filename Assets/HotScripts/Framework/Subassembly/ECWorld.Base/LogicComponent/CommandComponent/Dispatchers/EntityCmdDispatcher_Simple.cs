@@ -34,6 +34,7 @@ namespace Xease.CoreGame
                 }
             }
 
+            // GC警示：owner.OnComponent* 在 BindOwner 时已有 Context 订阅，+= 必走 Delegate.CombineImpl，每次新建 multicast（约 176B×2）；缓存 method group 挡不住
             owner.OnComponentAdded += _onComponentAdded;
             owner.OnComponentRemoved += _onComponentRemoved;
         }

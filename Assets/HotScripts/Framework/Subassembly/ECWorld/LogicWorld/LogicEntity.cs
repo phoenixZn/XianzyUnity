@@ -5,39 +5,11 @@ namespace Xease.CoreGame
 {
     public partial class LogicEntity : Entity
     {
-        public LogicWorld OwnerWorld { get; private set; }
+        //////////////////////////////////////////////////////////////////////////
+        /// Entity：override
 
-        private readonly EntityComponentChanged _addComponent;
-        private readonly EntityComponentChanged _removeComponent;
-        private readonly EntityComponentReplaced _replacedComponent;
-
-        public LogicEntity()
-        {
-            _addComponent = OnAddComponent;
-            _removeComponent = OnRemoveComponent;
-            _replacedComponent = OnReplacedComponent;
-        }
-
-        public virtual void EnterWorld(LogicWorld logicWorld)
-        {
-            OwnerWorld = logicWorld;
-            OnComponentAdded += _addComponent;
-            OnComponentRemoved += _removeComponent;
-            OnComponentReplaced += _replacedComponent;
-        }
-
-        public virtual void WillBeLeaveWorld()
-        {
-        }
-
-        public virtual void LeaveWorld()
-        {
-            OnComponentAdded -= _addComponent;
-            OnComponentRemoved -= _removeComponent;
-            OnComponentReplaced -= _replacedComponent;
-        }
-
-        protected void OnAddComponent(IEntity entity, int index, IComponent component)
+        // PostInitialize：组件加入且 event 已派发
+        protected override void OnComponentAddedEx(int index, IComponent component)
         {
             if (component is LogicComponent theCmpt)
             {
@@ -45,15 +17,17 @@ namespace Xease.CoreGame
             }
         }
 
-        protected void OnRemoveComponent(IEntity entity, int index, IComponent component)
+        // DisposeOnRemove：组件移除且 event 已派发
+        protected override void OnComponentRemovedEx(int index, IComponent component)
         {
             if (component is IComponentDispose dispose)
             {
                 SafeDisposeOnRemove(dispose);
             }
         }
-        
-        protected void OnReplacedComponent(IEntity entity, int index, IComponent previousComponent, IComponent newComponent)
+
+        // 先 Dispose 旧组件再 PostInitialize 新组件；同一引用则跳过
+        protected override void OnComponentReplacedEx(int index, IComponent previousComponent, IComponent newComponent)
         {
             if (previousComponent == newComponent)
             {
@@ -68,8 +42,28 @@ namespace Xease.CoreGame
                 SafePostInitialize(theCmpt);
             }
         }
-        
+
         //////////////////////////////////////////////////////////////////////////
+        /// This：
+
+        public LogicWorld OwnerWorld { get; private set; }
+
+        /// <summary>
+        /// 实体进入 LogicWorld，仅绑定 OwnerWorld。组件回调走 Entity 钩子，不对 OnComponent* event +=。
+        /// </summary>
+        public virtual void EnterWorld(LogicWorld logicWorld)
+        {
+            OwnerWorld = logicWorld;
+        }
+
+        public virtual void WillBeLeaveWorld()
+        {
+        }
+
+        public virtual void LeaveWorld()
+        {
+        }
+
         protected void SafePostInitialize(LogicComponent theCmpt)
         {
             try
@@ -81,7 +75,7 @@ namespace Xease.CoreGame
                 WLogger.LogError($"LogicComponent PostInitialize catch Exception:{e}");
             }
         }
-        
+
         protected void SafeDisposeOnRemove(IComponentDispose dispose)
         {
             try
@@ -93,6 +87,5 @@ namespace Xease.CoreGame
                 WLogger.LogError($"LogicComponent DisposeOnRemove catch Exception:{e}");
             }
         }
-
     }
 }

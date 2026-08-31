@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Entitas;
 
@@ -5,8 +6,12 @@ namespace Xease.CoreGame
 {
     public sealed class SysViewLoader : ReactiveSystem<LogicEntity>
     {
+        // 实例级缓存，避免每次 BeginAcquire 分配 Action
+        private readonly Action<ViewAcquireContext> _onAcquireCompleted;
+
         public SysViewLoader(ECWorlds worlds) : base(worlds.LogicWorld)
         {
+            _onAcquireCompleted = OnAcquireCompleted;
         }
 
         protected override ICollector<LogicEntity> GetTrigger(IContext<LogicEntity> context)
@@ -27,7 +32,7 @@ namespace Xease.CoreGame
             }
         }
 
-        private static void AcquireViews(LogicEntity entity)
+        private void AcquireViews(LogicEntity entity)
         {
             var view = entity.comView;
             var acquirables = view.Acquirables;
@@ -41,17 +46,16 @@ namespace Xease.CoreGame
             }
         }
 
-        private static void BeginAcquire(LogicEntity entity, ViewComponent view, IViewAcquirable acquirable)
+        private void BeginAcquire(LogicEntity entity, ViewComponent view, IViewAcquirable acquirable)
         {
             SetLoadState(view, acquirable, ViewLoadState.Loading);
 
-            // 静态方法组绑定，避免每帧闭包分配
             var ctx = new ViewAcquireContext
             {
                 Entity = entity,
                 View = view,
                 Acquirable = acquirable,
-                OnCompleted = OnAcquireCompleted,
+                OnCompleted = _onAcquireCompleted,
             };
             acquirable.BeginAcquire(ctx);
         }

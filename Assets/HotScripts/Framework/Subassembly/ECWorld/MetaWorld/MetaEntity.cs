@@ -5,39 +5,11 @@ namespace Xease.CoreGame
 {
     public partial class MetaEntity : Entity
     {
-        public MetaWorld OwnerWorld { get; private set; }
+        //////////////////////////////////////////////////////////////////////////
+        /// Entity：override
 
-        private readonly EntityComponentChanged _addComponent;
-        private readonly EntityComponentChanged _removeComponent;
-        private readonly EntityComponentReplaced _replacedComponent;
-
-        public MetaEntity()
-        {
-            _addComponent = OnAddComponent;
-            _removeComponent = OnRemoveComponent;
-            _replacedComponent = OnReplacedComponent;
-        }
-
-        public virtual void Enter(MetaWorld metaWorld)
-        {
-            OwnerWorld = metaWorld;
-            OnComponentAdded += _addComponent;
-            OnComponentRemoved += _removeComponent;
-            OnComponentReplaced += _replacedComponent;
-        }
-
-        public virtual void Leave()
-        {
-            OnComponentAdded -= _addComponent;
-            OnComponentRemoved -= _removeComponent;
-            OnComponentReplaced -= _replacedComponent;
-        }
-
-        public virtual void WillBeLeave()
-        {
-        }
-
-        private void OnAddComponent(IEntity entity, int index, IComponent component)
+        // PostInitialize：组件加入且 event 已派发
+        protected override void OnComponentAddedEx(int index, IComponent component)
         {
             if (component is MetaComponent theCmpt)
             {
@@ -45,7 +17,8 @@ namespace Xease.CoreGame
             }
         }
 
-        private void OnRemoveComponent(IEntity entity, int index, IComponent component)
+        // DisposeOnRemove：组件移除且 event 已派发
+        protected override void OnComponentRemovedEx(int index, IComponent component)
         {
             if (component is IComponentDispose dispose)
             {
@@ -53,7 +26,8 @@ namespace Xease.CoreGame
             }
         }
 
-        private void OnReplacedComponent(IEntity entity, int index, IComponent previousComponent, IComponent newComponent)
+        // 先 Dispose 旧组件再 PostInitialize 新组件；同一引用则跳过
+        protected override void OnComponentReplacedEx(int index, IComponent previousComponent, IComponent newComponent)
         {
             if (previousComponent == newComponent)
             {
@@ -72,6 +46,26 @@ namespace Xease.CoreGame
         }
 
         //////////////////////////////////////////////////////////////////////////
+        /// This：
+
+        public MetaWorld OwnerWorld { get; private set; }
+
+        /// <summary>
+        /// 实体进入 MetaWorld，仅绑定 OwnerWorld。组件回调走 Entity 钩子，不对 OnComponent* event +=。
+        /// </summary>
+        public virtual void Enter(MetaWorld metaWorld)
+        {
+            OwnerWorld = metaWorld;
+        }
+
+        public virtual void Leave()
+        {
+        }
+
+        public virtual void WillBeLeave()
+        {
+        }
+
         protected void SafePostInitialize(MetaComponent theCmpt)
         {
             try
@@ -83,6 +77,7 @@ namespace Xease.CoreGame
                 WLogger.LogError($"MetaComponent PostInitialize catch Exception:{e}");
             }
         }
+
         protected void SafeDisposeOnRemove(IComponentDispose dispose)
         {
             try

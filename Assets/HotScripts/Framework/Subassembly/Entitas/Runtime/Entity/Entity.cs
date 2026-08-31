@@ -136,6 +136,7 @@ namespace Entitas
             _componentIndicesCache = null;
             _toStringCache = null;
             OnComponentAdded?.Invoke(this, index, component);
+            OnComponentAddedEx(index, component);
         }
 
         /// Removes a component at the specified index.
@@ -183,6 +184,7 @@ namespace Entitas
                 if (replacement != null)
                 {
                     OnComponentReplaced?.Invoke(this, index, previousComponent, replacement);
+                    OnComponentReplacedEx(index, previousComponent, replacement);
                 }
                 else
                 {
@@ -192,6 +194,7 @@ namespace Entitas
                     _toStringCache = null;
 
                     OnComponentRemoved?.Invoke(this, index, previousComponent);
+                    OnComponentRemovedEx(index, previousComponent);
                 }
 
                 GetComponentPool(index).Push(previousComponent);
@@ -199,7 +202,21 @@ namespace Entitas
             else
             {
                 OnComponentReplaced?.Invoke(this, index, previousComponent, replacement);
+                OnComponentReplacedEx(index, previousComponent, replacement);
             }
+        }
+
+        // 子类自身组件回调；勿对 OnComponent* event +=，避免 Delegate.Combine 分配
+        protected virtual void OnComponentAddedEx(int index, IComponent component)
+        {
+        }
+
+        protected virtual void OnComponentRemovedEx(int index, IComponent component)
+        {
+        }
+
+        protected virtual void OnComponentReplacedEx(int index, IComponent previousComponent, IComponent newComponent)
+        {
         }
 
         /// Returns a component at the specified index.
