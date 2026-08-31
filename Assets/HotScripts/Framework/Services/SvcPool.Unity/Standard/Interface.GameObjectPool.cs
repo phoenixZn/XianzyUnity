@@ -52,7 +52,7 @@ namespace Xease
 
 
     /// <summary>
-    /// 按资源地址异步加载预制体后租用实例；失败返回 null，取消抛 OperationCanceledException。
+    /// 按资源地址异步加载预制体后租用或预热；失败时 Rent 返回 null、Prewarm 正常完成，取消抛 OperationCanceledException。
     /// </summary>
     public interface IGameObjectRentAsync
     {
@@ -63,5 +63,21 @@ namespace Xease
         /// <param name="cancellationToken">仅取消本次等待，不释放句柄；已取消则抛 OperationCanceledException</param>
         /// <returns>租出的实例；location 无效、加载失败或资源非 GameObject 时为 null</returns>
         UniTask<GameObject> RentAsync(string assetLocation, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 异步预热：InstantiateAsync 分帧生成 count 个未激活实例挂入对应二级节点，不超过 MaxSize。
+        /// </summary>
+        /// <param name="prefab">已加载的预制体</param>
+        /// <param name="count">目标补齐数量</param>
+        /// <param name="cancellationToken">取消本次等待；已生成但未入池的实例会销毁。已取消则抛 OperationCanceledException</param>
+        UniTask PrewarmAsync(GameObject prefab, int count, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 经 G.Asset 异步加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄留在 Asset 默认组，池不 Release。
+        /// </summary>
+        /// <param name="assetLocation">YooAsset 资源定位地址</param>
+        /// <param name="count">目标补齐数量</param>
+        /// <param name="cancellationToken">仅取消本次等待，不释放句柄；已生成但未入池的实例会销毁。已取消则抛 OperationCanceledException</param>
+        UniTask PrewarmAsync(string assetLocation, int count, CancellationToken cancellationToken = default);
     }
 }

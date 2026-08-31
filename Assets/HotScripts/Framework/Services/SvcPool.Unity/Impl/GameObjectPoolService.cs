@@ -16,6 +16,7 @@
  *
  * 3. 预热与扩容
  *    - Prewarm：Instantiate 后直接未激活并挂分类节点入池，不经 Rent 路径。
+ *    - PrewarmAsync：InstantiateAsync 分帧生成后同样未激活入池；取消则销毁未入池实例。
  *    - 池空扩容：Instantiate → OnCreate（未激活+挂分类节点）→ OnRent（挂到该类型 PrefabName[Rented]，仍未激活）。
  *    - 满池（MaxSize）：Release 时 Destroy，不挂回。默认 MaxSize=1000；
  *      ApplySettings(<PrefabName, maxSize>) 仅影响此后新建子池。
@@ -29,6 +30,7 @@
  *    - 池键：prefab.name（项目保证预制体名全局唯一）。
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -217,15 +219,67 @@ namespace Xease
         /// </summary>
         public async UniTask<GameObject> RentAsync(string assetLocation, CancellationToken cancellationToken = default)
         {
+            GameObject prefab = await LoadPrefabAsync(assetLocation, cancellationToken, "RentAsync");
+            if (prefab == null)
+            {
+                return null;
+            }
+
+            return Rent(prefab);
+        }
+
+        /// <summary>
+        /// 异步预热：InstantiateAsync 分帧生成 count 个未激活实例入池，不超过 MaxSize。
+        /// </summary>
+        public UniTask PrewarmAsync(GameObject prefab, int count, CancellationToken cancellationToken = default)
+        {
+            if (prefab == null)
+            {
+                G.LogError("GameObjectPoolService.PrewarmAsync prefab is null");
+                return UniTask.CompletedTask;
+            }
+            if (count <= 0)
+            {
+                return UniTask.CompletedTask;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            return GetOrCreatePool(prefab).PrewarmAsync(count, cancellationToken);
+        }
+
+        /// <summary>
+        /// 经 G.Asset 异步加载 location 对应预制体，再走 PrewarmAsync(prefab, count)；句柄留在 Asset 默认组，池不 Release。
+        /// </summary>
+        public async UniTask PrewarmAsync(string assetLocation, int count, CancellationToken cancellationToken = default)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            GameObject prefab = await LoadPrefabAsync(assetLocation, cancellationToken, "PrewarmAsync");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            await PrewarmAsync(prefab, count, cancellationToken);
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        // 经 G.Asset 加载预制体；失败返回 null，取消抛 OperationCanceledException；句柄留 Default 组不 Release
+        private async UniTask<GameObject> LoadPrefabAsync(string assetLocation, CancellationToken cancellationToken, string logOp)
+        {
             if (string.IsNullOrEmpty(assetLocation))
             {
-                G.LogError("GameObjectPoolService.RentAsync assetLocation is null or empty");
+                G.LogError($"GameObjectPoolService.{logOp} assetLocation is null or empty");
                 return null;
             }
 
             if (G.Asset == null)
             {
-                G.LogError("GameObjectPoolService.RentAsync G.Asset is null");
+                G.LogError($"GameObjectPoolService.{logOp} G.Asset is null");
                 return null;
             }
 
@@ -234,7 +288,7 @@ namespace Xease
             var handle = G.Asset.LoadAssetAsync<GameObject>(assetLocation, null);
             if (handle == null)
             {
-                G.LogError($"GameObjectPoolService.RentAsync load failed: {assetLocation}");
+                G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
                 return null;
             }
 
@@ -245,7 +299,7 @@ namespace Xease
                 var loadTask = handle.Task;
                 if (loadTask == null)
                 {
-                    G.LogError($"GameObjectPoolService.RentAsync load failed: {assetLocation}");
+                    G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
                     return null;
                 }
 
@@ -254,28 +308,26 @@ namespace Xease
 
             if (_root == null)
             {
-                G.LogError("GameObjectPoolService.RentAsync service already shutdown");
+                G.LogError($"GameObjectPoolService.{logOp} service already shutdown");
                 return null;
             }
 
             if (handle.Status != EOperationStatus.Succeed)
             {
-                G.LogError($"GameObjectPoolService.RentAsync load failed: {assetLocation}");
+                G.LogError($"GameObjectPoolService.{logOp} load failed: {assetLocation}");
                 return null;
             }
 
             var prefab = handle.AssetObject as GameObject;
             if (prefab == null)
             {
-                G.LogError($"GameObjectPoolService.RentAsync asset is not GameObject: {assetLocation}");
+                G.LogError($"GameObjectPoolService.{logOp} asset is not GameObject: {assetLocation}");
                 return null;
             }
 
-            return Rent(prefab);
+            return prefab;
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        /// This：
         // 确保根节点存在并挂 DontDestroyOnLoad
         private void EnsureRoot()
         {
@@ -382,6 +434,84 @@ namespace Xease
                     GameObject instance = UnityObject.Instantiate(m_Original);
                     OnCreate(instance);
                     Return(instance);
+                }
+            }
+
+            /// <summary>
+            /// 异步预热：InstantiateAsync 分帧生成未激活实例入池；取消或子池已拆则销毁未入池实例。
+            /// </summary>
+            public async UniTask PrewarmAsync(int count, CancellationToken cancellationToken)
+            {
+                int need = Capacity - Count;
+                if (need <= 0)
+                {
+                    return;
+                }
+                if (count < need)
+                {
+                    need = count;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                AsyncInstantiateOperation<GameObject> op = UnityObject.InstantiateAsync(m_Original, need);
+                GameObject[] instances;
+                try
+                {
+                    instances = await op.ToUniTask(cancellationToken: cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (!op.isDone)
+                    {
+                        op.Cancel();
+                    }
+                    else
+                    {
+                        DestroyCreated(op.Result);
+                    }
+                    throw;
+                }
+
+                if (_category == null)
+                {
+                    DestroyCreated(instances);
+                    return;
+                }
+
+                if (instances == null)
+                {
+                    return;
+                }
+
+                for (int i = 0; i < instances.Length; i++)
+                {
+                    GameObject instance = instances[i];
+                    if (instance == null)
+                    {
+                        continue;
+                    }
+
+                    OnCreate(instance);
+                    Return(instance);
+                }
+
+                // 销毁 InstantiateAsync 产出的实例（取消或子池已拆）
+                static void DestroyCreated(GameObject[] created)
+                {
+                    if (created == null)
+                    {
+                        return;
+                    }
+
+                    for (int i = 0; i < created.Length; i++)
+                    {
+                        GameObject instance = created[i];
+                        if (instance != null)
+                        {
+                            UnityObject.Destroy(instance);
+                        }
+                    }
                 }
             }
 
