@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Xease;
 
 namespace Xease.CoreGame
 {
@@ -20,6 +19,7 @@ namespace Xease.CoreGame
 
         protected override float OnUpdate(float dt)
         {
+#if !CONSOLE_CLIENT
             if (G.Input.GetKeyDown(KeyCode.Space))
                 G.ValueEvent.Dispatch(new EvtDemoSpacePressed());
 
@@ -43,9 +43,10 @@ namespace Xease.CoreGame
 
             if (entity == null || !entity.isEnabled || entity.hasComDeath)
                 return dt;
-            
+
             entity.SendCmd(new EntityCommand(){CmdType = EntityCmdType.Nt_Death, });
             //entity.SendCmd(new EntityCommand(){CmdType = EntityCmdType.Nt_ForceDeath, });
+#endif
             return dt;
         }
     }

@@ -11,7 +11,7 @@ namespace Xease.CoreGame
         /// <summary>
         /// 纯 C# 工程不持有 AssetLocation 加载态。
         /// </summary>
-        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
+        public ViewLoadState LoadState { get; private set; } = ViewLoadState.Ready;
 
         /// <summary>
         /// 始终 false，避免 SysViewLoader 走资源获取。

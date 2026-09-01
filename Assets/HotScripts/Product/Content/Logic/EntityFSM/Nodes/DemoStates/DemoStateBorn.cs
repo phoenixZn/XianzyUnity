@@ -95,6 +95,8 @@ namespace Xease.CoreGame
         // 所有已加载 View 下的 Collider GO 都 Bind，射线命中任意碰撞盒都能反查 entity
         private void BindActorSphereUnityObjects()
         {
+            this.Log($"BindActorSphereUnityObjects");
+#if !CONSOLE_CLIENT
             if (_ownerEntity == null || !_ownerEntity.hasComView)
                 return;
 
@@ -116,6 +118,7 @@ namespace Xease.CoreGame
                         _ownerEntity.BindUnityObject(colliders[c].gameObject);
                 }
             }
+#endif
         }
     }
 }
