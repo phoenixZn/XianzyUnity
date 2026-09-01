@@ -97,8 +97,8 @@ namespace Launcher
             _fsm.SetBlackboardValue(LSVKey.LSV_PlayMode, PlayMode);
             _fsm.SetBlackboardValue(LSVKey.LSV_HybridRuntimeSettings, RuntimeSettings);
             _fsm.SetBlackboardValue(LSVKey.LSV_RuntimeSettingsPath, RuntimeSettingsPath);
-            _fsm.SetBlackboardValue(LSVKey.LSV_ScriptPackageName, "PackMainScript");
-            _fsm.SetBlackboardValue(LSVKey.LSV_GamePackageName, "PackDemoAsset");
+            _fsm.SetBlackboardValue(LSVKey.LSV_ScriptPackageName, AppConfig.MainScriptRawPackageName);
+            _fsm.SetBlackboardValue(LSVKey.LSV_GamePackageName, AppConfig.DefaultAssetPackageName);
             
             if (RuntimeSettings != null)
             {

@@ -16,6 +16,8 @@ namespace Xease.ModelPointTool.Gen
             ModelPointGetter.Add("ActorCube", "Hp", "Cube/Hp");
             ModelPointGetter.Add("ActorCube", "Head", "Cube/Head");
             ModelPointGetter.Add("ActorSphere", "Hit", "Sphere/Hit");
+            ModelPointGetter.Add("TestHero", "Head", "Capsule/Head");
+            ModelPointGetter.Add("TestHero", "Foot", "Foot");
         }
     }
 }

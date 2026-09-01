@@ -9,8 +9,7 @@ namespace Xease.ModelPointTool
     public static class ModelPointGetter
     {
         // (prefabName, pointName) → 相对预制体根的 Transform.Find 路径
-        static readonly Dictionary<(string, string), string> s_objNameWithPointPath =
-            new Dictionary<(string, string), string>();
+        private static readonly Dictionary<(string, string), string> s_objNameWithPointPath = new();
 
         static ModelPointGetter()
         {

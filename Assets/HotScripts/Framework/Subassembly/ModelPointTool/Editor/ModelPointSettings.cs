@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ModelPointTool.Editor
 {
     /// <summary>
-    /// 模型挂点生成配置：模型根目录与要扫描的挂点名。仅编辑器使用。
+    /// 模型挂点生成配置：多个模型根目录与要扫描的挂点名。仅编辑器使用。
     /// </summary>
     [CreateAssetMenu(fileName = "ModelPointSettings", menuName = "ModelPointTool/Create Model Point Settings")]
     public class ModelPointSettings : ScriptableObject
@@ -19,61 +19,65 @@ namespace ModelPointTool.Editor
         };
 
         [Header("模型根目录")]
-        [Tooltip("直接拖拽文件夹到这里")]
-        // 扫描根，必须是文件夹
-        public DefaultAsset ModelRootPath;
-
-        [Header("文件夹路径（只读）")]
-        [SerializeField, TextArea(1, 2)]
-        // 与 ModelRootPath 同步的 Asset 路径，供 Inspector 展示
-        string folderPath;
+        [Tooltip("直接拖拽文件夹到这里，可配置多个")]
+        // 扫描根列表，每项必须是文件夹
+        public DefaultAsset[] ModelRootPaths;
 
         /// <summary>
-        /// 当前模型根的 Asset 路径；未指定时为空。
+        /// 当前有效模型根的 Asset 路径；空引用与非文件夹项会被跳过，路径去重。
         /// </summary>
-        public string FolderPath
+        public string[] GetValidFolderPaths()
         {
-            get
+            if (ModelRootPaths == null || ModelRootPaths.Length == 0)
+                return System.Array.Empty<string>();
+
+            var list = new List<string>();
+            for (var i = 0; i < ModelRootPaths.Length; i++)
             {
-                if (ModelRootPath != null)
-                    return AssetDatabase.GetAssetPath(ModelRootPath);
-                return folderPath;
+                var root = ModelRootPaths[i];
+                if (root == null)
+                    continue;
+
+                var path = AssetDatabase.GetAssetPath(root);
+                if (string.IsNullOrEmpty(path) || !AssetDatabase.IsValidFolder(path))
+                    continue;
+                if (!list.Contains(path))
+                    list.Add(path);
             }
+
+            return list.ToArray();
         }
 
         void OnValidate()
         {
-            if (ModelRootPath == null)
-            {
-                folderPath = string.Empty;
+            if (ModelRootPaths == null)
                 return;
-            }
 
-            var path = AssetDatabase.GetAssetPath(ModelRootPath);
-            if (AssetDatabase.IsValidFolder(path))
+            for (var i = 0; i < ModelRootPaths.Length; i++)
             {
-                folderPath = path;
-                return;
-            }
+                var root = ModelRootPaths[i];
+                if (root == null)
+                    continue;
 
-            Debug.LogWarning("请选择文件夹而不是文件！");
-            ModelRootPath = null;
-            folderPath = string.Empty;
+                var path = AssetDatabase.GetAssetPath(root);
+                if (AssetDatabase.IsValidFolder(path))
+                    continue;
+
+                Debug.LogWarning("请选择文件夹而不是文件！");
+                ModelRootPaths[i] = null;
+            }
         }
 
         /// <summary>
-        /// 收集模型根下全部 Prefab 的 Asset 路径。
+        /// 收集全部模型根下 Prefab 的 Asset 路径，按路径去重。
         /// </summary>
         public string[] CollectPrefabPaths()
         {
-            if (ModelRootPath == null)
+            var folders = GetValidFolderPaths();
+            if (folders.Length == 0)
                 return System.Array.Empty<string>();
 
-            var folder = AssetDatabase.GetAssetPath(ModelRootPath);
-            if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
-                return System.Array.Empty<string>();
-
-            return CollectPrefabPathsInFolder(folder);
+            return CollectPrefabPathsInFolders(folders);
         }
 
         /// <summary>
@@ -81,8 +85,35 @@ namespace ModelPointTool.Editor
         /// </summary>
         public static string[] CollectPrefabPathsInFolder(string folder)
         {
+            if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
+                return System.Array.Empty<string>();
+
+            return CollectPrefabPathsInFolders(new[] { folder });
+        }
+
+        /// <summary>
+        /// 收集多个文件夹下全部 Prefab 的 Asset 路径，按路径去重。
+        /// </summary>
+        public static string[] CollectPrefabPathsInFolders(string[] folders)
+        {
+            if (folders == null || folders.Length == 0)
+                return System.Array.Empty<string>();
+
+            var validFolders = new List<string>();
+            for (var i = 0; i < folders.Length; i++)
+            {
+                var folder = folders[i];
+                if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
+                    continue;
+                if (!validFolders.Contains(folder))
+                    validFolders.Add(folder);
+            }
+
+            if (validFolders.Count == 0)
+                return System.Array.Empty<string>();
+
             var list = new List<string>();
-            var guids = AssetDatabase.FindAssets("t:Prefab", new[] { folder });
+            var guids = AssetDatabase.FindAssets("t:Prefab", validFolders.ToArray());
             foreach (var guid in guids)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
@@ -93,6 +124,33 @@ namespace ModelPointTool.Editor
             }
 
             return list.ToArray();
+        }
+
+        /// <summary>
+        /// 多个 Prefab 资源同名时警告：运行时按预制体名登记，后写覆盖先写。
+        /// </summary>
+        public static void WarnDuplicatePrefabNames(string[] prefabPaths)
+        {
+            if (prefabPaths == null || prefabPaths.Length == 0)
+                return;
+
+            var firstPathByName = new Dictionary<string, string>();
+            for (var i = 0; i < prefabPaths.Length; i++)
+            {
+                var assetPath = prefabPaths[i];
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (prefab == null)
+                    continue;
+
+                if (firstPathByName.TryGetValue(prefab.name, out var firstPath))
+                {
+                    Debug.LogWarning(
+                        $"多个 Prefab 同名，后登记将覆盖先登记：{prefab.name}，先：{firstPath}，后：{assetPath}");
+                    continue;
+                }
+
+                firstPathByName.Add(prefab.name, assetPath);
+            }
         }
     }
 }

@@ -20,5 +20,6 @@ MonoBehaviour:
   - Head
   - Foot
   - Face
-  ModelRootPath: {fileID: 102900000, guid: aaa01cbad7c2aca4bb06e55962bd8423, type: 3}
-  folderPath: Assets/HotAssets/Demo/Prefabs
+  ModelRootPaths:
+  - {fileID: 102900000, guid: aaa01cbad7c2aca4bb06e55962bd8423, type: 3}
+  - {fileID: 102900000, guid: 7f1b6ad37db077449a60ea2aadc5004a, type: 3}

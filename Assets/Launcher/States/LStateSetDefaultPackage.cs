@@ -14,7 +14,7 @@ namespace Launcher
             
             PatchEventDefine.PatchStepsChange.SendEventMessage("设置默认资源包！");
             
-            var gamePackageName = _contextRef.GetBlackboardValue(LSVKey.LSV_GamePackageName, "PackDemoAsset");
+            var gamePackageName = _contextRef.GetBlackboardValue(LSVKey.LSV_GamePackageName);
             var gamePackage = YooAssets.GetPackage((string)gamePackageName);
             if (gamePackage != null)
             {

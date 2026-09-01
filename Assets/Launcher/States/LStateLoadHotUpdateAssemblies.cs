@@ -61,7 +61,7 @@ namespace Launcher
 
         async UniTaskVoid LoadHotUpdateAssemblies()
         {
-            var scriptPackageName = _contextRef.GetBlackboardValue(LSVKey.LSV_ScriptPackageName, "PackMainScript");
+            var scriptPackageName = _contextRef.GetBlackboardValue(LSVKey.LSV_ScriptPackageName);
             var scriptPackage = YooAssets.GetPackage((string)scriptPackageName);
             
             if (scriptPackage == null)

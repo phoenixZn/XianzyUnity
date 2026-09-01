@@ -50,6 +50,7 @@ namespace Xease.ModelPointTool.Gen
         {
             var setting = GetOrCreateSetting();
             var prefabPaths = setting.CollectPrefabPaths();
+            ModelPointSettings.WarnDuplicatePrefabNames(prefabPaths);
             var bindPoints = setting.BindPointNameList;
             var code = BuildGeneratedCode(prefabPaths, bindPoints);
             WriteGeneratedFile(code);
@@ -83,7 +84,7 @@ namespace Xease.ModelPointTool.Gen
             var addBlock = new StringBuilder();
             if (prefabPaths == null || bindPoints == null)
             {
-                Debug.LogError("ModelPointSettings is incomplete. Check model root path and bind point list.");
+                Debug.LogError("ModelPointSettings is incomplete. Check model root paths and bind point list.");
                 return FileHeader + addBlock + FileFooter;
             }
 
