@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using UnityEngine;
 using Xease.ModelPointTool.Gen;
 
 namespace Xease.ModelPointTool
 {
     /// <summary>
-    /// 按预制体名与挂点名查询相对路径。表由 <see cref="ModelPointGetterGen.RegisterAll"/> 填充。
+    /// 按预制体名与挂点名查询相对路径，并从实例根查找挂点 Transform。表由 <see cref="ModelPointGetterGen.RegisterAll"/> 填充。
     /// </summary>
     public static class ModelPointGetter
     {
@@ -24,6 +25,19 @@ namespace Xease.ModelPointTool
             if (s_objNameWithPointPath.TryGetValue((prefabName, bindPoint), out var path))
                 return path;
             return null;
+        }
+
+        /// <summary>
+        /// 从预制体实例根按登记路径查找挂点；root 为空、未登记或找不到时返回 null。
+        /// </summary>
+        public static Transform FindBindPoint(Transform prefabRoot, string prefabName, string bindPoint)
+        {
+            if (prefabRoot == null)
+                return null;
+            var path = GetBindPointPath(prefabName, bindPoint);
+            if (string.IsNullOrEmpty(path))
+                return null;
+            return prefabRoot.Find(path);
         }
 
         /// <summary>

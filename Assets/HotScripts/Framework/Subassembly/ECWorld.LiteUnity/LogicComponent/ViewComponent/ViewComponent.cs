@@ -48,7 +48,7 @@ namespace Xease.CoreGame
     }
 
     /// <summary>
-    /// 持有可绑定的 Unity GameObject；供 BindUnityObject 等消费，不进入加载策略。
+    /// 持有可绑定的 Unity GameObject；供 RelateToUnityObject 等消费，不进入加载策略。
     /// </summary>
     public interface IViewGameObjectHolder
     {

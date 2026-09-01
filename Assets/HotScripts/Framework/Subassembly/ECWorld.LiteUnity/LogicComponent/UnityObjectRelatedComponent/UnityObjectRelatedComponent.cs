@@ -94,11 +94,11 @@ namespace Xease.CoreGame
         /// 登记一个 GameObject InstanceID。同一 entity 重复 Bind 只更新 relation。
         /// 首次 AddComponent；已有组件则原地改 dic 后 NotifyChanged。
         /// </summary>
-        public bool BindUnityObject(int instanceId, int relation = UnityObjectRelation.Unknown)
+        public bool RelateToUnityObject(int instanceId, int relation = UnityObjectRelation.Unknown)
         {
             if (instanceId == 0)
             {
-                WLogger.LogError("BindUnityObject instanceId == 0");
+                WLogger.LogError("RelateToUnityObject instanceId == 0");
                 return false;
             }
 
@@ -134,15 +134,15 @@ namespace Xease.CoreGame
         /// <summary>
         /// 按 GameObject 登记；go 为 null（含已 Destroy）时失败。
         /// </summary>
-        public bool BindUnityObject(GameObject go, int relation = UnityObjectRelation.Unknown)
+        public bool RelateToUnityObject(GameObject go, int relation = UnityObjectRelation.Unknown)
         {
             if (go == null)
             {
-                WLogger.LogError("BindUnityObject go == null");
+                WLogger.LogError("RelateToUnityObject go == null");
                 return false;
             }
 
-            return BindUnityObject(go.GetInstanceID(), relation);
+            return RelateToUnityObject(go.GetInstanceID(), relation);
         }
 
         /// <summary>
@@ -184,12 +184,12 @@ namespace Xease.CoreGame
         public bool RebindUnityObject(int oldId, int newId, int relation = UnityObjectRelation.Unknown)
         {
             if (oldId == newId)
-                return BindUnityObject(newId, relation);
+                return RelateToUnityObject(newId, relation);
 
             if (oldId != 0)
                 UnbindUnityObject(oldId);
 
-            return BindUnityObject(newId, relation);
+            return RelateToUnityObject(newId, relation);
         }
 
         /// <summary>

@@ -1,15 +1,22 @@
 ﻿using UnityEngine;
+#if !CONSOLE_CLIENT
+using Xease.ModelPointTool;
+#endif
 
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo 出生：挂 Transform、异步加载 ActorCube+ActorSphere，就绪后绑定 Collider GO 再进入 Idle。
+    /// Demo 出生：加载 ActorCube+ActorSphere，就绪后将 Sphere 挂到 Cube 的 Head，绑定 Collider 再进入 Idle。
     /// </summary>
     public class DemoStateBorn : MainStateBase
     {
         // YooAsset location；DemoModeLoading 预热与 Born 加载共用
         internal const string DemoViewAssetCube = "ActorCube";
         internal const string DemoViewAssetSphere = "ActorSphere";
+#if !CONSOLE_CLIENT
+        // ActorCube 上用于挂载 Sphere 的挂点名（与生成表一致）
+        private const string CubeHeadPoint = "Head";
+#endif
 
         //////////////////////////////////////////////////////////////////////////
         /// CustomBhvState：override
@@ -40,7 +47,7 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle；全部成功则绑定 Collider。
+        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle；全部成功则挂接 Head 并绑定 Collider。
         /// </summary>
         public override float Update(float dt)
         {
@@ -54,7 +61,8 @@ namespace Xease.CoreGame
                 return dt;
             }
 
-            BindActorSphereUnityObjects();
+            AttachSphereToCubeHead();
+            BindColliderUnityObjects();
             ChooseNextState("MST_Idle");
             return dt;
         }
@@ -92,10 +100,63 @@ namespace Xease.CoreGame
             return true;
         }
 
-        // 所有已加载 View 下的 Collider GO 都 Bind，射线命中任意碰撞盒都能反查 entity
-        private void BindActorSphereUnityObjects()
+        // Sphere 挂到 Cube 的 Head，并关闭 Sphere 的逻辑 Transform 同步
+        private void AttachSphereToCubeHead()
         {
-            this.Log($"BindActorSphereUnityObjects");
+#if !CONSOLE_CLIENT
+            if (!TryGetLoadedView(DemoViewAssetCube, out var cubeGo, out _)
+                || !TryGetLoadedView(DemoViewAssetSphere, out var sphereGo, out var sphereSync))
+            {
+                this.LogError("DemoStateBorn attach failed: cube or sphere view missing");
+                return;
+            }
+
+            var head = ModelPointGetter.FindBindPoint(cubeGo.transform, DemoViewAssetCube, CubeHeadPoint);
+            if (head == null)
+            {
+                this.LogError($"DemoStateBorn attach failed: {CubeHeadPoint} not found on {DemoViewAssetCube}");
+                return;
+            }
+
+            sphereGo.transform.SetParent(head, false);
+            sphereGo.transform.localPosition = Vector3.zero;
+            sphereGo.transform.localRotation = Quaternion.identity;
+            if (sphereSync != null)
+                sphereSync.NeedsSyncTransform = false;
+#endif
+        }
+
+#if !CONSOLE_CLIENT
+        // 按 AssetLocation 取已加载 GO；sync 为同一 wrapper 的 IViewTransformSyncable（可空）
+        private bool TryGetLoadedView(string location, out GameObject go, out IViewTransformSyncable sync)
+        {
+            go = null;
+            sync = null;
+            if (_ownerEntity == null || !_ownerEntity.hasComView)
+                return false;
+
+            var wrappers = _ownerEntity.comView.Wrappers;
+            for (int i = 0; i < wrappers.Count; ++i)
+            {
+                var wrapper = wrappers[i];
+                if (wrapper is not IViewAssetLocatable loc || loc.AssetLocation != location)
+                    continue;
+                if (wrapper is not IViewGameObjectHolder holder || holder.Instance == null)
+                    continue;
+
+                go = holder.Instance;
+                sync = wrapper as IViewTransformSyncable;
+                return true;
+            }
+
+            return false;
+        }
+#endif
+
+        // 所有已加载 View 下的 Collider GO 都 Bind，射线命中任意碰撞盒都能反查 entity
+        private void BindColliderUnityObjects()
+        {
+            //this.Log($"BindColliderUnityObjects");
 #if !CONSOLE_CLIENT
             if (_ownerEntity == null || !_ownerEntity.hasComView)
                 return;
@@ -115,7 +176,7 @@ namespace Xease.CoreGame
 
                     go.GetComponentsInChildren(true, colliders);
                     for (int c = 0; c < colliders.Count; ++c)
-                        _ownerEntity.BindUnityObject(colliders[c].gameObject);
+                        _ownerEntity.RelateToUnityObject(colliders[c].gameObject);
                 }
             }
 #endif
