@@ -28,6 +28,9 @@
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\**\*.Unity\**\*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\*.Unity.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\**\*.Unity.cs" />
+    <!-- Unity Editor 脚本：无 UnityEditor.dll，CLI 宿主不编入 -->
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\Editor\**\*.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\**\Editor\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

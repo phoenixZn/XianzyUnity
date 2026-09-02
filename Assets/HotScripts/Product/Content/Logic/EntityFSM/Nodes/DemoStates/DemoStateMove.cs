@@ -59,7 +59,10 @@ namespace Xease.CoreGame
             var step = MoveSpeed * dt;
             if (dist <= ArriveDist || dist <= step)
             {
-                _ownerEntity.SetPosition(ClampToBound(_target));
+                var arrived = ClampToBound(_target);
+                _ownerEntity.SetPosition(arrived);
+                if (G.IsCLI)
+                    this.Log($"DemoStateMove arrive pos={arrived}");
                 ChooseNextState(_pendingDeath ? "MST_Die" : "MST_Idle");
                 return dt;
             }

@@ -26,7 +26,8 @@
 
 - **包含**：`Assets/HotScripts/Framework`、`Assets/HotScripts/Product` 下全部 `.cs`（通配 include）。
 - **排除（与 XEditor.UnityPartingTool 语义一致）**：路径段以 `.Unity` 结尾的目录内所有 `.cs`；以及 `*.Unity.cs`。
-- `*.Unity.cs` 与 `.Unity` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`。
+- **排除 Editor**：任意路径段名为 `Editor` 的目录内所有 `.cs`（如 `ModelPointTool/Editor`）。CLI 不引用 `UnityEditor.dll`，`CustomEditor` / `MenuItem` 等编辑器 API 无法编译。
+- `*.Unity.cs`、`.Unity` 目录与 `Editor` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`。
 - LitMotion 源码在 `Assets/AOTScripts/ThirdParty/LitMotion`，不在 HotScripts 通配范围内；CLI 走 `PureCsproj/LitMotion` 的 `ProjectReference`。
 
 ## PureGameEnv 内 shim（未改 Unity 源码）

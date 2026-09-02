@@ -15,6 +15,12 @@ namespace Xease
         public static GEnvLogAction LogWarning => GEnv.Inst.Param.LogWarning;
         public static GEnvLogAction Log  => GEnv.Inst.Param.LogInfo;
         public static bool IsDev = true;
+        // 命令行宿主为 true（CONSOLE_CLIENT）；Unity 为 false，便于 CLI 打 Log、编辑器看表现
+#if CONSOLE_CLIENT
+        public static bool IsCLI = true;
+#else
+        public static bool IsCLI = false;
+#endif
     }
     
     //////////////////////////////////////////////////////////////////////////
