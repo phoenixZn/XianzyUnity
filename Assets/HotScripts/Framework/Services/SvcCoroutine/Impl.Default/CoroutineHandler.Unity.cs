@@ -1,14 +1,9 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Xease
 {
-    public class CoroutineCompletedHandler : UnityEvent<bool>
-    {
-    }
-
     /// <summary>
     /// 协程句柄：承载一条业务协程的运行状态，支持停止/暂停/恢复与完成回调；
     /// 自身是 CustomYieldInstruction，可在其他协程中 yield 等待其结束
@@ -19,7 +14,8 @@ namespace Xease
         private readonly MonoBehaviour _host;
 
         protected Action<CoroutineHandler> mRemoveAction;
-        protected CoroutineCompletedHandler mCompletedAction = new CoroutineCompletedHandler();
+        // 完成回调（参数 true=主动 Stop，false=自然结束）；惰性为 null 零分配，多监听时仅委托合并
+        private Action<bool> _completedAction;
 
         // 底层实体协程引用，Stop 时用于真正终止，避免外壳协程空转到内层 yield 结束
         private Coroutine _wrapperCoroutine;
@@ -118,9 +114,9 @@ namespace Xease
         /// <summary>
         /// 注册完成回调，参数表示是否被主动 Stop（true=停止，false=自然结束）
         /// </summary>
-        public ICoroutineHandler OnCompleted(UnityAction<bool> action)
+        public ICoroutineHandler OnCompleted(Action<bool> action)
         {
-            mCompletedAction.AddListener(action);
+            _completedAction += action;
             return this;
         }
 
@@ -134,8 +130,8 @@ namespace Xease
             _finished = true;
             _wrapperCoroutine = null;
             mRemoveAction?.Invoke(this);
-            mCompletedAction?.Invoke(Stopped);
-            mCompletedAction.RemoveAllListeners();
+            _completedAction?.Invoke(Stopped);
+            _completedAction = null;
             Coroutine = null;
         }
 

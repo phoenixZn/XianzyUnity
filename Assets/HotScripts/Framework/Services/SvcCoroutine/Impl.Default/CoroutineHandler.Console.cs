@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Events;
 
 namespace Xease
 {
@@ -22,8 +21,8 @@ namespace Xease
         }
 
         protected Action<CoroutineHandler> mRemoveAction;
-        // 完成回调列表（参数 true=主动 Stop，false=自然结束）；不用 UnityEvent，避免 CLI 运行期依赖
-        protected List<UnityAction<bool>> mCompletedActions = new List<UnityAction<bool>>();
+        // 完成回调（参数 true=主动 Stop，false=自然结束）；惰性为 null 零分配，多监听时仅委托合并
+        private Action<bool> _completedAction;
 
         // 嵌套枚举器栈：yield return IEnumerator 时压栈，耗尽弹栈，对齐 Unity 嵌套协程语义
         private readonly Stack<IEnumerator> _routineStack = new Stack<IEnumerator>();
@@ -109,9 +108,9 @@ namespace Xease
         /// <summary>
         /// 注册完成回调，参数表示是否被主动 Stop（true=停止，false=自然结束）
         /// </summary>
-        public ICoroutineHandler OnCompleted(UnityAction<bool> action)
+        public ICoroutineHandler OnCompleted(Action<bool> action)
         {
-            mCompletedActions.Add(action);
+            _completedAction += action;
             return this;
         }
 
@@ -140,11 +139,8 @@ namespace Xease
             _waitHandler = null;
             _routineStack.Clear();
             mRemoveAction?.Invoke(this);
-            for (int i = 0; i < mCompletedActions.Count; i++)
-            {
-                mCompletedActions[i]?.Invoke(Stopped);
-            }
-            mCompletedActions.Clear();
+            _completedAction?.Invoke(Stopped);
+            _completedAction = null;
             Coroutine = null;
         }
 

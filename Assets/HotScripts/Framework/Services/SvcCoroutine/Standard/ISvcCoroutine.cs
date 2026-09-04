@@ -13,7 +13,7 @@ namespace Xease
         /// <summary>
         /// 注册完成回调，参数表示是否被主动 Stop（true=停止，false=自然结束）
         /// </summary>
-        ICoroutineHandler OnCompleted(UnityEngine.Events.UnityAction<bool> action);
+        ICoroutineHandler OnCompleted(System.Action<bool> action);
     }
     
     public interface ICoroutineService : IService
