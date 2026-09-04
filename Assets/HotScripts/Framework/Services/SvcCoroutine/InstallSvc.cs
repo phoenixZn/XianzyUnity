@@ -16,6 +16,16 @@ namespace Xease
         {
             get { return _coroutineSvc; }
         }
+#if CONSOLE_CLIENT
+        /// <summary>
+        /// 注册协程服务（命令行宿主）：无 MonoBehaviour 宿主，协程由服务的 IEnvUpdate 帧泵驱动
+        /// </summary>
+        public void AddService_Coroutine()
+        {
+            G.Log("AddService_Coroutine");
+            AddService(new CoroutineService(), out _coroutineSvc);
+        }
+#else
         /// <summary>
         /// 注册协程服务，host 为协程运行的 MonoBehaviour 宿主（通常传 GEnvParam.UnityHost）
         /// </summary>
@@ -24,6 +34,7 @@ namespace Xease
             G.Log("AddService_Coroutine");
             AddService(new CoroutineService(host), out _coroutineSvc);
         }
+#endif
     }
 
 }

@@ -12,7 +12,15 @@ namespace Xease
 
     //////////////////////////////////////////////////////////////////////////
     internal class CoroutineService : ICoroutineService, ICoroutine
+#if CONSOLE_CLIENT
+        , IEnvUpdate
+#endif
     {
+#if CONSOLE_CLIENT
+        public CoroutineService()
+        {
+        }
+#else
         // 协程运行的 MonoBehaviour 宿主，初始化时注入（通常为 GameEntry），生命周期与 GEnv 一致
         private readonly MonoBehaviour _host;
 
@@ -20,6 +28,7 @@ namespace Xease
         {
             _host = host;
         }
+#endif
 
         public void Shutdown()
         {
@@ -28,6 +37,10 @@ namespace Xease
         }
 
         private Dictionary<ICoroutine, List<CoroutineHandler>> _coroutineDict = new ();
+#if CONSOLE_CLIENT
+        // CLI 帧泵列表：与 _coroutineDict 平行维护，EnvUpdate 倒序遍历驱动全部 handler
+        private readonly List<CoroutineHandler> _tickingHandlers = new List<CoroutineHandler>();
+#endif
 
         public ICoroutineHandler StartCoroutine(object owner, IEnumerator coroutine)
         {
@@ -41,7 +54,12 @@ namespace Xease
         
         public ICoroutineHandler StartCoroutine(ICoroutine owner, IEnumerator coroutine)
         {
+#if CONSOLE_CLIENT
+            CoroutineHandler handler = new CoroutineHandler(owner, coroutine, Remove);
+            _tickingHandlers.Add(handler);
+#else
             CoroutineHandler handler = new CoroutineHandler(owner, coroutine, Remove, _host);
+#endif
             if (_coroutineDict.TryGetValue(owner, out var list))
             {
                 list.Add(handler);
@@ -58,6 +76,9 @@ namespace Xease
 
         private void Remove(CoroutineHandler handler)
         {
+#if CONSOLE_CLIENT
+            _tickingHandlers.Remove(handler);
+#endif
             var owner = handler.Owner;
             if (_coroutineDict.TryGetValue(owner, out var list))
             {
@@ -100,6 +121,21 @@ namespace Xease
             }
             _coroutineDict.Clear();
         }
+
+#if CONSOLE_CLIENT
+        //////////////////////////////////////////////////////////////////////////
+        /// IEnvUpdate:
+
+        // CLI 帧泵：AddService 时由 ServicesProvider 自动 BindEnvActions 挂到 GEnv 驱动链；
+        // 倒序遍历，Tick 内 Finish→Remove 自移除当前元素不影响索引
+        public void EnvUpdate(float dt, float dt_unscaled)
+        {
+            for (int i = _tickingHandlers.Count - 1; i >= 0; i--)
+            {
+                _tickingHandlers[i].Tick(dt);
+            }
+        }
+#endif
     }
     
     public static class CoroutineExtension
