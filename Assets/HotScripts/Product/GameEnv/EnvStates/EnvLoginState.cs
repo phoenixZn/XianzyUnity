@@ -160,6 +160,12 @@ namespace Xease
         {
             if (_nextStateID != null)
                 return;
+            // 输入被重定向（无控制台）时 KeyAvailable 会抛异常；无头模式直接自动登入便于冒烟
+            if (System.Console.IsInputRedirected)
+            {
+                _nextStateID = EnvStateID.ES_Main;
+                return;
+            }
             if (!System.Console.KeyAvailable)
                 return;
 

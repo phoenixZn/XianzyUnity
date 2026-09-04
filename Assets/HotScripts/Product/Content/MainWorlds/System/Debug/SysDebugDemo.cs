@@ -27,6 +27,7 @@ namespace Xease.CoreGame.Debug
                 TestRandomRange();
                 SmokeUniTaskYield();
                 SmokeLMotion();
+                TestCoroutineSuite();
             }
         }
         
