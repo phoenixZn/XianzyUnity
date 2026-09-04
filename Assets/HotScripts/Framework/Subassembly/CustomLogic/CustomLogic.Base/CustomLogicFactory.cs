@@ -14,8 +14,8 @@ namespace Xease.CoreGame
 
         //////////////////////////////////////////////////////////////////////////
         //缓存
-        protected CLNodesPool<ICustomNode> _nodesPool = new();
-        protected CLNodesPool<ICanRecycle> _partsPool = new();
+        protected CLNodesPool<ICustomNode> _nodesPool = new(128);
+        protected CLNodesPool<ICanRecycle> _partsPool = new(32);
         public CLNodesPool<ICustomNode> NodePool => _nodesPool;
         public CLNodesPool<ICanRecycle> PartsPool => _partsPool;
 

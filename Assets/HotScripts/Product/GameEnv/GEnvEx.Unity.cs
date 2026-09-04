@@ -31,7 +31,7 @@ namespace Xease
             Services.AddService_Random(Param.EnvBaseSeed);
             Services.AddService_ValueEvent();
             Services.AddService_SharedPool();
-            Services.AddService_Coroutine();
+            Services.AddService_Coroutine(Param.UnityHost);
             Services.AddService_Asset();
             Services.AddService_GameObjectPools();
             Services.AddService_Input();

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 
 namespace Xease
@@ -12,8 +13,18 @@ namespace Xease
     //////////////////////////////////////////////////////////////////////////
     internal class CoroutineService : ICoroutineService, ICoroutine
     {
+        // 协程运行的 MonoBehaviour 宿主，初始化时注入（通常为 GameEntry），生命周期与 GEnv 一致
+        private readonly MonoBehaviour _host;
+
+        public CoroutineService(MonoBehaviour host)
+        {
+            _host = host;
+        }
+
         public void Shutdown()
         {
+            // 服务关闭时停掉全部协程，避免 handler 泄漏与宿主上的空转协程
+            StopAllCoroutines();
         }
 
         private Dictionary<ICoroutine, List<CoroutineHandler>> _coroutineDict = new ();
@@ -30,7 +41,7 @@ namespace Xease
         
         public ICoroutineHandler StartCoroutine(ICoroutine owner, IEnumerator coroutine)
         {
-            CoroutineHandler handler = new CoroutineHandler(owner, coroutine, Remove);
+            CoroutineHandler handler = new CoroutineHandler(owner, coroutine, Remove, _host);
             if (_coroutineDict.TryGetValue(owner, out var list))
             {
                 list.Add(handler);

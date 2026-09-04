@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Xease
 {
     public static partial class G
@@ -14,10 +16,13 @@ namespace Xease
         {
             get { return _coroutineSvc; }
         }
-        public void AddService_Coroutine()
+        /// <summary>
+        /// 注册协程服务，host 为协程运行的 MonoBehaviour 宿主（通常传 GEnvParam.UnityHost）
+        /// </summary>
+        public void AddService_Coroutine(MonoBehaviour host)
         {
             G.Log("AddService_Coroutine");
-            AddService(new CoroutineService(), out _coroutineSvc);
+            AddService(new CoroutineService(host), out _coroutineSvc);
         }
     }
 

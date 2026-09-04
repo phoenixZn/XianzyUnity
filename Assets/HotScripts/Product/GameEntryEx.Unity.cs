@@ -18,6 +18,7 @@ namespace Xease
                 LogWarning = Debug.LogWarning,
                 LogError = Debug.LogError,
                 EnvBaseSeed = Time.frameCount,
+                UnityHost = this,
             };
             GEnv.InitGameEnvInstance(new UnityGameEnv(param));
         }
