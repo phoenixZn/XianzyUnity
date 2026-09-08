@@ -1,19 +1,13 @@
 namespace Xease.CoreGame
 {
     //CustomLogic 带有外部约定性质的Key便捷记录在这里。通常是：
-    //  1、初始化逻辑时，就约好的黑板值。
+    //  1、初始化逻辑时，就约好的可变黑板值。
     //  2、节点约定好占有的 Key。
-    //  注意： 纯内部逻辑的黑板临时变量，不必刻意记录在这 ！！！
+    // 注意： 纯内部逻辑的黑板临时变量，不必刻意记录在这 ！！！
+    // 注意： 纯静态的配置数据，通常用 LogicConfig、NodeCfg，不记黑板
+    // 注意： 运行时必备（没有就不能运行的数据）且不会被修改的数据，通常用 LogicGenInfo，不记黑板
     public partial class CvKey
     {
-        //通用
-        public const string CV_WorldInfo = "CV_WorldInfo";
-        public const string CV_LogicWorld = "CV_LogicWorld";
-        public const string CV_MetaWorld = "CV_MetaWorld";
-        public const string CV_OwnerPlayerInfo = "CV_OwnerPlayerInfo";
-        public const string CV_OwnerEntity = "CV_OwnerEntity";
-
-
         //主状态机
         public const string CV_BornLogicIdList = "CV_BornLogicIdList";  //出生逻辑列表
         public const string CV_BornBuffIdList = "CV_BornBuffIdList";  //出生Buff列表

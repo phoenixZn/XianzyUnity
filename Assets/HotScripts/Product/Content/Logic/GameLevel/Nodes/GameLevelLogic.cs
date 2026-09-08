@@ -1,69 +1,72 @@
 using System.Collections.Generic;
 
-
 namespace Xease.CoreGame
 {
-    public struct EvtNotifyLevelEvent_Wave : IValueEvent
+    public struct EvtNotifyLevelEventLogic : IValueEvent
     {
-        public int WaveGroupIndex;
-        public int WaveExLogicID;
+        public int EventLogicID;
     }
     
     
-    public class LevelLogic_WaveGroup : CustomLogic
+    public class GameLevelLogic : CustomLogic
     {
-        public int LastWaveGroupIndex { get; protected set; }
-
         private List<CustomLogic> _eventLogicEx = new();
+        
+        public bool SceneLogicLoaded { get; set; }
         
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
+            SceneLogicLoaded = false;
             base.InitializeNode(cfg, context);
             if (_eventLogicEx.Count != 0)
             {
-                CLogger.LogError(this, "GameLevelLogic _eventLogicEx.Count != 0"); 
+                CLogger.LogError(this, "GameLevelLogic _eventLogicEx.Count != 0");  //Debug确认
             }
-            G.ValueEvent.AddHandler<EvtNotifyLevelEvent_Wave>(HandleEvtNotifyWaveBegin);
-            LastWaveGroupIndex = 0;
+            G.ValueEvent.AddHandler<EvtNotifyLevelEventLogic>(HandleEvtNotifyLevelEventLogic);
         }
         
         public override void Destroy()
         {
-            G.ValueEvent.RemoveHandler<EvtNotifyLevelEvent_Wave>(HandleEvtNotifyWaveBegin);
+            G.ValueEvent.RemoveHandler<EvtNotifyLevelEventLogic>(HandleEvtNotifyLevelEventLogic);
             foreach (var logic in _eventLogicEx)
             {
                 G.CustomLogic.DestroyLogic(logic);
             }
             _eventLogicEx.Clear();
-            LastWaveGroupIndex = -1;
+            SceneLogicLoaded = false;
             base.Destroy();
         }
 
-        private void HandleEvtNotifyWaveBegin(EvtNotifyLevelEvent_Wave evt)
+        // 队长首次进入刷怪区域时触发的关卡事件逻辑
+        private void HandleEvtNotifyLevelEventLogic(EvtNotifyLevelEventLogic evt)
         {
-            LastWaveGroupIndex = evt.WaveGroupIndex;
-            int logicID = evt.WaveExLogicID;
-            CLogger.LogInfo($"GameLevelLogic EvtNotifyWaveBegin： WaveGroupIndex={evt.WaveGroupIndex}, logicID:{logicID}");
+            int logicID = evt.EventLogicID;
+            if (G.IsDev)
+                this.Log($"GameLevelLogic EvtNotifyLevelEventLogic： logicID:{logicID}");
             if (logicID <= 0)
             {
                 return;
             }
-            // var metaWorld = this.GetMetaWorld();
-            // var svc = G.CustomLogicService;
-            // VarEnv varEnv = svc.NewVarEnv();
-            // varEnv.WriteVar(CvKey.CV_LogicWorld, this.GetLogicWorld());
-            // varEnv.WriteVar(CvKey.CV_MetaWorld, metaWorld);
-            // var genInfo = svc.NewGenInfo<CustomLogicGenInfo>();
-            // genInfo.LogicConfigID = logicID;
-            // genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameLevel;
-            // genInfo.PreEnv = varEnv;
-            // var logic = svc.CreateLogic(genInfo);
-            // if (logic != null)
-            // {
-            //     _eventLogicEx.Add(logic);    
-            // }
+            var logic = CreateEventLogic(logicID);
+            if (logic != null)
+            {
+                _eventLogicEx.Add(logic);
+            }
         }
-        
+
+        //关卡中的EventLogic暂时和LevelLogic使用相同的 GameLevelLogicGenInfo，属于SubLevelLogic
+        private CustomLogic CreateEventLogic(int logicID)
+        {
+            var thisGenInfo = GetGenInfo<GameLevelLogicGenInfo>();
+            var svc = G.CustomLogic;
+            VarEnv varEnv = svc.NewVarEnv();
+            var genInfo = GameLevelLogicGenInfo.New(svc, thisGenInfo.ECWorlds, thisGenInfo.WorldCreationInfo);
+            genInfo.LogicConfigID = logicID;
+            genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameLevelEvent;
+            genInfo.PreEnv = varEnv;
+            var logic = svc.CreateLogic(genInfo);
+            return logic;
+        }
         
         public override float Update(float dt)
         {

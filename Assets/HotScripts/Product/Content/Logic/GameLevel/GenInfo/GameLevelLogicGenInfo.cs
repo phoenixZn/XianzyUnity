@@ -1,9 +1,9 @@
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// GameMode 自定义逻辑的运行时初始化信息：携带 ECWorlds / WorldCreationInfo
+    /// GameLevelLogic自定义逻辑的运行时初始化信息
     /// </summary>
-    public class GameModeGenInfo : CustomLogicGenInfo, IHasLogicWorld, IHasMetaWorld
+    public class GameLevelLogicGenInfo : CustomLogicGenInfo, IHasLogicWorld, IHasMetaWorld
     {
         public ECWorlds ECWorlds { get; protected set; }
         public WorldCreationInfo WorldCreationInfo { get; protected set; }
@@ -27,9 +27,9 @@ namespace Xease.CoreGame
         internal void Init(ECWorlds worlds, WorldCreationInfo worldCreationInfo)
         {
             if (worlds == null)
-                G.LogError("GameModeGenInfo Init 异常, ECWorlds 为空");
+                G.LogError("GameLevelLogicGenInfo Init 异常, ECWorlds 为空");
             if (worldCreationInfo == null)
-                G.LogError("GameModeGenInfo Init 异常, WorldCreationInfo 为空");
+                G.LogError("GameLevelLogicGenInfo Init 异常, WorldCreationInfo 为空");
 
             ECWorlds = worlds;
             WorldCreationInfo = worldCreationInfo;
@@ -38,9 +38,9 @@ namespace Xease.CoreGame
         /// <summary>
         /// 从对象池创建并初始化 GameMode 所需的 GenInfo。
         /// </summary>
-        internal static GameModeGenInfo New(ICustomLogicService svc, ECWorlds worlds, WorldCreationInfo worldCreationInfo)
+        internal static GameLevelLogicGenInfo New(ICustomLogicService svc, ECWorlds worlds, WorldCreationInfo worldCreationInfo)
         {
-            var genInfo = svc.NewGenInfo<GameModeGenInfo>();
+            var genInfo = svc.NewGenInfo<GameLevelLogicGenInfo>();
             genInfo.Init(worlds, worldCreationInfo);
             return genInfo;
         }

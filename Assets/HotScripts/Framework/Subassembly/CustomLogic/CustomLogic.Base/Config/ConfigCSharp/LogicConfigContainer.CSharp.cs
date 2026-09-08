@@ -28,6 +28,13 @@ namespace Xease.CoreGame
             Add(id, logicCfg);
             return logicCfg;
         }
+        
+        protected CustomLogicCfg AddConfig<T>(int id, Nodes nodes, string desc = null) where T: CustomLogic
+        {
+            var logicCfg = new CustomLogicCfg(id, nodes, typeof(T), desc);
+            Add(id, logicCfg);
+            return logicCfg;
+        }
 
 
         //////////////////////////////////////////////////////////////////////////

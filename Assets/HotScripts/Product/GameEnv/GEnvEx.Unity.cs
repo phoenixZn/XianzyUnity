@@ -38,6 +38,7 @@ namespace Xease
             var svcLogic = Services.AddService_CustomLogic();
             svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
             svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
+            svcLogic.AddConfigContainer(new LogicConfigs_GameLevelEvent(LogicContainerKey.LogicConfigs_GameLevelEvent));
             svcLogic.AddConfigContainer(new LogicConfig_Skill(LogicContainerKey.LogicConfigs_Skill));
             svcLogic.AddConfigContainer(new LogicConfig_EntityFSM(LogicContainerKey.LogicConfigs_EntityFSM));
             svcLogic.AddConfigContainer(new LogicConfig_AI(LogicContainerKey.LogicConfigs_AI));

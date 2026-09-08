@@ -8,8 +8,8 @@ namespace Xease.CoreGame
     /// </summary>
     public class DemoStateMove : MainStateBase
     {
-        // 匀速移动速度（世界单位/秒）
-        private const float MoveSpeed = 4f;
+        // 默认匀速（世界单位/秒）；点击后在此基础上翻倍
+        private const float MoveSpeed = 2f;
         // 判定到达的距离阈值
         private const float ArriveDist = 0.1f;
         // 测试活动范围：x/y ∈ [BoundMin, BoundMax]，z=0
@@ -18,6 +18,8 @@ namespace Xease.CoreGame
 
         // 本次移动目标点（z 恒为 0）
         private Vector3 _target;
+        // 本次实际移速；Enter 重置为 MoveSpeed，点击后 * 2
+        private float _moveSpeed;
         // 途中收到 Nt_Death，到达当前目标后再切 Die
         private bool _pendingDeath;
 
@@ -27,6 +29,7 @@ namespace Xease.CoreGame
         public override void Destroy()
         {
             _target = default;
+            _moveSpeed = 0f;
             _pendingDeath = false;
             base.Destroy();
         }
@@ -38,6 +41,7 @@ namespace Xease.CoreGame
         {
             base.Enter();
             _pendingDeath = false;
+            _moveSpeed = MoveSpeed;
             _target = new Vector3(
                 G.Random.RandFloat(BoundMin, BoundMax),
                 G.Random.RandFloat(BoundMin, BoundMax),
@@ -56,10 +60,10 @@ namespace Xease.CoreGame
             var pos = _ownerEntity.position;
             var to = _target - pos;
             var dist = to.magnitude;
-            var step = MoveSpeed * dt;
+            var step = _moveSpeed * dt;
             if (dist <= ArriveDist || dist <= step)
             {
-                var arrived = ClampToBound(_target);
+                var arrived = _target;
                 _ownerEntity.SetPosition(arrived);
                 if (G.IsCLI)
                     this.Log($"DemoStateMove arrive pos={arrived}");
@@ -68,7 +72,7 @@ namespace Xease.CoreGame
             }
 
             var next = pos + to / dist * step;
-            _ownerEntity.SetPosition(ClampToBound(next));
+            _ownerEntity.SetPosition(next);
             return dt;
         }
 
@@ -76,30 +80,29 @@ namespace Xease.CoreGame
         /// MainStateBase：override
 
         /// <summary>
-        /// 拦截 Nt_Death：不立刻切 Die，记下待死等本次移动走完。
+        /// 拦截 Nt_Death：不立刻切 Die，记下待死等本次移动走完；同时改目标到上方、速度翻倍、绕 z 转 45°。
         /// </summary>
         public override bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
         {
-            if (cmd.CmdType == EntityCmdType.Nt_Death)
-            {
-                if (this.isDebug())
-                    this.Log($"{StateID}.HandleEntityCommand Nt_Death: pending until arrive");
-                _pendingDeath = true;
+            if (cmd.CmdType != EntityCmdType.Nt_Death)
+                return base.HandleEntityCommand(entity, cmd);
+
+            if (this.isDebug())
+                this.Log($"{StateID}.HandleEntityCommand Nt_Death: pending until arrive");
+            _pendingDeath = true;
+
+            if (_ownerEntity == null || !_ownerEntity.hasComTransform)
                 return true;
-            }
-            return base.HandleEntityCommand(entity, cmd);
+
+            // 点击：目标改到当前位置上方 2 单位，速度翻倍，绕 z 转 45°
+            _target = _ownerEntity.position + Vector3.up * 2f;
+            _moveSpeed *= 2f;
+            _ownerEntity.SetQuaternion(_ownerEntity.rotation * Quaternion.Euler(0f, 0f, 45f));
+            return true;
         }
 
         //////////////////////////////////////////////////////////////////////////
         /// This：
-
-        // 限制在 x/y ∈ [-10,10]、z=0，避免走出测试范围
-        private static Vector3 ClampToBound(Vector3 pos)
-        {
-            pos.x = Mathf.Clamp(pos.x, BoundMin, BoundMax);
-            pos.y = Mathf.Clamp(pos.y, BoundMin, BoundMax);
-            pos.z = 0f;
-            return pos;
-        }
+        
     }
 }

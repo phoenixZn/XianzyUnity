@@ -1,6 +1,6 @@
 namespace Xease.CoreGame
 {
-    public partial class CustomLogicService : ICustomLogicService
+    public partial class CustomLogicService
     {
         // 预热通用部件/节点池，避免运行时首次 new 抖动
         public void BaseWarmup()

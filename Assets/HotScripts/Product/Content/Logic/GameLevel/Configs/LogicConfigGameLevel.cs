@@ -9,8 +9,8 @@ namespace Xease.CoreGame
         public LogicConfigs_GameLevel(string name)
             : base(name, 20)
         {
-            DefaultLogicType = typeof(CustomLogic);
-            //游戏模式: ID从 2000000 开始
+            DefaultLogicType = typeof(GameLevelLogic);
+            //关卡ID从 2000000 开始
             InitConfigs_Template();
         }
 

@@ -3,6 +3,11 @@ using Xease.CoreGame;
 
 namespace Xease
 {
+    public interface IWorldsConfig
+    {
+        WorldCreationInfo Get(string worldCfgID);
+    }
+    
     public partial class ModuleWorlds : Module, IEnvUpdate, IEnvFixedUpdate, IEnvLateUpdate, IEnvDrawGizmos, IEnvOnGUI
     {
         // MainWorld:
@@ -11,8 +16,8 @@ namespace Xease
         public ECWorlds MainWorld => _mainWorld;
         
         // WorldsConfig:
-        protected WorldsConfig _worldsConfig;
-        public WorldsConfig WorldsConfig => _worldsConfig;
+        protected IWorldsConfig _worldsConfig;
+        public IWorldsConfig WorldsConfig => _worldsConfig;
         
         
         public bool IsActive { get; private set; }
