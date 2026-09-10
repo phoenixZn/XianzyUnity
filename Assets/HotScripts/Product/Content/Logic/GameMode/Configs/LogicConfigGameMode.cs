@@ -10,7 +10,7 @@ namespace Xease.CoreGame
         public LogicConfigs_GameMode(string name)
             : base(name, 20)
         {
-            DefaultLogicType = typeof(CustomLogic);
+            DefaultLogicType = typeof(LogicGameMode);
             //游戏模式: ID从 1000000 开始
             InitConfigs_Template();
             InitConfigs_Demo();
