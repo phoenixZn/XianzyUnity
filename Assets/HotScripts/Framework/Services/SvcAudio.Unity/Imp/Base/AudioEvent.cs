@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using System;
 
@@ -73,8 +72,9 @@ namespace Xease.Audio
             {
                 clip = _bank.GetClip(clipName);
             }
-            if (clip is null)
+            if (clip == null)
             {
+                Audio.LogError($"[Audio] clip \"{clipName}\" not loaded, event \"{Config?.Name}\"");
                 Destroy();
                 return null;
             }

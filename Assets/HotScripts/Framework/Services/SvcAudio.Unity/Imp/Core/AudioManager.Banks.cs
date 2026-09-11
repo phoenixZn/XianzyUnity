@@ -24,6 +24,7 @@ namespace Xease.Audio
             }
             if (_audioBanks.ContainsKey(bank.Config.Name))
             {
+                Audio.LogWarning($"[Audio] LoadBank ContainsKey:{bankName}");
                 return;
             }
             _audioBanks.Add(bank.Config.Name, bank);
@@ -76,7 +77,6 @@ namespace Xease.Audio
             }
             foreach (var path in Meta.InitBanks)
             {
-                G.LogError(path);
                 LoadBank(path);
             }
         }

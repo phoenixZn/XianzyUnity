@@ -29,6 +29,7 @@ namespace Xease.Audio
             var eventConfig = bank.GetEventConfig(eventName);
             if (eventConfig is null)
             {
+                Audio.LogError($"[Audio] event \"{eventName}\" not found in bank \"{bankName}\"");
                 return null;
             }
             var eventType = GetEventType(eventConfig.Event);
@@ -38,6 +39,7 @@ namespace Xease.Audio
             }
             if (!IncEventGroupCounter(eventConfig))
             {
+                Audio.LogWarning($"[Audio] event \"{eventName}\" skipped by stack/interval limit");
                 return null;
             }
             var audioEvent = AudioEventPool.CreateEvent(eventType);

@@ -33,12 +33,16 @@ namespace Xease.Audio
 
         public AudioController GetController(AudioEvent audioEvent, AudioTrack track = null)
         {
+            AudioController audioController;
             if (_freeAudioControllers.Count == 0)
             {
-                return AddController();
+                audioController = AddController();
             }
-            var audioController = _freeAudioControllers.Dequeue();
-            _audioControllers.Add(audioController);
+            else
+            {
+                audioController = _freeAudioControllers.Dequeue();
+                _audioControllers.Add(audioController);
+            }
             if (track != null)
             {
                 audioController.Mixer = track.Mixer;

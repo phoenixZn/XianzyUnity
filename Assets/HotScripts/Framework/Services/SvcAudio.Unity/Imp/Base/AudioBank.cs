@@ -58,8 +58,9 @@ namespace Xease.Audio
                         continue;
                     }
                     var audioAsset = AudioAsset<AudioClip>.Load(path);
-                    if (audioAsset.Asset is null)
+                    if (audioAsset == null || audioAsset.Asset == null)
                     {
+                        Audio.LogError($"[Audio] clip \"{path}\" load failed in bank \"{Config.Name}\"");
                         continue;
                     }
                     _audioClipAssets.Add(path, audioAsset);
