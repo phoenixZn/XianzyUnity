@@ -1,6 +1,3 @@
-using UnityEngine;
-using YooAsset;
-
 namespace Xease.Audio
 {
     /// <summary>
@@ -13,33 +10,47 @@ namespace Xease.Audio
 
         public static implicit operator T(AudioRawFile<T> rawFile)
         {
-            return rawFile.Content;
+            return rawFile == null ? default : rawFile.Content;
         }
 
         public static AudioRawFile<T> Load(string path)
         {
-            RawFileHandle handle = null;
-            AudioRawFile<T> audioRawFile = new();
             try
             {
-                handle = Audio.LoadRawFileSync(path);
+                var handle = Audio.LoadRawFileSync(path);
                 if (handle == null)
                 {
                     return null;
                 }
-                audioRawFile.Path = handle.GetRawFilePath();
-                audioRawFile.Content = new T();
-                Audio.Deserialize(handle.GetRawFileText(), audioRawFile.Content);
+                var text = handle.GetRawFileText();
+                // RawFile 只认 JSON 文本；.kab 本身是 JSON，若被写成 Unity YAML（以 % 开头）则拒绝
+                if (string.IsNullOrEmpty(text))
+                {
+                    Audio.LogError($"[Audio] Load rawfile \"{path}\" error, message: empty file.");
+                    return null;
+                }
+                if (text[0] == '%')
+                {
+                    Audio.LogError($"[Audio] Load rawfile \"{path}\" error, message: expected JSON, got YAML.");
+                    return null;
+                }
+                var audioRawFile = new AudioRawFile<T>
+                {
+                    Path = handle.GetRawFilePath(),
+                    Content = new T()
+                };
+                Audio.Deserialize(text, audioRawFile.Content);
+                return audioRawFile;
             }
             catch (System.Exception ex)
             {
                 Audio.LogError($"[Audio] Load rawfile \"{path}\" error, message: {ex.Message}");
+                return null;
             }
             finally
             {
                 Audio.Release(path);
             }
-            return audioRawFile;
         }
 
         public void Unload()

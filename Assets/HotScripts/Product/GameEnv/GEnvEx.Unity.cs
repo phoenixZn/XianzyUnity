@@ -33,6 +33,7 @@ namespace Xease
             Services.AddService_SharedPool();
             Services.AddService_Coroutine(Param.UnityHost);
             Services.AddService_Asset();
+            Services.AddService_Audio();
             Services.AddService_GameObjectPools();
             Services.AddService_Input();
             var svcLogic = Services.AddService_CustomLogic();

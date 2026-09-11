@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Xease.Audio
 {
+    /// <summary>
+    /// Bank 配置。.kab 是 JSON 文本：编辑器经 ScriptedImporter 导入，运行时按 RawFile 读取。
+    /// </summary>
     [Serializable]
-    [CreateAssetMenu(menuName = "KAudio/Audio Bank", fileName = "New Audio Bank.kab")]
     public class AudioBankConfig : AudioConfigBase
     {
         public string Name;

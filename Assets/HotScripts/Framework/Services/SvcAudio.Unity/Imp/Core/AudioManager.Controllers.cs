@@ -82,7 +82,7 @@ namespace Xease.Audio
         {
             _audioControllers.RemoveAll(audioController =>
             {
-                if (audioController.GameObject is null)
+                if (audioController.GameObject == null)
                 {
                     return true;
                 }

@@ -20,9 +20,10 @@ namespace Xease.Audio
 
         public static AudioBank Create(string path)
         {
+            var rawFile = AudioRawFile<AudioBankConfig>.Load(path);
             return new AudioBank()
             {
-                Config = AudioRawFile<AudioBankConfig>.Load(path),
+                Config = rawFile != null ? rawFile.Content : null,
             };
         }
         
@@ -37,6 +38,11 @@ namespace Xease.Audio
         {
             if (IsLoaded)
             {
+                return;
+            }
+            if (Config?.AudioEvents is null)
+            {
+                Audio.LogError("[Audio] AudioBank config is invalid, skip clip load.");
                 return;
             }
             foreach (var audioEventConfig in Config.AudioEvents)
@@ -65,22 +71,30 @@ namespace Xease.Audio
 
         public IEnumerator LoadAsync(Action callback = null)
         {
-            if (!IsLoaded)
+            if (IsLoaded)
             {
-                foreach (var audioEventConfig in Config.AudioEvents)
+                callback?.Invoke();
+                yield break;
+            }
+            if (Config?.AudioEvents is null)
+            {
+                Audio.LogError("[Audio] AudioBank config is invalid, skip clip load.");
+                callback?.Invoke();
+                yield break;
+            }
+            foreach (var audioEventConfig in Config.AudioEvents)
+            {
+                foreach (var path in audioEventConfig.Clips)
                 {
-                    foreach (var path in audioEventConfig.Clips)
+                    if (_audioClipAssets.ContainsKey(path))
                     {
-                        if (_audioClipAssets.ContainsKey(path))
-                        {
-                            continue;
-                        }
-                        var audioAsset = new AudioAsset<AudioClip>();
-                        yield return audioAsset.LoadASync(path);
-                        _audioClipAssets.Add(path, audioAsset);
+                        continue;
                     }
-                    _audioEventDict.TryAdd(audioEventConfig.Name, audioEventConfig);
+                    var audioAsset = new AudioAsset<AudioClip>();
+                    yield return audioAsset.LoadASync(path);
+                    _audioClipAssets.Add(path, audioAsset);
                 }
+                _audioEventDict.TryAdd(audioEventConfig.Name, audioEventConfig);
             }
             IsLoaded = true;
             callback?.Invoke();

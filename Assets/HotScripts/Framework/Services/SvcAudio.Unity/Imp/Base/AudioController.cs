@@ -203,7 +203,8 @@ namespace Xease.Audio
 
         public void Update()
         {
-            if (GameObject is null)
+            // Unity 已销毁对象必须用 == null（伪空），is null 仍会当成活引用
+            if (GameObject == null)
             {
                 Recycle();
                 return;
@@ -220,7 +221,7 @@ namespace Xease.Audio
             
             _volume.Update();
             _panning.Update();
-            if (AudioSource is not null)
+            if (AudioSource != null)
             {
                 AudioSource.volume = _volume;
                 AudioSource.panStereo = _panning;
@@ -229,7 +230,7 @@ namespace Xease.Audio
 
         public void Pause()
         {
-            if (AudioSource is null)
+            if (AudioSource == null)
             {
                 return;
             }
@@ -239,7 +240,7 @@ namespace Xease.Audio
         
         public void Resume()
         {
-            if (AudioSource is null)
+            if (AudioSource == null)
             {
                 return;
             }
@@ -249,7 +250,7 @@ namespace Xease.Audio
 
         public void Clear()
         {
-            if (AudioSource is not null)
+            if (AudioSource != null)
             {
                 AudioSource.spatialize = false;
                 AudioSource.transform.position = Vector3.zero;
@@ -261,7 +262,10 @@ namespace Xease.Audio
             }
             AudioEvent = null;
             IsPaused = false;
-            GameObject.SetActive(false);
+            if (GameObject != null)
+            {
+                GameObject.SetActive(false);
+            }
         }
 
         public void Recycle()

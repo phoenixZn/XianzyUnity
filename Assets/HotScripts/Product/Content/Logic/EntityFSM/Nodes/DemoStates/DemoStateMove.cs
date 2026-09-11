@@ -98,6 +98,9 @@ namespace Xease.CoreGame
             _target = _ownerEntity.position + Vector3.up * 2f;
             _moveSpeed *= 2f;
             _ownerEntity.SetQuaternion(_ownerEntity.rotation * Quaternion.Euler(0f, 0f, 45f));
+            
+            var audioEvent = G.Audio.CreateEvent("AudioBankCombat", "bounce");
+            audioEvent.Play();
             return true;
         }
 

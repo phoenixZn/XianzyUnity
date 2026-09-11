@@ -7,20 +7,18 @@ namespace Xease.Audio
 {
     public partial class AudioManager
     {
+        // 存活事件：运行时 Id → 实例
         private readonly Dictionary<int, AudioEvent> _audioEvents = new();
-        private readonly Dictionary<string, AudioEventGroup> _audioEventGroups = new(); 
+        // 按事件名/Tag 统计并发与最小间隔
+        private readonly Dictionary<string, AudioEventGroup> _audioEventGroups = new();
+        // 下一枚事件 Id 种子；实际 Id 避开已占用键
         private int _audioEventId = 0;
 
-        public int NewEventId()
-        {
-            var id = Interlocked.Increment(ref _audioEventId);
-            while (_audioEvents.ContainsKey(id))
-            {
-                id = Interlocked.Increment(ref _audioEventId);
-            }
-            return id;
-        }
-
+        //////////////////////////////////////////////////////////////////////////
+        /// IAudioService:
+        /// <summary>
+        /// 按 Bank 与事件名创建事件实例；失败返回 null。
+        /// </summary>
         public AudioEvent CreateEvent(string bankName, string eventName)
         {
             var bank = GetBank(bankName);
@@ -53,8 +51,80 @@ namespace Xease.Audio
             audioEvent.Awake();
             return audioEvent;
         }
-        
-# if UNITY_EDITOR
+
+        /// <summary>
+        /// 按配置上的 Event 类型名收集当前存活事件。
+        /// </summary>
+        public List<AudioEvent> GetEvents(string eventType)
+        {
+            return _audioEvents.Values.Where(audioEvent => audioEvent.Config.Event == eventType).ToList();
+        }
+
+        /// <summary>
+        /// 按运行时 Id 查找事件；不存在返回 null。
+        /// </summary>
+        public AudioEvent GetEventById(int eventId)
+        {
+            return _audioEvents.TryGetValue(eventId, out var audioEvent) ? audioEvent : null;
+        }
+
+        /// <summary>
+        /// 销毁并回收指定事件。
+        /// </summary>
+        public void DestroyEvent(AudioEvent audioEvent)
+        {
+            if (audioEvent is null)
+            {
+                return;
+            }
+            if (!_audioEvents.ContainsKey(audioEvent.Id))
+            {
+                return;
+            }
+            DecEventGroupCounter(audioEvent.Config);
+            _audioEvents.Remove(audioEvent.Id);
+            audioEvent.Destroy();
+            AudioEventPool.ReleaseEvent(audioEvent);
+        }
+
+        /// <summary>
+        /// 按 Id 销毁事件；不存在则忽略。
+        /// </summary>
+        public void DestroyEvent(int eventId)
+        {
+            GetEventById(eventId)?.Destroy();
+        }
+
+        /// <summary>
+        /// 销毁全部存活事件。
+        /// </summary>
+        public void DestroyAllEvent()
+        {
+            foreach (var audioEvent in _audioEvents.Values.ToList())
+            {
+                DestroyEvent(audioEvent);
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        /// <summary>
+        /// 分配未占用的事件运行时 Id。
+        /// </summary>
+        public int NewEventId()
+        {
+            var id = Interlocked.Increment(ref _audioEventId);
+            while (_audioEvents.ContainsKey(id))
+            {
+                id = Interlocked.Increment(ref _audioEventId);
+            }
+            return id;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// 编辑器预览：不绑 Bank，直接用给定配置创建事件。
+        /// </summary>
         public AudioEvent CreateEvent(AudioEventConfig config)
         {
             var eventType = GetEventType(config.Event);
@@ -74,16 +144,7 @@ namespace Xease.Audio
         }
 #endif
 
-        public List<AudioEvent> GetEvents(string eventType)
-        {
-            return _audioEvents.Values.Where(audioEvent => audioEvent.Config.Event == eventType).ToList();
-        }
-
-        public AudioEvent GetEventById(int eventId)
-        {
-            return _audioEvents.TryGetValue(eventId, out var audioEvent) ? audioEvent : null;
-        }
-
+        // 推进存活事件；失活或异常则销毁
         private void UpdateEvent()
         {
             var audioEventList = _audioEvents.Values.ToList();
@@ -106,35 +167,6 @@ namespace Xease.Audio
             foreach (var kv in _audioEventGroups)
             {
                 kv.Value.Update();
-            }
-        }
-
-        public void DestroyEvent(AudioEvent audioEvent)
-        {
-            if (audioEvent is null)
-            {
-                return;
-            }
-            if (!_audioEvents.ContainsKey(audioEvent.Id))
-            {
-                return;
-            }
-            DecEventGroupCounter(audioEvent.Config);
-            _audioEvents.Remove(audioEvent.Id);
-            audioEvent.Destroy();
-            AudioEventPool.ReleaseEvent(audioEvent);
-        }
-
-        public void DestroyEvent(int eventId)
-        {
-            GetEventById(eventId)?.Destroy();
-        }
-
-        public void DestroyAllEvent()
-        {
-            foreach (var audioEvent in _audioEvents.Values.ToList())
-            {
-                DestroyEvent(audioEvent);
             }
         }
 

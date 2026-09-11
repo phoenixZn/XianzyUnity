@@ -50,6 +50,19 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+    - GroupName: Other
+      GroupDesc: 
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/HotAssets/Demo/Audio/Config
+        CollectorGUID: 624c95e403b2d6e4a82e4529a4c6b145
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
   - PackageName: PackDemoAsset
     PackageDesc: "\u8D44\u4EA7\u5305"
     EnableAddressable: 1
@@ -117,6 +130,19 @@ MonoBehaviour:
       Collectors:
       - CollectPath: Assets/HotAssets/Demo/Scenes
         CollectorGUID: a99cd3f7d9f0e8947a59fdfb32115f9d
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+    - GroupName: Audio
+      GroupDesc: 
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/HotAssets/Demo/Audio/Res
+        CollectorGUID: c5d4734106b17684598970df51e6ae40
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory

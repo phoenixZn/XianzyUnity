@@ -1,0 +1,1 @@
+{"Name":"AudioBankMusic","AudioEvents":[{"Name":"bounce","TagName":"","Desc":"bounce","Event":"AudioEventCombat","Clips":["sfx_general_bounce_1"],"Volume":1.0,"MaxStack":3,"MinInterval":0.1,"PitchShift":0.0,"CanClean":true,"CanPause":true}],"name":"AudioBankMusic","hideFlags":8}

@@ -5,10 +5,82 @@ namespace Xease.Audio
 {
     public partial class AudioManager
     {
+        // 全局 Mixer 资源句柄
         private AudioAsset<AudioMixer> _mixer;
+        // Mixer 路径 → Track
         public readonly Dictionary<string, AudioTrack> _mixerTracks = new();
 
-        public void InitTrack()
+        //////////////////////////////////////////////////////////////////////////
+        /// IAudioService:
+        /// <summary>
+        /// 按 Mixer 路径取 Track；未注册返回 null。
+        /// </summary>
+        public AudioTrack GetTrack(string trackName)
+        {
+            if (trackName is null)
+            {
+                return null;
+            }
+            if (_mixerTracks.TryGetValue(trackName, out var track))
+            {
+                return track;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 过渡到 Mixer Snapshot。
+        /// </summary>
+        public void MixerToSnapshot(string trackName, float time)
+        {
+            var snapshot = _mixer.Asset.FindSnapshot(trackName);
+            if (snapshot != null)
+            {
+                snapshot.TransitionTo(time);
+            }
+        }
+
+        /// <summary>
+        /// 静音指定 Track。
+        /// </summary>
+        public void Mute(string trackName)
+        {
+            GetTrack(trackName)?.SetMute(true);
+        }
+
+        /// <summary>
+        /// 取消静音指定 Track。
+        /// </summary>
+        public void UnMute(string trackName)
+        {
+            GetTrack(trackName)?.SetMute(false);
+        }
+
+        /// <summary>
+        /// 静音全部已注册 Track。
+        /// </summary>
+        public void MuteAll()
+        {
+            foreach (var track in _mixerTracks.Values)
+            {
+                track.SetMute(true);
+            }
+        }
+
+        /// <summary>
+        /// 取消静音全部已注册 Track。
+        /// </summary>
+        public void UnMuteAll()
+        {
+            foreach (var track in _mixerTracks.Values)
+            {
+                track.SetMute(false);
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        private void InitTrack()
         {
             _mixerTracks.Clear();
             _mixer = AudioAsset<AudioMixer>.Load("GlobalMixer");
@@ -37,7 +109,7 @@ namespace Xease.Audio
             // MixerToSnapshot("Normal", 0);
         }
 
-        public void DisposeTrack()
+        private void DisposeTrack()
         {
             _mixerTracks.Clear();
             _mixer?.Unload();
@@ -59,54 +131,6 @@ namespace Xease.Audio
             var track = new AudioTrack(_mixer, path);
             _mixerTracks.Add(path, track);
             track.SetVolume(1f);
-        }
-
-        public AudioTrack GetTrack(string trackName)
-        {
-            if (trackName is null)
-            {
-                return null;
-            }
-            if (_mixerTracks.TryGetValue(trackName, out var track))
-            {
-                return track;
-            }
-            return null;
-        }
-
-        public void MixerToSnapshot(string trackName, float time)
-        {
-            var snapshot = _mixer.Asset.FindSnapshot(trackName);
-            if (snapshot != null)
-            {
-                snapshot.TransitionTo(time);
-            }
-        }
-        
-        public void Mute(string trackName)
-        {
-            GetTrack(trackName)?.SetMute(true);
-        }
-
-        public void UnMute(string trackName)
-        {
-            GetTrack(trackName)?.SetMute(false);
-        }
-
-        public void MuteAll()
-        {
-            foreach (var track in _mixerTracks.Values)
-            {
-                track.SetMute(true);
-            }
-        }
-
-        public void UnMuteAll()
-        {
-            foreach (var track in _mixerTracks.Values)
-            {
-                track.SetMute(false);
-            }
         }
     }
 }

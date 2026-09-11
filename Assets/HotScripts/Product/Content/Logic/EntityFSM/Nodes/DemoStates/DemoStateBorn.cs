@@ -44,6 +44,8 @@ namespace Xease.CoreGame
             //_ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetCube);
             _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetCube);
             _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetSphere);
+            
+            G.Audio.Play("AudioBankCombat", "bounce");
         }
 
         /// <summary>
