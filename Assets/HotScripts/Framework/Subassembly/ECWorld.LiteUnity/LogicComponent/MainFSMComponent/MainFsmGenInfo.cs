@@ -24,17 +24,17 @@ namespace Xease.CoreGame
         internal void Init(MetaWorld metaWorld, LogicEntity ownerEntity)
         {
             if (metaWorld == null)
-                KLogger.LogError("MainFsmGenInfo Init 异常, MetaWorld 为空");
+                G.LogError("MainFsmGenInfo Init 异常, MetaWorld 为空");
             if (ownerEntity == null)
-                KLogger.LogError("MainFsmGenInfo Init 异常, OwnerEntity 为空");
+                G.LogError("MainFsmGenInfo Init 异常, OwnerEntity 为空");
 
             var logicWorld = ownerEntity.OwnerWorld;
             if (logicWorld == null)
-                KLogger.LogError("MainFsmGenInfo Init 异常, LogicWorld 为空");
+                G.LogError("MainFsmGenInfo Init 异常, LogicWorld 为空");
 
             var ownerFighterEntityID = ownerEntity.ID;
             if (ownerFighterEntityID == 0)
-                KLogger.LogError("MainFsmGenInfo Init 异常, OwnerFighterEntityID 为 0");
+                G.LogError("MainFsmGenInfo Init 异常, OwnerFighterEntityID 为 0");
 
             LogicWorld = logicWorld;
             MetaWorld = metaWorld;

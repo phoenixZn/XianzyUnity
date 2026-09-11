@@ -176,7 +176,7 @@ public partial class LogicEntityDebugger : MonoBehaviour, IVarEnvFriend
         var entity = logicWorld.GetEntityWithUnityObjectRelated(gameObject.GetInstanceID());
         if (entity == null)
         {
-            KLogger.LogError($"LogicEntityDebugger 未找到关联 LogicEntity: {gameObject.name}");
+            G.LogError($"LogicEntityDebugger 未找到关联 LogicEntity: {gameObject.name}");
             return;
         }
 

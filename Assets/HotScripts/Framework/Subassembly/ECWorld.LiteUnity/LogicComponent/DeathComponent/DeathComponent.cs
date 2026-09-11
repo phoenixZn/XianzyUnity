@@ -21,7 +21,7 @@ namespace Xease.CoreGame
         {
             if (hasComDeath)
             {
-                KLogger.LogError($"AddComDeath already hasComDeath!");
+                WLogger.LogError($"AddComDeath already hasComDeath!");
                 return;
             }
             var index = LogicComponentsLookup.ComDeath;

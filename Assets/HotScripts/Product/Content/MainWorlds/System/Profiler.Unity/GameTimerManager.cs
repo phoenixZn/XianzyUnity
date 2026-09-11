@@ -79,7 +79,7 @@ namespace Xease.CoreGame.Debug
         {
             if (cb == null)
             {
-                KLogger.LogError($"[GameTimerManager] callback should not be null");
+                G.LogError($"[GameTimerManager] callback should not be null");
                 return -1;
             }
             
@@ -176,7 +176,7 @@ namespace Xease.CoreGame.Debug
                     }
                     catch (Exception ex)
                     {
-                        KLogger.LogError($"[GameTimerManager] Timer ID = {timer.id} callback exception: {ex}");
+                        G.LogError($"[GameTimerManager] Timer ID = {timer.id} callback exception: {ex}");
                     }
                     
                     if (timer.times > 0 && timer.curTimes >= timer.times)
