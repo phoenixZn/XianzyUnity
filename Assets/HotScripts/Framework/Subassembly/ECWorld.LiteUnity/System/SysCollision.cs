@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using Entitas;
+
+namespace Xease.CoreGame
+{
+    public class SysCollision : IFixedUpdateSystem
+    {
+        private readonly IGroup<LogicEntity> group;
+        private readonly MetaWorld _metaWorld;
+
+        private readonly List<LogicEntity> _entityBuffer = new(256);
+        private int _entityBufferVersion = -1;
+
+        public SysCollision(ECWorlds world)
+        {
+            _metaWorld = world.MetaWorld;
+            group = world.LogicWorld.GetGroup(LogicMatcher.AllOf(LogicComponentsLookup.ComCollider, LogicComponentsLookup.ComTransform));
+        }
+
+        public void FixedUpdate(float dt, float dt_unscaled)
+        {
+            var buffer = group.GetEntities(_entityBuffer, ref _entityBufferVersion);
+            foreach (var entity in buffer)
+            {
+                if (!entity.comCollider.isActive)
+                {
+                    continue;
+                }
+                var handler = entity.comCollider.handler;
+                if (handler.CheckRawHits(entity, dt))
+                {
+                    handler.HandleRawHits(entity, handler.RawHitMaker.RawHits, dt);
+                }
+                handler.Cleanup();
+            }
+        }
+    }
+}
