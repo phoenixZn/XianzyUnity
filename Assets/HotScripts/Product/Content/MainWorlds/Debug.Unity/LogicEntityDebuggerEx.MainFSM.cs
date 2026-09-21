@@ -6,10 +6,11 @@
 // //
 // // 【与 AI 段差异】AI 手动指定 CvKey；本段通过 IVarEnvFriend 友元 API 自动枚举全部可读黑板变量。
 // //
-// using Xease.CoreGame;
 // using Sirenix.OdinInspector;
 // using UnityEngine;
 //
+// namespace Xease.CoreGame.Debug
+// {
 // public partial class LogicEntityDebugger
 // {
 //     [BoxGroup("[MainFSMComponent]")]
@@ -58,4 +59,5 @@
 //         CV_TargetPos = Vector3.zero;
 //         MainFsmVarEnvPanel.ClearDisplay();
 //     }
+// }
 // }

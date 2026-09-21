@@ -1,0 +1,15 @@
+{
+  "platform": 2,
+  "scoreRules": [
+    { "matchItems": [{ "sourceType": 0, "matchString": "RTX|RX\\\\s*6|Radeon\\\\s*RX" }], "score": 700 },
+    { "matchItems": [{ "sourceType": 0, "matchString": "GTX\\\\s*1[0-2]|RX\\\\s*5" }], "score": 500 },
+    { "matchItems": [{ "sourceType": 0, "matchString": "Intel|UHD|Iris" }], "score": 200 },
+    { "matchItems": [{ "sourceType": 0, "matchString": ".+" }], "score": 100 }
+  ],
+  "tierConfigs": [
+    { "tierName": "Tier1", "maxScore": 9999, "baseTierName": "", "recommendedFps": 120, "switches": { } },
+    { "tierName": "Tier2", "maxScore": 600, "baseTierName": "Tier1", "recommendedFps": 60, "switches": {  } },
+    { "tierName": "Tier3", "maxScore": 400, "baseTierName": "Tier2", "recommendedFps": 30, "switches": { "overridePostProcessEnabled": true, "postProcessEnabled": false } },
+    { "tierName": "Tier4", "maxScore": 200, "baseTierName": "Tier3", "recommendedFps": 30, "switches": { "overrideShadowEnabled": true, "shadowEnabled": false ,"overrideShaderTier": true, "shaderTier": 0, "overrideOutlineEnabled": true, "outlineEnabled": false, "overrideVisualEffectLOD": true, "visualEffectLOD": 1 } }
+  ]
+}

@@ -20,181 +20,182 @@
 //
 using System;
 using Entitas;
-using Xease;
-using Xease.CoreGame;
 using UnityEngine;
 
-public partial class LogicEntityDebugger : MonoBehaviour, IVarEnvFriend
+namespace Xease.CoreGame.Debug
 {
-    LogicEntity _entity;
-    bool _applicationIsQuitting;
-
-    public LogicEntity Entity { get { return _entity; } }
-
-    [Header("基础信息")]
-    [SerializeField] int EntityID;
-    [SerializeField] int GoInstanceID;
-    
-    //////////////////////////////////////////////////////////////////////////
-    // MonoBehaviour:
-
-    void Start()
+    public partial class LogicEntityDebugger : MonoBehaviour, IVarEnvFriend
     {
-        GoInstanceID = gameObject.GetInstanceID();
-        if (_entity != null)
+        LogicEntity _entity;
+        bool _applicationIsQuitting;
+
+        public LogicEntity Entity { get { return _entity; } }
+
+        [Header("基础信息")]
+        [SerializeField] int EntityID;
+        [SerializeField] int GoInstanceID;
+        
+        //////////////////////////////////////////////////////////////////////////
+        // MonoBehaviour:
+
+        void Start()
         {
-            return;
+            GoInstanceID = gameObject.GetInstanceID();
+            if (_entity != null)
+            {
+                return;
+            }
+            LogicWorld logicWorld = GetLogicWorld();
+            if (logicWorld == null)
+            {
+                G.LogError("LogicEntityDebugger logicWorld == null");
+                return;
+            }
+            TryAutoLinkFromGameObject(logicWorld);
         }
-        LogicWorld logicWorld = GetLogicWorld();
-        if (logicWorld == null)
+
+        protected virtual LogicWorld GetLogicWorld()
         {
-            G.LogError("LogicEntityDebugger logicWorld == null");
-            return;
+            var modMainWorld = G.Module<ModuleWorlds>();
+            var w = modMainWorld?.MainWorld;
+            if (w == null)
+            {
+                return null;
+            }
+            return w.LogicWorld;
         }
-        TryAutoLinkFromGameObject(logicWorld);
-    }
 
-    protected virtual LogicWorld GetLogicWorld()
-    {
-        var modMainWorld = G.Module<ModuleWorlds>();
-        var w = modMainWorld?.MainWorld;
-        if (w == null)
+        void Update()
         {
-            return null;
+            if (!IsLinkedEntityValid())
+            {
+                return;
+            }
+            RefreshBasicInfo();
+            UpdateComData();
         }
-        return w.LogicWorld;
-    }
 
-    void Update()
-    {
-        if (!IsLinkedEntityValid())
+        void OnApplicationQuit()
         {
-            return;
+            _applicationIsQuitting = true;
         }
-        RefreshBasicInfo();
-        UpdateComData();
-    }
 
-    void OnApplicationQuit()
-    {
-        _applicationIsQuitting = true;
-    }
-
-    void OnDestroy()
-    {
-        if (!_applicationIsQuitting && _entity != null)
+        void OnDestroy()
         {
-            Debug.LogWarning("LogicEntityDebugger got destroyed but is still linked to " + _entity + "!\n" +
-                             "Please call Unlink() or DetachFromGameObject() before it is destroyed."
-            );
+            if (!_applicationIsQuitting && _entity != null)
+            {
+                G.LogWarning("LogicEntityDebugger got destroyed but is still linked to " + _entity + "!\n" +
+                                 "Please call Unlink() or DetachFromGameObject() before it is destroyed."
+                );
+                ReleaseEntityLink();
+            }
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!IsLinkedEntityValid())
+            {
+                return;
+            }
+            DrawDebugGizmos();
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        // Link / Detach:
+        public void Link(LogicEntity entity)
+        {
+            if (_entity != null)
+            {
+                throw new Exception($"LogicEntityDebugger is already linked to {_entity}");
+            }
+            _entity = entity;
+            _entity.OnDestroyEntity += OnLinkedEntityDestroy;
+            _entity.Retain(this);
+        }
+
+        public void Unlink()
+        {
+            if (_entity == null)
+            {
+                throw new Exception("LogicEntityDebugger is already unlinked!");
+            }
             ReleaseEntityLink();
         }
-    }
+        
+        // 解除 Retain 并取消 OnDestroyEntity 订阅；可重复调用
+        void ReleaseEntityLink()
+        {
+            if (_entity == null)
+            {
+                return;
+            }
+            _entity.OnDestroyEntity -= OnLinkedEntityDestroy;
+            _entity.Release(this);
+            _entity = null;
+        }
+        
+        void OnLinkedEntityDestroy(IEntity entity)
+        {
+            DetachAndDestroyComponent();    //保底机制
+        }    
 
-    void OnDrawGizmos()
-    {
-        if (!IsLinkedEntityValid())
+        /////////////////////////// For Pool ////////////////////////////////////////
+        /// <summary>
+        /// View 回对象池前调用：解除 Entity 引用并同步移除组件，避免 Debugger 随池化实例残留。
+        /// </summary>
+        public static void DetachFromGameObject(GameObject gameObject)
         {
-            return;
-        }
-        DrawDebugGizmos();
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // Link / Detach:
-    public void Link(LogicEntity entity)
-    {
-        if (_entity != null)
-        {
-            throw new Exception($"LogicEntityDebugger is already linked to {_entity}");
-        }
-        _entity = entity;
-        _entity.OnDestroyEntity += OnLinkedEntityDestroy;
-        _entity.Retain(this);
-    }
-
-    public void Unlink()
-    {
-        if (_entity == null)
-        {
-            throw new Exception("LogicEntityDebugger is already unlinked!");
-        }
-        ReleaseEntityLink();
-    }
-    
-    // 解除 Retain 并取消 OnDestroyEntity 订阅；可重复调用
-    void ReleaseEntityLink()
-    {
-        if (_entity == null)
-        {
-            return;
-        }
-        _entity.OnDestroyEntity -= OnLinkedEntityDestroy;
-        _entity.Release(this);
-        _entity = null;
-    }
-    
-    void OnLinkedEntityDestroy(IEntity entity)
-    {
-        DetachAndDestroyComponent();    //保底机制
-    }    
-
-    /////////////////////////// For Pool ////////////////////////////////////////
-    /// <summary>
-    /// View 回对象池前调用：解除 Entity 引用并同步移除组件，避免 Debugger 随池化实例残留。
-    /// </summary>
-    public static void DetachFromGameObject(GameObject gameObject)
-    {
-        if (gameObject == null)
-        {
-            return;
-        }
-        var debugger = gameObject.GetComponent<LogicEntityDebugger>();
-        if (debugger == null)
-        {
-            return;
-        }
-        debugger.DetachAndDestroyComponent();
-    }
-
-    // 入池/Entity 销毁时须同步移除，Destroy 延迟到帧末会导致组件仍随实例进池
-    void DetachAndDestroyComponent()
-    {
-        ReleaseEntityLink();
-        DestroyImmediate(this);
-    }
-    
-    
-    // 按挂载 GameObject 的 InstanceID 查找 UnityObjectRelated 并关联 LogicEntity
-    void TryAutoLinkFromGameObject(LogicWorld logicWorld)
-    {
-        if (_entity != null || logicWorld == null)
-        {
-            return;
+            if (gameObject == null)
+            {
+                return;
+            }
+            var debugger = gameObject.GetComponent<LogicEntityDebugger>();
+            if (debugger == null)
+            {
+                return;
+            }
+            debugger.DetachAndDestroyComponent();
         }
 
-        var entity = logicWorld.GetEntityWithUnityObjectRelated(gameObject.GetInstanceID());
-        if (entity == null)
+        // 入池/Entity 销毁时须同步移除，Destroy 延迟到帧末会导致组件仍随实例进池
+        void DetachAndDestroyComponent()
         {
-            G.LogError($"LogicEntityDebugger 未找到关联 LogicEntity: {gameObject.name}");
-            return;
+            ReleaseEntityLink();
+            DestroyImmediate(this);
+        }
+        
+        
+        // 按挂载 GameObject 的 InstanceID 查找 UnityObjectRelated 并关联 LogicEntity
+        void TryAutoLinkFromGameObject(LogicWorld logicWorld)
+        {
+            if (_entity != null || logicWorld == null)
+            {
+                return;
+            }
+
+            var entity = logicWorld.GetEntityWithUnityObjectRelated(gameObject.GetInstanceID());
+            if (entity == null)
+            {
+                G.LogError($"LogicEntityDebugger 未找到关联 LogicEntity: {gameObject.name}");
+                return;
+            }
+
+            Link(entity);
         }
 
-        Link(entity);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // Display: 基础信息
-    void RefreshBasicInfo()
-    {
-        if (_entity.hasComID)
+        //////////////////////////////////////////////////////////////////////////
+        // Display: 基础信息
+        void RefreshBasicInfo()
         {
-            EntityID = (int)_entity.ID;
+            if (_entity.hasComID)
+            {
+                EntityID = (int)_entity.ID;
+            }
         }
-    }
 
-    bool IsLinkedEntityValid()
-    {
-        return _entity != null && _entity.isEnabled;
+        bool IsLinkedEntityValid()
+        {
+            return _entity != null && _entity.isEnabled;
+        }
     }
 }

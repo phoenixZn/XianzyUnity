@@ -10,10 +10,11 @@
 // //   2. 在 UpdateComData_ComAI() 中 ReadVar 写入字段。
 // //   3. 若需 Gizmos：扩展 DrawGizmos_ComAI()，并在 LogicEntityDebuggerEx.cs 的 DrawDebugGizmos() 中确认已调用。
 // //
-// using Xease.CoreGame;
 // using Sirenix.OdinInspector;
 // using UnityEngine;
 //
+// namespace Xease.CoreGame.Debug
+// {
 // public partial class LogicEntityDebugger
 // {
 //     [BoxGroup("[AIComponent]")]
@@ -58,4 +59,5 @@
 //         Gizmos.DrawLine(ComPos, CV_MarchTargetPos);
 //         Gizmos.DrawSphere(CV_MarchTargetPos, 0.25f);
 //     }
+// }
 // }

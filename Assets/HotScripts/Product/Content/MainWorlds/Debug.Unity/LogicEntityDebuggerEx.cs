@@ -30,51 +30,53 @@
 //   - UpdateComData 与 Header 一一对应：UpdateComData_ComTransform ↔ [Header("TransformComponent")]
 //   - Gizmos 同理：DrawGizmos_ComAI ↔ AIComponent 段
 //
-using Xease.CoreGame;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-public partial class LogicEntityDebugger
+namespace Xease.CoreGame.Debug
 {
-    [BoxGroup("[TransformComponent]")]
-    [SerializeField] Vector3 ComPos;
-    private Vector3 lastPos;
-
-    
-    //////////////////////////////////////////////////////////////////////////
-    // UpdateData Display:
-    //////////////////////////////////////////////////////////////////////////
-
-    void UpdateComData()
+    public partial class LogicEntityDebugger
     {
-        UpdateComData_ComTransform();
-        // UpdateComData_ComAI();
-        // UpdateComData_ComBuffCenter();
-        // UpdateComData_ComFSM();
-    }
-    
-    // [Header("TransformComponent")]
-    void UpdateComData_ComTransform()
-    {
-        if (!_entity.hasComTransform)
+        [BoxGroup("[TransformComponent]")]
+        [SerializeField] Vector3 ComPos;
+        private Vector3 lastPos;
+
+        
+        //////////////////////////////////////////////////////////////////////////
+        // UpdateData Display:
+        //////////////////////////////////////////////////////////////////////////
+
+        void UpdateComData()
         {
-            return;
+            UpdateComData_ComTransform();
+            // UpdateComData_ComAI();
+            // UpdateComData_ComBuffCenter();
+            // UpdateComData_ComFSM();
+        }
+        
+        // [Header("TransformComponent")]
+        void UpdateComData_ComTransform()
+        {
+            if (!_entity.hasComTransform)
+            {
+                return;
+            }
+
+            if (lastPos != ComPos && lastPos != Vector3.zero)
+            {
+                G.LogWarning($"LogicEntityDebugger 篡改ComTransform lastPos={lastPos}, ComPos={ComPos}");
+                _entity.SetPosition(ComPos);
+            }
+            ComPos = _entity.comTransform.position;
+            lastPos = ComPos;
         }
 
-        if (lastPos != ComPos && lastPos != Vector3.zero)
+        //////////////////////////////////////////////////////////////////////////
+        // Gizmos:
+        //////////////////////////////////////////////////////////////////////////
+        void DrawDebugGizmos()
         {
-            KLogger.LogWarning($"LogicEntityDebugger 篡改ComTransform lastPos={lastPos}, ComPos={ComPos}");
-            _entity.SetPosition(ComPos);
+            //DrawGizmos_ComAI();
         }
-        ComPos = _entity.comTransform.position;
-        lastPos = ComPos;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // Gizmos:
-    //////////////////////////////////////////////////////////////////////////
-    void DrawDebugGizmos()
-    {
-        //DrawGizmos_ComAI();
     }
 }

@@ -63,6 +63,14 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
+      - CollectPath: Assets/HotAssets/Config/Engine
+        CollectorGUID: d2e7fdc777335ce4dacf49b4c0d3bb2f
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
   - PackageName: PackDemoAsset
     PackageDesc: "\u8D44\u4EA7\u5305"
     EnableAddressable: 1

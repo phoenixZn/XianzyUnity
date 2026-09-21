@@ -6,10 +6,11 @@
 // //   3. DebugRemoveAllBuffs() — Inspector 按钮（Stretch=false），调用 RemoveAllBuffs()
 // //
 // using System.Collections.Generic;
-// using Xease.CoreGame;
 // using Sirenix.OdinInspector;
 // using UnityEngine;
 //
+// namespace Xease.CoreGame.Debug
+// {
 // public partial class LogicEntityDebugger
 // {
 //     [BoxGroup("[BuffCenterComponent]")]
@@ -88,4 +89,5 @@
 //
 //         return true;
 //     }
+// }
 // }

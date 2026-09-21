@@ -41,7 +41,7 @@ namespace Xease.CoreGame
             OwnerEntity = ownerEntity;
             // OwnerPlayerInfo = ownerEntity.GetPlayerInfo();
             // if (OwnerPlayerInfo == null)
-            //     KLogger.LogError("MainFsmGenInfo Init 异常, ownerEntity.GetPlayerInfo() 为空 (推导获取失败)");
+            //     G.LogError("MainFsmGenInfo Init 异常, ownerEntity.GetPlayerInfo() 为空 (推导获取失败)");
         }
 
         /// <summary>

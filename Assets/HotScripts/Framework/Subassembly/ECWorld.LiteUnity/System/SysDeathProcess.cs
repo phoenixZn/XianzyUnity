@@ -63,7 +63,7 @@ namespace Xease.CoreGame
             }
             else
             {
-                UnityEngine.Debug.LogWarning("SysDeathProcess DoDestroy !entity.isEnabled");
+                WLogger.LogWarning("SysDeathProcess DoDestroy !entity.isEnabled");
             }
         }
 

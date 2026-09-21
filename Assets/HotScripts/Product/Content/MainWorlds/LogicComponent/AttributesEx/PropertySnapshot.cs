@@ -156,7 +156,7 @@ namespace Xease.CoreGame
             //     var playerInfo = e.GetPlayerInfo();
             //     if (playerInfo == null)
             //     {
-            //         //KLogger.LogError("叠加 玩家身上记录的集体生效的分类属性 playerInfo == null");
+            //         //G.LogError("叠加 玩家身上记录的集体生效的分类属性 playerInfo == null");
             //         return;
             //     }
             //     
