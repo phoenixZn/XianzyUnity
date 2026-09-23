@@ -1,8 +1,8 @@
 {
   "platform": 2,
   "scoreRules": [
-    { "matchItems": [{ "sourceType": 0, "matchString": "RTX|RX\\\\s*6|Radeon\\\\s*RX" }], "score": 700 },
-    { "matchItems": [{ "sourceType": 0, "matchString": "GTX\\\\s*1[0-2]|RX\\\\s*5" }], "score": 500 },
+    { "matchItems": [{ "sourceType": 0, "matchString": "RTX|RX\\s*6|Radeon\\s*RX" }], "score": 700 },
+    { "matchItems": [{ "sourceType": 0, "matchString": "GTX\\s*1[0-2]|RX\\s*5" }], "score": 500 },
     { "matchItems": [{ "sourceType": 0, "matchString": "Intel|UHD|Iris" }], "score": 200 },
     { "matchItems": [{ "sourceType": 0, "matchString": ".+" }], "score": 100 }
   ],
