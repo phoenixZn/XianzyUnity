@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 601db1d23977ad84d8bc199e31ec7051, type: 3}
+  m_Name: VfxScanBudgetConfig
+  m_EditorClassIdentifier: 
+  budgets:
+  - type: 0
+    displayName: "\u9ED8\u8BA4"
+    matchingLabel: 
+    maxDerivedParticles: 100
+    maxDerivedParticlesError: 160
+    maxParticlesRedundancyRatio: 2
+    maxParticlesRedundancyAbsMin: 64
+    maxMeshTriangles: 100
+    maxMeshTrianglesError: 300
+    forbidCollision: 1
+    forbidTrigger: 1
+    forbidLights: 1
+    warnNoise: 1
+    warnSubEmitters: 1
+    warnWorldSpace: 0
+    maxMaterialCount: 5
+    maxMaterialCountError: 8
+    maxTextureSize: 512
+    maxTextureSizeError: 1024
+    requirePot: 1
+    forbidUncompressedTexture: 1
+    mipmapPolicy: 2
+    maxHierarchyDepth: 6
+    maxHierarchyDepthError: 10
+    maxNodeCount: 25
+    maxNodeCountError: 50
+  - type: 1
+    displayName: "UI \u7279\u6548"
+    matchingLabel: VFX_UI
+    maxDerivedParticles: 40
+    maxDerivedParticlesError: 80
+    maxParticlesRedundancyRatio: 2
+    maxParticlesRedundancyAbsMin: 64
+    maxMeshTriangles: 100
+    maxMeshTrianglesError: 300
+    forbidCollision: 1
+    forbidTrigger: 1
+    forbidLights: 1
+    warnNoise: 1
+    warnSubEmitters: 1
+    warnWorldSpace: 1
+    maxMaterialCount: 2
+    maxMaterialCountError: 4
+    maxTextureSize: 256
+    maxTextureSizeError: 512
+    requirePot: 1
+    forbidUncompressedTexture: 1
+    mipmapPolicy: 1
+    maxHierarchyDepth: 6
+    maxHierarchyDepthError: 10
+    maxNodeCount: 16
+    maxNodeCountError: 32
+  - type: 2
+    displayName: "\u7EC8\u6781\u6280\u80FD"
+    matchingLabel: VFX_Ultimate
+    maxDerivedParticles: 200
+    maxDerivedParticlesError: 300
+    maxParticlesRedundancyRatio: 2
+    maxParticlesRedundancyAbsMin: 64
+    maxMeshTriangles: 500
+    maxMeshTrianglesError: 1000
+    forbidCollision: 0
+    forbidTrigger: 1
+    forbidLights: 1
+    warnNoise: 1
+    warnSubEmitters: 1
+    warnWorldSpace: 0
+    maxMaterialCount: 8
+    maxMaterialCountError: 12
+    maxTextureSize: 512
+    maxTextureSizeError: 1024
+    requirePot: 1
+    forbidUncompressedTexture: 1
+    mipmapPolicy: 2
+    maxHierarchyDepth: 6
+    maxHierarchyDepthError: 10
+    maxNodeCount: 20
+    maxNodeCountError: 40
+  - type: 4
+    displayName: "\u573A\u666F\u5E38\u9A7B"
+    matchingLabel: VFX_Scene
+    maxDerivedParticles: 50
+    maxDerivedParticlesError: 100
+    maxParticlesRedundancyRatio: 2
+    maxParticlesRedundancyAbsMin: 64
+    maxMeshTriangles: 100
+    maxMeshTrianglesError: 300
+    forbidCollision: 1
+    forbidTrigger: 1
+    forbidLights: 1
+    warnNoise: 1
+    warnSubEmitters: 1
+    warnWorldSpace: 1
+    maxMaterialCount: 2
+    maxMaterialCountError: 4
+    maxTextureSize: 512
+    maxTextureSizeError: 1024
+    requirePot: 1
+    forbidUncompressedTexture: 1
+    mipmapPolicy: 2
+    maxHierarchyDepth: 6
+    maxHierarchyDepthError: 10
+    maxNodeCount: 20
+    maxNodeCountError: 40
