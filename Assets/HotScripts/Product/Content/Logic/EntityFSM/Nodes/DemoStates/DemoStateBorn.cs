@@ -12,7 +12,7 @@ namespace Xease.CoreGame
     {
         // YooAsset location；DemoModeLoading 预热与 Born 加载共用
         internal const string DemoViewAssetCube = "ActorCube";
-        internal const string DemoViewAssetSphere = "ActorSphere";
+        internal const string DemoViewAssetSphere = "Bats-T";//"ActorSphere";
 #if !CONSOLE_CLIENT
         // ActorCube 上用于挂载 Sphere 的挂点名（与生成表一致）
         private const string CubeHeadPoint = "Head";
