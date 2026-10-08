@@ -33,9 +33,9 @@ namespace Xease.CoreGame
             CancelPrewarm();
             _prewarmDone = false;
 
-            if (G.GameObjectPool_Battle == null)
+            if (G.GOPool == null)
             {
-                this.LogError("DemoModeLoading GameObjectPool_Battle is null");
+                this.LogError("DemoModeLoading GOPool is null");
                 _prewarmDone = true;
                 return;
             }
@@ -49,7 +49,7 @@ namespace Xease.CoreGame
         {
             try
             {
-                var pool = G.GameObjectPool_Battle;
+                var pool = G.GOPool;
                 if (pool == null)
                 {
                     _prewarmDone = true;

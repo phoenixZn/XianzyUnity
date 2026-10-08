@@ -12,7 +12,7 @@ namespace Xease.CoreGame
     {
         /*
          加载策略：G.Asset.LoadAssetAsync 缓存回调，IsDone 时同步 Invoke 再 Rent；未完成才挂 Completed。
-         释放时 Return 到 GameObjectPool_Battle。AssetLocation / Instance 不进入 IViewAcquirable。
+         释放时 Return 到 GOPool。AssetLocation / Instance 不进入 IViewAcquirable。
          同实例连载 last-wins：退订旧 handle，仅当前 pending 落地并回调。
         */
         private string _assetLocation;
@@ -93,7 +93,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            if (G.GameObjectPool_Battle == null)
+            if (G.GOPool == null)
             {
                 WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
                 CancelPendingAcquire(notifyFailure: false);
@@ -134,7 +134,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            if (G.GameObjectPool_Battle == null)
+            if (G.GOPool == null)
             {
                 WLogger.LogError($"PooledAssetViewWrapper pool missing: {_assetLocation}");
                 InvokePendingCompleted(false);
@@ -156,7 +156,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            var instance = G.GameObjectPool_Battle.Rent(prefab);
+            var instance = G.GOPool.Rent(prefab);
             if (instance == null)
             {
                 WLogger.LogError($"PooledAssetViewWrapper rent failed: {_assetLocation}");
@@ -205,8 +205,8 @@ namespace Xease.CoreGame
             if (_instance == null)
                 return;
 
-            if (G.GameObjectPool_Battle != null)
-                G.GameObjectPool_Battle.Return(_instance);
+            if (G.GOPool != null)
+                G.GOPool.Return(_instance);
             else
                 Object.Destroy(_instance);
 

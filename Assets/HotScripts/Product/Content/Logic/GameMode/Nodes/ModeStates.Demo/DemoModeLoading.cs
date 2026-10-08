@@ -1,7 +1,7 @@
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo Loading：经 GameObjectPool_Battle 预热 Born 所用 Cube/Sphere，完成后再进入 InitGame。
+    /// Demo Loading：经 GOPool 预热 Born 所用 Cube/Sphere，完成后再进入 InitGame。
     /// </summary>
     public partial class DemoModeLoading : CustomBhvState
     {

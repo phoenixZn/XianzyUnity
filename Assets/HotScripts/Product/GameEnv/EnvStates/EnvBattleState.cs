@@ -1,3 +1,5 @@
+using Xease.CoreGame;
+
 namespace Xease
 {
     public class EnvBattleState : EnvStateBase, IEnvUpdate
@@ -5,16 +7,45 @@ namespace Xease
         public override void Enter(EnvStateBase fromState)
         {
             base.Enter(fromState);
+
+            var modMainWorld = G.Module<ModuleWorlds>();
+            if (modMainWorld.MainWorld != null)
+            {
+                G.LogError("EnvBattleState.Enter modMainWorld.MainWorld != null");
+                modMainWorld.DestroyGameWorld();
+            }
+            
+            //worldInfo 静态配置部分
+            var worldInfo = modMainWorld.WorldsConfig.Get("MainWorldTest");
+            if (worldInfo == null)
+            {
+                G.LogError("EnvBattleState.Enter WorldsConfig Get worldInfo == null");
+                return;
+            }
+            //TODO：worldInfo 动态的部分加入
+            if (worldInfo is MainWorldCreationInfo mainWorldCreationInfo)
+            {
+                mainWorldCreationInfo.LocalPlayer = new InGamePlayerInfo();
+            }
+            modMainWorld.CreateGameWorld(worldInfo);
+            modMainWorld.SetActive(true);
+            
+            G.UI.Show(UIPanelName.UIBattle);
         }
         
         public override void Leave(EnvStateBase toState)
         {
+            var modMainWorld = G.Module<ModuleWorlds>();
+            modMainWorld?.SetActive(false);
+            modMainWorld?.DestroyGameWorld();
+            
+            G.UI.Hide(UIPanelName.UIBattle);
             base.Leave(toState);
         }
         
         public void EnvUpdate(float dt, float dt_unscaled)
         {
-
+            //G.Log($"EnvUpdate[{StateID}]: dt={dt}, dt_unscaled={dt_unscaled}");
         }
         
         public override string CheckTransitions()

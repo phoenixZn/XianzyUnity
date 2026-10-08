@@ -92,13 +92,13 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-    - GroupName: UIPrefabs
-      GroupDesc: "UI\u9884\u5236\u4F53"
+    - GroupName: UI
+      GroupDesc: "UI\u8D44\u6E90"
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/HotAssets/Demo/UIPrefabs
-        CollectorGUID: 842578ce91393744f90eb38459bc1476
+      - CollectPath: Assets/HotAssets/Demo/UI
+        CollectorGUID: 58467d3d448227946b5d02f18f3edf94
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory

@@ -33,10 +33,11 @@ namespace Xease
             Services.AddService_SharedPool();
             Services.AddService_Coroutine(Param.UnityHost);
             Services.AddService_Asset();
-            Services.AddService_DeviceProfile();
-            Services.AddService_Audio();
             Services.AddService_GameObjectPools();
             Services.AddService_Input();
+            Services.AddService_DeviceProfile();
+            Services.AddService_Audio();
+            Services.AddService_UI();
             var svcLogic = Services.AddService_CustomLogic();
             svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
             svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
@@ -74,6 +75,7 @@ namespace Xease
                 [EnvStateID.ES_EnvInit] = new EnvInitState(),
                 [EnvStateID.ES_Login] = new EnvLoginState(),
                 [EnvStateID.ES_Main] = new EnvMainState(),
+                [EnvStateID.ES_Battle] = new EnvBattleState(),
             };
             EnvStateMng.Initialize(states, EnvStateID.ES_EnvInit);
         }
