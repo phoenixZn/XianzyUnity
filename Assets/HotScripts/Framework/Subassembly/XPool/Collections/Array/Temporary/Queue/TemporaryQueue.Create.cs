@@ -8,7 +8,7 @@ namespace MackySoft.XPool.Collections {
 		/// <summary>
 		/// Create an empty temporay queue using <see cref="ArrayPool{T}.Shared"/>.
 		/// </summary>
-		public static TemporaryQueue<T> Create<T> () {
+		public static TemporaryQueue<T> Create () {
 			return Create(ArrayPool<T>.Shared);
 		}
 
@@ -16,14 +16,14 @@ namespace MackySoft.XPool.Collections {
 		/// Create an empty temporay queue.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static TemporaryQueue<T> Create<T> (ArrayPool<T> pool) {
+		public static TemporaryQueue<T> Create (ArrayPool<T> pool) {
 			return new TemporaryQueue<T>(pool,0);
 		}
 
 		/// <summary>
 		/// Create an empty temporary queue with the specified initial capacity.
 		/// </summary>
-		public static TemporaryQueue<T> Create<T> (int minimumCapacity) {
+		public static TemporaryQueue<T> Create (int minimumCapacity) {
 			return Create(minimumCapacity,ArrayPool<T>.Shared);
 		}
 
@@ -31,7 +31,7 @@ namespace MackySoft.XPool.Collections {
 		/// Create an empty temporary queue with the specified initial capacity.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static TemporaryQueue<T> Create<T> (int minimumCapacity,ArrayPool<T> pool) {
+		public static TemporaryQueue<T> Create (int minimumCapacity,ArrayPool<T> pool) {
 			return new TemporaryQueue<T>(pool,minimumCapacity);
 		}
 

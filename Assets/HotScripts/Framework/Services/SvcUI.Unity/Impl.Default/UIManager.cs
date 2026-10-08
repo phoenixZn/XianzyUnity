@@ -117,6 +117,7 @@ namespace Xease.UI
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = cam;
             canvas.planeDistance = UiPlaneDistance;
+            canvas.vertexColorAlwaysGammaSpace = true; // Linear 下顶点色留在 Gamma，由 UI Shader 转换以保持暗部精度
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(ReferenceResolutionX, ReferenceResolutionY);
