@@ -63,8 +63,8 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/HotAssets/Config/Engine
-        CollectorGUID: d2e7fdc777335ce4dacf49b4c0d3bb2f
+      - CollectPath: Assets/HotAssets/Config
+        CollectorGUID: c14613da5075eb1419c5a44e5db54ee6
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackRawFile

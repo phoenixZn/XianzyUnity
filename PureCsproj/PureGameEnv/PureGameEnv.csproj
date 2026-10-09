@@ -31,6 +31,8 @@
     <!-- Unity Editor 脚本：无 UnityEditor.dll，CLI 宿主不编入 -->
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\Editor\**\*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\**\Editor\**\*.cs" />
+    <!-- Luban 生成代码依赖 UPM Luban.Runtime，CLI 宿主不编入 -->
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\Content\Gen\Luban\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -33,6 +33,7 @@ namespace Xease
             Services.AddService_SharedPool();
             Services.AddService_Coroutine(Param.UnityHost);
             Services.AddService_Asset();
+            Services.AddService_Config();
             Services.AddService_GameObjectPools();
             Services.AddService_Input();
             Services.AddService_DeviceProfile();
