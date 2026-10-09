@@ -37,7 +37,7 @@ namespace Xease.CoreGame.Debug
 
         }
 
-        // Unity 宿主实现见 SysDebugDemo.Config.Unity；CLI 无配表服务，调用为空
+        // 实现见 SysDebugDemo.Config；校验已加载的示例表
         partial void TestLubanConfig();
 
         // Yield 走线程池 / SynchronizationContext（CLI）或 PlayerLoop（Unity），不阻塞 Execute

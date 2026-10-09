@@ -45,7 +45,10 @@ namespace Xease.CoreGame
             _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetCube);
             _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetSphere);
             
+#if !CONSOLE_CLIENT
+            // 命令行宿主不注册音频服务
             G.Audio.Play("AudioBankCombat", "bounce");
+#endif
         }
 
         /// <summary>

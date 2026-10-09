@@ -29,8 +29,11 @@ namespace Xease
             }
             modMainWorld.CreateGameWorld(worldInfo);
             modMainWorld.SetActive(true);
-            
+
+#if !CONSOLE_CLIENT
+            // 命令行宿主不注册 UI 服务
             G.UI.Show(UIPanelName.UIBattle);
+#endif
         }
         
         public override void Leave(EnvStateBase toState)
@@ -38,8 +41,10 @@ namespace Xease
             var modMainWorld = G.Module<ModuleWorlds>();
             modMainWorld?.SetActive(false);
             modMainWorld?.DestroyGameWorld();
-            
+
+#if !CONSOLE_CLIENT
             G.UI.Hide(UIPanelName.UIBattle);
+#endif
             base.Leave(toState);
         }
         

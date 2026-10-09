@@ -99,8 +99,11 @@ namespace Xease.CoreGame
             _moveSpeed *= 2f;
             _ownerEntity.SetQuaternion(_ownerEntity.rotation * Quaternion.Euler(0f, 0f, 45f));
             
+#if !CONSOLE_CLIENT
+            // 命令行宿主不注册音频服务
             var audioEvent = G.Audio.CreateEvent("AudioBankCombat", "bounce");
             audioEvent.Play();
+#endif
             return true;
         }
 

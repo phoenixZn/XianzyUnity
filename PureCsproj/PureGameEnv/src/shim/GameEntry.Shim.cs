@@ -104,7 +104,8 @@ namespace Xease
     }
 
     /// <summary>
-    /// 命令行宿主的 GEnv 实现，对应 UnityGameEnv；不注册 Asset/Input/GOPool，协程服务由 IEnvUpdate 帧泵驱动。
+    /// 命令行宿主的 GEnv 实现，对应 UnityGameEnv；不注册 Asset/Input/GOPool。
+    /// 协程由 IEnvUpdate 帧泵驱动；配表从仓库 JSON 目录加载。
     /// </summary>
     public class ConsoleGameEnv : GEnv
     {
@@ -125,6 +126,7 @@ namespace Xease
             Services.AddService_ValueEvent();
             Services.AddService_SharedPool();
             Services.AddService_Coroutine();
+            Services.AddService_Config();
             var svcLogic = Services.AddService_CustomLogic();
             svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
             svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
@@ -172,6 +174,7 @@ namespace Xease
                 [EnvStateID.ES_EnvInit] = new EnvInitState(),
                 [EnvStateID.ES_Login] = new EnvLoginState(),
                 [EnvStateID.ES_Main] = new EnvMainState(),
+                [EnvStateID.ES_Battle] = new EnvBattleState(),
             };
             EnvStateMng.Initialize(states, EnvStateID.ES_EnvInit);
         }

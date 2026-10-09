@@ -3,7 +3,7 @@ using cfg;
 namespace Xease
 {
     /// <summary>
-    /// Luban 配表服务：持有生成的 <see cref="Tables"/>，数据来自 Asset RawFile 包。
+    /// Luban 配表服务：持有生成的 <see cref="Tables"/>。表数据由宿主注入的 loader 提供，本接口不关心来源。
     /// </summary>
     public interface IConfigService : IService
     {
@@ -18,7 +18,7 @@ namespace Xease
         bool Initialized { get; }
 
         /// <summary>
-        /// 按 Tables 所需文件名从 RawFile 包同步加载 JSON 并构造表。
+        /// 用宿主注入的 loader 同步构造表。
         /// </summary>
         void Init();
     }

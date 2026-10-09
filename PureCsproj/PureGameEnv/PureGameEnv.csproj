@@ -31,8 +31,15 @@
     <!-- Unity Editor 脚本：无 UnityEditor.dll，CLI 宿主不编入 -->
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\Editor\**\*.cs" />
     <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\**\Editor\**\*.cs" />
-    <!-- Luban 生成代码依赖 UPM Luban.Runtime，CLI 宿主不编入 -->
-    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\Content\Gen\Luban\**\*.cs" />
+    <!-- UI 依赖 SvcUI.Unity 与 UnityEngine.UI，CLI 宿主不编入 -->
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Product\Content\UIScripts\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Luban 运行时源码与生成代码同程序集；本机需已导入 com.code-philosophy.luban -->
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\Library\PackageCache\com.code-philosophy.luban@*\Runtime\**\*.cs">
+      <Link>Luban.Runtime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +53,10 @@
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(MSBuildThisFileDirectory)refs\UnityEngine.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(MSBuildThisFileDirectory)..\..\Assets\Plugins\Newtonsoft.Json.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

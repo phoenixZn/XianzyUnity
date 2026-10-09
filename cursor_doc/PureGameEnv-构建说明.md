@@ -27,7 +27,10 @@
 - **包含**：`Assets/HotScripts/Framework`、`Assets/HotScripts/Product` 下全部 `.cs`（通配 include）。
 - **排除（与 XEditor.UnityPartingTool 语义一致）**：路径段以 `.Unity` 结尾的目录内所有 `.cs`；以及 `*.Unity.cs`。
 - **排除 Editor**：任意路径段名为 `Editor` 的目录内所有 `.cs`（如 `ModelPointTool/Editor`）。CLI 不引用 `UnityEditor.dll`，`CustomEditor` / `MenuItem` 等编辑器 API 无法编译。
+- **排除 UI**：`Product/Content/UIScripts`。这些脚本依赖已排除的 `SvcUI.Unity` 以及 `UnityEngine.UI`。
+- **Newtonsoft**：`JsonHelper` 引用 `Assets/Plugins/Newtonsoft.Json.dll`，csproj 显式引用该 DLL。
 - `*.Unity.cs`、`.Unity` 目录与 `Editor` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`（不注册 Asset/Input/GOPool；协程服务注册 CLI 实现，由 `IEnvUpdate` 帧泵驱动，yield 仅支持 null / 嵌套 IEnumerator / handler 最小集）。
+- **Luban 配表**：`SvcConfig` 会编入。`ConsoleGameEnv` 调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读 JSON。生成代码 `Product/Content/Gen/Luban` 依赖 UPM `Luban.Runtime`，csproj 用通配编入 `Library/PackageCache/com.code-philosophy.luban@*/Runtime/**/*.cs`（本机需已用 Unity 导入该包，与 `refs/*.dll` 一样不进 git）。
 - LitMotion 源码在 `Assets/AOTScripts/ThirdParty/LitMotion`，不在 HotScripts 通配范围内；CLI 走 `PureCsproj/LitMotion` 的 `ProjectReference`。
 
 ## PureGameEnv 内 shim（未改 Unity 源码）
@@ -70,7 +73,7 @@ dotnet run --project PureCsproj/PureGameEnv/PureGameEnv.csproj
 
 ## 当前编译结果
 
-- **已通过**：`dotnet build`（Debug）0 error。运行可见 `GameEntryInit` → Services/Modules → `ES_EnvInit` → `ES_Login`。
+- **已通过**：`dotnet build`（Debug）0 error。运行可见 `AddService_Config` 与 `[Config] Tables ready`（示例表首行 id `1001`）。
 
 ## 后续治理方向（按需）
 

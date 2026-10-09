@@ -39,7 +39,10 @@ DataTables\gen_client.bat
 
 ### 1.3 运行时读取
 
-`UnityGameEnv` 在 `AddService_Asset()` 之后调用 `AddService_Config()`，内部同步 `Init()`：按 `Tables` 构造器给出的文件名，从 **PackMainScript** RawFile 读文本，再 `JSON.Parse`。
+`UnityGameEnv` 在 `AddService_Asset()` 之后调用 `AddService_Config()`。`ConfigManager` 用宿主注入的 loader 同步 `Init()`：按 `Tables` 构造器给出的文件名加载 JSON 再 `JSON.Parse`。
+
+- Unity：`G.Asset.LoadAssetRawFileSync` 读 **PackMainScript** RawFile，文本拷贝后 `Release`。
+- 命令行：`ConsoleGameEnv` 同样调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读同名 `.json`。
 
 业务侧：
 
@@ -49,20 +52,11 @@ var orNull = G.Config.Tables.Tbitem.GetOrDefault(0);
 foreach (var row in G.Config.Tables.Tbitem.DataList) { /* ... */ }
 ```
 
-- `G.Config`：`IConfigService`（`Assets/HotScripts/Framework/Services/SvcConfig.Unity`）。
+- `G.Config`：`IConfigService`（`Assets/HotScripts/Framework/Services/SvcConfig`）。
 - `Tables`：生成类型，命名空间 `cfg`。
 - YooAsset 地址规则为 **AddressByFileName**（无扩展名）。`Tables` 里 `loader("demo_tbitem")` 对应资源 `demo_tbitem.json`。
 
-### 1.4 验收
-
-进 Play 后看日志：
-
-- 配表服务：`[Config] Tables ready, Tbitem count=2, first=1001:道具1`
-- `SysDebugDemo` 首帧：`TestLubanConfig ok, count=2, 1001:道具1`
-
-若 Simulate 读不到新 JSON：刷新 YooAsset 收集器后再进 Play，或重打 **PackMainScript**。
-
-### 1.5 新增一张表（概要）
+### 1.4 新增一张表（概要）
 
 1. 在 `DataTables/Data/__tables__.xlsx` 登记表（全名、值类型、input、分组 `c` 等），格式与现有 `demo.Tbitem` 一行同类。
 2. 在 `DataTables/Data/` 增加数据 Excel（文件名习惯与 MiniTemplate 一致，如 `#模块.表.xlsx`）。
@@ -72,22 +66,22 @@ foreach (var row in G.Config.Tables.Tbitem.DataList) { /* ... */ }
 
 Excel 列约定以 [Luban 文档](https://www.datable.cn/docs/beginner/quickstart) 为准：表头含类型行、字段名行；`##` 开头行为注释。
 
-### 1.6 日后切二进制（预留，当前不要默认跑）
+### 1.5 日后切二进制（预留，当前不要默认跑）
 
 - 脚本：`DataTables/gen_client_bin.bat`（`-c cs-bin -d bin`）。
 - **不要**与 JSON 生成同时写到同一套 `outputCodeDir`。
-- 运行时只改 `ConfigManager.LoadJson`：同一 `LoadAssetRawFileSync`，改为 `new ByteBuf(handle.GetRawFileData())`，`Tables` 构造器参数类型会随生成代码变成 `ByteBuf`。
+- 运行时只改 `InstallSvc` 里的 loader（Unity 为 `LoadJsonFromAsset`）：同一 `LoadAssetRawFileSync`，改为 `new ByteBuf(handle.GetRawFileData())`，`Tables` 构造器参数类型会随生成代码变成 `ByteBuf`。命令行 loader 改为读 `.bytes`。
 - 扩展名从 `.json` 变为 `.bytes`，AddressByFileName 仍是表文件名（如 `demo_tbitem`）。
 
-### 1.7 常见问题
+### 1.6 常见问题
 
 | 现象 | 处理 |
 |------|------|
 | `dotnet` 找不到 / SDK 过低 | 安装 .NET 8+，命令行能跑 `dotnet --version` |
 | 生成报 schema / 表定义错误 | 先看 `__tables__.xlsx` 与数据 xlsx 是否对齐；看 Console 里 Luban 日志 |
 | 编译找不到 `Luban` 命名空间 | 确认 `com.code-philosophy.luban` 已导入；`HotUpdate.asmdef` 已引用 `Luban.Runtime`（GUID `2a81c6962524d424a8ef5072bd3b0fa0`） |
-| Play 时 load failed / empty | JSON 是否在 `HotAssets/Config/Luban`；收集器 CollectPath 是否指向该目录；地址是否等于 `Tables` 里 `loader("...")` 的名字 |
-| PureCsproj 编不过 Gen 代码 | 已 `Compile Remove` `Product/Content/Gen/Luban`；不要把 Luban 生成代码挪出该目录除非同步改 csproj |
+| Play 时 load failed / empty | JSON 是否在 `HotAssets/Config/Luban`；收集器 CollectPath 是否指向该目录；地址是否等于 `Tables` 里 `loader("...")` 的名字。Simulate 读不到新 JSON 时，刷新收集器后再进 Play，或重打 **PackMainScript**。 |
+| PureCsproj 编不过 Gen 代码 | 确认本机 `Library/PackageCache` 已有 `com.code-philosophy.luban`；`PureGameEnv.csproj` 编入该包 `Runtime` 与 `Gen/Luban` |
 
 ---
 
@@ -108,7 +102,7 @@ XianzyUnity/
 │   ├── Editor/Luban/                     # HybridTool 生成菜单
 │   ├── HotScripts/
 │   │   ├── HotUpdate.asmdef              # 引用 Luban.Runtime
-│   │   ├── Framework/Services/SvcConfig.Unity/   # 运行时加载服务
+│   │   ├── Framework/Services/SvcConfig/         # 运行时加载服务（Unity / CLI）
 │   │   └── Product/Content/Gen/Luban/            # 生成的 C#（勿手改）
 │   └── HotAssets/Config/Luban/           # 生成的 JSON，打进 PackMainScript
 └── Packages/manifest.json                # com.code-philosophy.luban
@@ -121,7 +115,7 @@ XianzyUnity/
 | `DataTables/Defines/` | 非 Excel 的 schema。当前 `builtin.xml` 定义 `vector2/3/4`。 |
 | `DataTables/Data/` | 表定义与策划数据。`__*.xlsx` 为元表；`#demo.item.xlsx` 为示例数据。 |
 | `Assets/Editor/Luban/` | 仅 Editor；调用 `gen_client.bat`。 |
-| `Assets/HotScripts/Framework/Services/SvcConfig.Unity/` | Unity 宿主配表服务（YooAsset）。目录名 `.Unity`，PureCsproj 不编入。 |
+| `Assets/HotScripts/Framework/Services/SvcConfig/` | 配表服务。`ConfigManager` 只接收 loader；Unity 走 `G.Asset`，CLI 读 JSON 文件。 |
 | `Assets/HotScripts/Product/Content/Gen/Luban/` | 生成代码，进 `HotUpdate`。与 `UIScripts/Gen` 同属 Product 生成物。 |
 | `Assets/HotAssets/Config/Luban/` | 生成 JSON。YooAsset：`PackMainScript` / Other，`AddressByFileName` + `PackRawFile`，AssetTags=`luban`。 |
 | `Packages` 中 `com.code-philosophy.luban` | 运行时 `ByteBuf`、`Luban.SimpleJSON`、`BeanBase`。 |
@@ -132,8 +126,8 @@ XianzyUnity/
 DataTables Excel  --gen_client-->  Gen/Luban C#  +  Config/Luban JSON
                                          |                    |
                                          v                    v
-                                   HotUpdate 程序集     PackMainScript RawFile
-                                         \                    /
+                                   HotUpdate / PureGameEnv    RawFile 或磁盘 JSON
+                                         \                         /
                                           --> ConfigManager --> G.Config.Tables
 ```
 
@@ -183,11 +177,12 @@ JSON 数组，字段小写，与 Excel 列对应。YooAsset 地址：`demo_tbite
 
 | 文件 | 作用 |
 |------|------|
-| `SvcConfig.Unity/Standard/IConfigService.cs` | `Tables` / `Initialized` / `Init`。 |
-| `SvcConfig.Unity/Impl/ConfigManager.cs` | RawFile → JSON → `new Tables(LoadJson)`。切 bin 只改此处 loader。 |
-| `SvcConfig.Unity/InstallSvc.cs` | `G.Config`、`AddService_Config()`。 |
+| `SvcConfig/Standard/IConfigService.cs` | `Tables` / `Initialized` / `Init`。不关心数据来源。 |
+| `SvcConfig/Impl/ConfigManager.cs` | 构造时注入 loader，`new Tables(loader)`。 |
+| `SvcConfig/InstallSvc.cs` | `G.Config`、`AddService_Config()`。`CONSOLE_CLIENT` 读 JSON 文件，否则走 `G.Asset`。 |
 | `Product/GameEnv/GEnvEx.Unity.cs` | `AddService_Asset()` 之后 `AddService_Config()`。 |
-| `SysDebugDemo.cs` | `partial void TestLubanConfig()`；CLI 无实现则空操作。 |
-| `SysDebugDemo.Config.Unity.cs` | Unity 下校验行数、`Get(1001)` 字段、缺失键 `GetOrDefault`。 |
+| `PureCsproj/.../GameEntry.Shim.cs` | `ConsoleGameEnv` 在协程服务之后 `AddService_Config()`。 |
+| `SysDebugDemo.cs` | `partial void TestLubanConfig()`。 |
+| `SysDebugDemo.Config.cs` | 校验行数、`Get(1001)` 字段、缺失键 `GetOrDefault`。Unity 与 CLI 都会跑。 |
 
 业务新代码不要依赖 `SysDebugDemo` 里的样例常量；以 `G.Config.Tables` 为准。
