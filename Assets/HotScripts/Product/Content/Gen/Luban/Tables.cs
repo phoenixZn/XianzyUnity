@@ -14,16 +14,28 @@ namespace cfg
 {
 public partial class Tables
 {
+    /// <summary>
+    /// 局内掉落池表
+    /// </summary>
+    public Battle.TDropPoolConfig TDropPoolConfig {get; }
+    /// <summary>
+    /// 掉落物配置表
+    /// </summary>
+    public Battle.TDropConfig TDropConfig {get; }
     public demo.Tbitem Tbitem {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
+        TDropPoolConfig = new Battle.TDropPoolConfig(loader("battle_tdroppoolconfig"));
+        TDropConfig = new Battle.TDropConfig(loader("battle_tdropconfig"));
         Tbitem = new demo.Tbitem(loader("demo_tbitem"));
         ResolveRef();
     }
     
     private void ResolveRef()
     {
+        TDropPoolConfig.ResolveRef(this);
+        TDropConfig.ResolveRef(this);
         Tbitem.ResolveRef(this);
     }
 }

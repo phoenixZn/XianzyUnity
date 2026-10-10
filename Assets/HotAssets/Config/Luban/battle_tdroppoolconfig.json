@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "drops": [
+      {
+        "weight": 10,
+        "dropId": 1001
+      },
+      {
+        "weight": 20,
+        "dropId": 1002
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "drops": [
+      {
+        "weight": 100,
+        "dropId": 1003
+      }
+    ]
+  }
+]

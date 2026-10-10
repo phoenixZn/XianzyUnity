@@ -24,11 +24,14 @@ namespace Xease.CoreGame.Debug
 
             if (ExecuteAcc == 1)
             {
+                
+                G.Log("Test://////////////////////////////////////////////////////////////////////////");
                 TestRandomRange();
                 SmokeUniTaskYield();
                 SmokeLMotion();
                 TestCoroutineSuite();
                 TestLubanConfig();
+                TestLubanDrop();
             }
         }
         
@@ -39,6 +42,9 @@ namespace Xease.CoreGame.Debug
 
         // 实现见 SysDebugDemo.Config；校验已加载的示例表
         partial void TestLubanConfig();
+
+        // 实现见 SysDebugDemo.Config；校验掉落表嵌套池与池引用
+        partial void TestLubanDrop();
 
         // Yield 走线程池 / SynchronizationContext（CLI）或 PlayerLoop（Unity），不阻塞 Execute
         private void SmokeUniTaskYield()

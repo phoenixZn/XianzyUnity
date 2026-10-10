@@ -11,20 +11,20 @@ using Luban;
 using Luban.SimpleJSON;
 
 
-namespace cfg
+namespace cfg.Base
 {
-public partial struct vector3
+public partial struct Vector3
 {
-    public vector3(JSONNode _buf) 
+    public Vector3(JSONNode _buf) 
     {
         { if(!_buf["x"].IsNumber) { throw new SerializationException(); }  X = _buf["x"]; }
         { if(!_buf["y"].IsNumber) { throw new SerializationException(); }  Y = _buf["y"]; }
         { if(!_buf["z"].IsNumber) { throw new SerializationException(); }  Z = _buf["z"]; }
     }
 
-    public static vector3 Deserializevector3(JSONNode _buf)
+    public static Vector3 DeserializeVector3(JSONNode _buf)
     {
-        return new vector3(_buf);
+        return new Base.Vector3(_buf);
     }
 
     public readonly float X;

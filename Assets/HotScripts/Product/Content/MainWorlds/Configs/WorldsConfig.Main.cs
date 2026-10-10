@@ -45,7 +45,7 @@ namespace Xease.CoreGame
 #endif
 
                     systems.Add(new SysGameplayInitialize_Main(worlds));
-                    systems.Add(new UnitTestSystems_Base(worlds));
+                    //systems.Add(new UnitTestSystems_Base(worlds));
                     return systems;
                 },
             });

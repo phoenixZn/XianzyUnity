@@ -1,6 +1,6 @@
 #!/bin/bash
 # 日后切二进制时使用：与 gen_client.sh 不要同时写到同一套 outputCodeDir。
-# 运行时 ConfigManager 将 JSON.Parse 改为 new ByteBuf(rawBytes)。
+# 运行时 TableConfigService 将 JSON.Parse 改为 new ByteBuf(rawBytes)。
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE="$(cd "$SCRIPT_DIR/.." && pwd)"
 LUBAN_DLL="$WORKSPACE/Tools/Luban/Luban.dll"

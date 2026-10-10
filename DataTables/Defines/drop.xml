@@ -1,0 +1,21 @@
+<module name="Battle">
+    <bean name="DropInfo" sep=",">
+        <var name="weight" type="int" comment="权重"/>
+        <var name="dropId" type="int" comment="掉落物ID"/>
+    </bean>
+    <bean name="DropPool" sep=",">
+        <var name="pool" type="int#ref=Battle.TDropPoolConfig" comment="局内掉落池"/>
+        <var name="dropLimit" type="int" comment="掉落总次数上限"/>
+    </bean>
+    <bean name="DropPoolConfig">
+        <var name="id" type="int"/>
+        <var name="drops" type="(list#sep=|),DropInfo" comment="局内掉落池组"/>
+    </bean>
+    <bean name="DropConfig">
+        <var name="id" type="int"/>
+        <var name="pools" type="(list#sep=|),DropPool" comment="局内掉落池"/>
+        <var name="useParallelDrop" type="bool" comment="全部池并行掉落"/>
+    </bean>
+    <table name="TDropPoolConfig" value="DropPoolConfig" index="id" input="TDropPoolConfig.csv" group="c" comment="局内掉落池表"/>
+    <table name="TDropConfig" value="DropConfig" index="id" input="TDropConfig.csv" group="c" comment="掉落物配置表"/>
+</module>

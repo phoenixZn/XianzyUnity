@@ -1,6 +1,6 @@
 @echo off
 REM 日后切二进制时使用：与 gen_client.bat 不要同时写到同一套 outputCodeDir。
-REM 运行时 ConfigManager 将 JSON.Parse 改为 new ByteBuf(rawBytes)。
+REM 运行时 TableConfigService 将 JSON.Parse 改为 new ByteBuf(rawBytes)。
 setlocal
 set WORKSPACE=%~dp0..
 set LUBAN_DLL=%WORKSPACE%\Tools\Luban\Luban.dll

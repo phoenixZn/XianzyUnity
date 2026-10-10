@@ -8,7 +8,7 @@ namespace Xease
     /// Luban 配表加载：用宿主注入的 loader 构造 <see cref="Tables"/>。
     /// 切二进制时只改 loader 的返回值类型，并改用 gen_client_bin。
     /// </summary>
-    internal class ConfigManager : IConfigService
+    internal class TableConfigService : IConfigService
     {
         //////////////////////////////////////////////////////////////////////////
         /// This：
@@ -19,7 +19,7 @@ namespace Xease
         /// <summary>
         /// 保存宿主提供的 JSON 加载方法，Init 时交给 Tables。
         /// </summary>
-        public ConfigManager(Func<string, JSONNode> loadJson)
+        public TableConfigService(Func<string, JSONNode> loadJson)
         {
             _loadJson = loadJson ?? throw new ArgumentNullException(nameof(loadJson));
         }

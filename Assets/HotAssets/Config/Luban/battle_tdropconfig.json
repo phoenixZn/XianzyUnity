@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "pools": [
+      {
+        "pool": 1,
+        "dropLimit": 5
+      },
+      {
+        "pool": 2,
+        "dropLimit": 3
+      }
+    ],
+    "useParallelDrop": false
+  },
+  {
+    "id": 2,
+    "pools": [
+      {
+        "pool": 1,
+        "dropLimit": 10
+      }
+    ],
+    "useParallelDrop": true
+  }
+]

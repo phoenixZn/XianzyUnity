@@ -32,7 +32,7 @@ namespace Xease
         public void AddService_Config()
         {
             G.Log("AddService_Config");
-            var svc = new ConfigManager(LoadJsonFromFile);
+            var svc = new TableConfigService(LoadJsonFromFile);
             svc.Init();
             AddService(svc, out _configSvc);
         }
@@ -85,7 +85,7 @@ namespace Xease
         public void AddService_Config()
         {
             G.Log("AddService_Config");
-            var svc = new ConfigManager(LoadJsonFromAsset);
+            var svc = new TableConfigService(LoadJsonFromAsset);
             svc.Init();
             AddService(svc, out _configSvc);
         }
