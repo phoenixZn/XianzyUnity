@@ -110,5 +110,14 @@ namespace Launcher
                 UniEvent.SendMessage(msg);
             }
         }
+        
+        public class StartGame : IEventMessage
+        {
+            public static void SendEventMessage()
+            {
+                var msg = new StartGame();
+                UniEvent.SendMessage(msg);
+            }
+        }
     }
 }

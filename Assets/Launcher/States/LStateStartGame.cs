@@ -15,9 +15,8 @@ namespace Launcher
             base.Enter();
             
             PatchEventDefine.PatchStepsChange.SendEventMessage("启动游戏！");
-            SceneEventDefine.StartGame.SendEventMessage();
+            PatchEventDefine.StartGame.SendEventMessage();
             
-            YooAssets.LoadSceneAsync("DemoHotScene");
             Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "HotUpdate");
             if (assembly == null)
             {

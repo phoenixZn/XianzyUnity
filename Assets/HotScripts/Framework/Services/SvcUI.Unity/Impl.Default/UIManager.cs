@@ -58,7 +58,7 @@ namespace Xease.UI
         {
             if (rootObj == null)
             {
-                G.LogError("UIService resolved == null");
+                G.Log("UIService resolved == null");
                 rootObj = CreateRuntimeRoot();
                 _ownsRoot = true;
             }

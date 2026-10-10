@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using YooAsset;
 #endif
 
 namespace Xease
@@ -23,6 +24,7 @@ namespace Xease
         {
             base.Enter(fromState);
             CreateLoginUi();
+            YooAssets.LoadSceneAsync("DemoHotScene");
         }
 
         /// <summary>

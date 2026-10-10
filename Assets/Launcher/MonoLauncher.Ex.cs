@@ -42,7 +42,7 @@ namespace Launcher
             _eventGroup.AddListener<UserEventDefine.UserTryUpdatePackageManifest>(OnHandleStateEvent);
             _eventGroup.AddListener<UserEventDefine.UserTryDownloadWebFiles>(OnHandleStateEvent);
             
-            _eventGroup.AddListener<SceneEventDefine.StartGame>(OnHandleEventStartGame);
+            _eventGroup.AddListener<PatchEventDefine.StartGame>(OnHandleEventStartGame);
         }
 
         private void OnDisable()
@@ -160,7 +160,7 @@ namespace Launcher
 
         private void OnHandleEventStartGame(IEventMessage message)
         {
-            if (message is SceneEventDefine.StartGame)
+            if (message is PatchEventDefine.StartGame)
             {
 
             }

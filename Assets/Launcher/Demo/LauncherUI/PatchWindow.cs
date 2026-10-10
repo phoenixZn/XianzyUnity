@@ -77,6 +77,7 @@ namespace Launcher
             _eventGroup.AddListener<PatchEventDefine.PackageVersionRequestFailed>(OnHandleEventMessage);
             _eventGroup.AddListener<PatchEventDefine.PackageManifestUpdateFailed>(OnHandleEventMessage);
             _eventGroup.AddListener<PatchEventDefine.WebFileDownloadFailed>(OnHandleEventMessage);
+            _eventGroup.AddListener<PatchEventDefine.StartGame>(OnHandleEventMessage);
         }
         void OnDestroy()
         {
@@ -146,6 +147,11 @@ namespace Launcher
                     UserEventDefine.UserTryDownloadWebFiles.SendEventMessage();
                 };
                 ShowMessageBox($"Failed to download file : {msg.FileName}", callback);
+            }
+            else if (message is PatchEventDefine.StartGame)
+            {
+                // 补丁结束，关掉更新界面
+                Destroy(gameObject);
             }
             else
             {
