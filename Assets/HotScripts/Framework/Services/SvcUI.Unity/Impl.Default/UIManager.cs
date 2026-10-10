@@ -253,6 +253,11 @@ namespace Xease.UI
         //////////////////////////////////////////////////////////////////////////
         /// IUIService:
         /// <summary>
+        /// UI 根上的相机；运行时根创建之后可用。
+        /// </summary>
+        public Camera UICamera => _root != null ? _root.camera : null;
+
+        /// <summary>
         /// 异步打开；栈顶同名且已隐藏时只补 onShow。
         /// </summary>
         public void Show(string name, object[] args = null)

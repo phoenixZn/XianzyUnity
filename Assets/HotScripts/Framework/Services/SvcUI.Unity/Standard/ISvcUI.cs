@@ -1,3 +1,4 @@
+using UnityEngine;
 using Xease.UI;
 
 namespace Xease
@@ -9,6 +10,11 @@ namespace Xease
     /// </summary>
     public interface IUIService : IService
     {
+        /// <summary>
+        /// UI 根上的相机；运行时根创建之后可用。
+        /// </summary>
+        Camera UICamera { get; }
+
         /// <summary>
         /// 异步打开面板；name 为 <see cref="UIBaseHandlerAttribute.PrefabName"/>（YooAsset location）。
         /// </summary>

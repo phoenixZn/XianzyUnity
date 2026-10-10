@@ -39,6 +39,7 @@ namespace Xease
             Services.AddService_DeviceProfile();
             Services.AddService_Audio();
             Services.AddService_UI();
+            Services.AddService_Camera(Services.UISvc.UICamera);
             var svcLogic = Services.AddService_CustomLogic();
             svcLogic.AddConfigContainer(new LogicConfigs_GameMode(LogicContainerKey.LogicConfigs_GameMode));
             svcLogic.AddConfigContainer(new LogicConfigs_GameLevel(LogicContainerKey.LogicConfigs_GameLevel));
