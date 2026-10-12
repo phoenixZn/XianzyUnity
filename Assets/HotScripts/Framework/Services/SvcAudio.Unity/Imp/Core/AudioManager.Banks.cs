@@ -20,11 +20,13 @@ namespace Xease.Audio
             if (bank?.Config is null || string.IsNullOrEmpty(bank.Config.Name))
             {
                 Audio.LogError($"[Audio] AudioBank \"{bankName}\" load failed.");
+                bank?.Unload();
                 return;
             }
             if (_audioBanks.ContainsKey(bank.Config.Name))
             {
                 Audio.LogWarning($"[Audio] LoadBank ContainsKey:{bankName}");
+                bank.Unload();
                 return;
             }
             _audioBanks.Add(bank.Config.Name, bank);
@@ -45,6 +47,7 @@ namespace Xease.Audio
             if (bank?.Config is null)
             {
                 Audio.LogError($"[Audio] AudioBank \"{bankName}\" load failed.");
+                bank?.Unload();
                 callback?.Invoke();
                 yield break;
             }

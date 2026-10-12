@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Xease.Audio
 {
     /// <summary>
@@ -15,6 +17,7 @@ namespace Xease.Audio
 
         public static AudioRawFile<T> Load(string path)
         {
+            AudioRawFile<T> audioRawFile = null;
             try
             {
                 var handle = Audio.LoadRawFileSync(path);
@@ -34,16 +37,17 @@ namespace Xease.Audio
                     Audio.LogError($"[Audio] Load rawfile \"{path}\" error, message: expected JSON, got YAML.");
                     return null;
                 }
-                var audioRawFile = new AudioRawFile<T>
+                audioRawFile = new AudioRawFile<T>
                 {
                     Path = handle.GetRawFilePath(),
-                    Content = new T()
+                    Content = CreateContent()
                 };
                 Audio.Deserialize(text, audioRawFile.Content);
                 return audioRawFile;
             }
             catch (System.Exception ex)
             {
+                audioRawFile?.Unload();
                 Audio.LogError($"[Audio] Load rawfile \"{path}\" error, message: {ex.Message}");
                 return null;
             }
@@ -55,8 +59,22 @@ namespace Xease.Audio
 
         public void Unload()
         {
+            if (Content is Object unityObject)
+            {
+                Object.Destroy(unityObject);
+            }
             Content = default;
             Path = null;
+        }
+
+        // 引擎对象禁止构造函数创建；普通配置类仍走 new
+        static T CreateContent()
+        {
+            if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
+            {
+                return (T)(object)ScriptableObject.CreateInstance(typeof(T));
+            }
+            return new T();
         }
     }
 }

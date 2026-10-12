@@ -109,7 +109,19 @@ namespace Xease.Audio
             }
             _audioClipAssets.Clear();
             _audioEventDict.Clear();
+            ReleaseConfig();
             IsLoaded = false;
+        }
+
+        // 运行时 CreateInstance 的配置不是资源引用，卸载时销毁
+        void ReleaseConfig()
+        {
+            if (Config == null)
+            {
+                return;
+            }
+            UnityEngine.Object.Destroy(Config);
+            Config = null;
         }
 
         public AudioEventConfig GetEventConfig(string eventName)

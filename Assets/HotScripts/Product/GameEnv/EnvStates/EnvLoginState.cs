@@ -24,7 +24,7 @@ namespace Xease
         {
             base.Enter(fromState);
             CreateLoginUi();
-            YooAssets.LoadSceneAsync("DemoHotScene");
+            //YooAssets.LoadSceneAsync("DemoHotScene");
         }
 
         /// <summary>
