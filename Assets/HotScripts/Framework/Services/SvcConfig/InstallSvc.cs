@@ -7,20 +7,24 @@ using System;
 using Luban.SimpleJSON;
 using YooAsset;
 #endif
+using cfg;
 
 namespace Xease
 {
     public static partial class G
     {
-        public static IConfigService Config => GEnv.Inst.Services.ConfigSvc;
+        public static ITableConfigService TableConfig => GEnv.Inst.Services.TableConfigSvc;
+
+        public static Tables Tables => TableConfig.Tables;
+
     }
 
     public partial class ServicesProvider
     {
         //////////////////////////////////////////////////////////////////////////
         /// Luban 配表：
-        protected IConfigService _configSvc; // Luban 配表服务实例
-        public IConfigService ConfigSvc => _configSvc;
+        protected ITableConfigService _tbConfigSvc; // Luban 配表服务实例
+        public ITableConfigService TableConfigSvc => _tbConfigSvc;
 
 #if CONSOLE_CLIENT
         // 仓库内 Luban JSON 目录；首次向上查找后复用
@@ -34,7 +38,7 @@ namespace Xease
             G.Log("AddService_Config");
             var svc = new TableConfigService(LoadJsonFromFile);
             svc.Init();
-            AddService(svc, out _configSvc);
+            AddService(svc, out _tbConfigSvc);
         }
 
         // 按无扩展文件名读取生成 JSON
@@ -85,9 +89,9 @@ namespace Xease
         public void AddService_Config()
         {
             G.Log("AddService_Config");
-            var svc = new TableConfigService(LoadJsonFromAsset);
+            var svc = new TableTableConfigService(LoadJsonFromAsset);
             svc.Init();
-            AddService(svc, out _configSvc);
+            AddService(svc, out _tbConfigSvc);
         }
 
         // name 为无扩展文件名，与 AddressByFileName 一致；文本拷贝后释放句柄

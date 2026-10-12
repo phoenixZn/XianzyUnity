@@ -17,7 +17,7 @@ namespace Xease.CoreGame.Debug
         // 校验 Config 已 Init，Tbitem 行数、Get 字段与缺失键 GetOrDefault
         partial void TestLubanConfig()
         {
-            var svc = G.Config;
+            var svc = G.TableConfig;
             if (svc == null || !svc.Initialized)
             {
                 G.LogError("TestLubanConfig fail: Config not initialized");
@@ -53,7 +53,7 @@ namespace Xease.CoreGame.Debug
         // 校验 TDropConfig / TDropPoolConfig：嵌套池、池引用与缺失键
         partial void TestLubanDrop()
         {
-            var svc = G.Config;
+            var svc = G.TableConfig;
             if (svc == null || !svc.Initialized)
             {
                 G.LogError("TestLubanDrop fail: Config not initialized");
