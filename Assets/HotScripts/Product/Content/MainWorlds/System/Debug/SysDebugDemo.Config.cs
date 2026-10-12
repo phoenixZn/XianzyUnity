@@ -17,14 +17,7 @@ namespace Xease.CoreGame.Debug
         // 校验 Config 已 Init，Tbitem 行数、Get 字段与缺失键 GetOrDefault
         partial void TestLubanConfig()
         {
-            var svc = G.TableConfig;
-            if (svc == null || !svc.Initialized)
-            {
-                G.LogError("TestLubanConfig fail: Config not initialized");
-                return;
-            }
-
-            var tb = svc.Tables.Tbitem;
+            var tb = G.Tables.Tbitem;
             if (tb.DataList.Count == 0)
             {
                 G.LogError($"TestLubanConfig DataList count fail: {tb.DataList.Count}");
@@ -53,15 +46,8 @@ namespace Xease.CoreGame.Debug
         // 校验 TDropConfig / TDropPoolConfig：嵌套池、池引用与缺失键
         partial void TestLubanDrop()
         {
-            var svc = G.TableConfig;
-            if (svc == null || !svc.Initialized)
-            {
-                G.LogError("TestLubanDrop fail: Config not initialized");
-                return;
-            }
-
-            var drops = svc.Tables.TDropConfig;
-            var poolTable = svc.Tables.TDropPoolConfig;
+            var drops = G.Tables.TDropConfig;
+            var poolTable = G.Tables.TDropPoolConfig;
             if (drops.DataList.Count == 0 || poolTable.DataList.Count == 0)
             {
                 G.LogError($"TestLubanDrop DataList empty: drop={drops.DataList.Count}, pool={poolTable.DataList.Count}");

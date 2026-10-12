@@ -15,7 +15,7 @@ namespace Xease
     {
         public static ITableConfigService TableConfig => GEnv.Inst.Services.TableConfigSvc;
 
-        public static Tables Tables => TableConfig.Tables;
+        public static Tables Tables => GEnv.Inst.Services.TableConfigSvc.Tables;
 
     }
 
@@ -89,7 +89,7 @@ namespace Xease
         public void AddService_Config()
         {
             G.Log("AddService_Config");
-            var svc = new TableTableConfigService(LoadJsonFromAsset);
+            var svc = new TableConfigService(LoadJsonFromAsset);
             svc.Init();
             AddService(svc, out _tbConfigSvc);
         }
