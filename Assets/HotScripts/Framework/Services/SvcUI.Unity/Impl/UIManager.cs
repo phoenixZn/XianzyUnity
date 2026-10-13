@@ -481,15 +481,18 @@ namespace Xease.UI
         }
 
         /// <summary>
-        /// 从层列表与打开列表移除，并尝试恢复栈内下层 Panel。
+        /// 从层列表与打开列表移除。hideAll 时不恢复栈内下层。
         /// </summary>
         public void Remove(UIPanelBase ui, bool hideAll)
         {
             var layer = GetLayer(ui.layerId);
             layer.list.Remove(ui);
             HidePopup(ui);
-            CheckNeedOpenLastUI(ui);
-            ui.gameObject.SetActive(false);
+            // 整批关闭不再把下一层拉起来，避免退出 Play 时去激活已销毁物体
+            if (!hideAll)
+                CheckNeedOpenLastUI(ui);
+            if (ui.gameObject != null)
+                ui.gameObject.SetActive(false);
             _opendUI.Remove(ui.UIName);
         }
 

@@ -23,14 +23,15 @@ namespace Xease.UI
         {
             this.scrollerPro = scrollerPro;
             var rect = transform as RectTransform;
-            groupSize = rect.SizeDelta();
+            groupSize = SizeDelta(rect);
             if (scrollerPro.isGrid)
             {
                 var itemRect = itemPrefab as RectTransform;
+                var itemRectSize = SizeDelta(itemRect);
                 if (scrollerPro.scrollDirection == ScrollDirectionEnum.Vertical)
-                    gridCount = (int)(rect.SizeDelta().x / (itemRect.SizeDelta().x + scrollerPro.Scroller.spacing));
+                    gridCount = (int)(groupSize.x / (itemRectSize.x + scrollerPro.Scroller.spacing));
                 else
-                    gridCount = (int)(rect.SizeDelta().y / (itemRect.SizeDelta().y + scrollerPro.Scroller.spacing));
+                    gridCount = (int)(groupSize.y / (itemRectSize.y + scrollerPro.Scroller.spacing));
             }
             else
             {
@@ -78,5 +79,15 @@ namespace Xease.UI
                 }
             }
         }
+        
+        /// <summary>
+        /// 取 RectTransform 当前矩形尺寸，供格子列表计算每组个数。
+        /// 返回 rect.size，而不是 sizeDelta 字段。
+        /// </summary>
+        public static Vector2 SizeDelta(RectTransform rectTransform)
+        {
+            return rectTransform.rect.size;
+        }
     }
+
 }

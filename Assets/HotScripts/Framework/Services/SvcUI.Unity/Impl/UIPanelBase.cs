@@ -71,13 +71,16 @@ namespace Xease.UI
         }
 
         /// <summary>
-        /// 从层列表移除，播关闭缩放后 Destroy。
+        /// 从层列表移除，播关闭缩放后 Destroy。物体已被引擎销毁时只摘记录。
         /// </summary>
         public void Hide(bool hideAll = false)
         {
             _isActive = false;
             _isShowComplete = false;
             mOwnerMng.Remove(this, hideAll);
+            // 退出 Play 时 GameObject 可能先于 Shutdown 被销毁
+            if (gameObject == null)
+                return;
             if (UIViews == null)
             {
                 ViewHideInternal();

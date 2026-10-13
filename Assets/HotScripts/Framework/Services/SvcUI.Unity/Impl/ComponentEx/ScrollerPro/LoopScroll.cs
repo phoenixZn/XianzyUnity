@@ -108,6 +108,7 @@ namespace Xease.UI
             itemPrefab = scrollerPro.transform.Find("item").gameObject;
             // loopScrollItemPool = new LoopScrollItemPool<View>(this, 100, itemPrefab, loopScroll.transform, uiBase);
 
+            loopScroll.Initialize();
             loopScroll.GetObjectHandler = GetObject;
             loopScroll.ReturnObjectHandler = ReturnObject;
             loopScroll.ProvideDataHandler = ProvideData;

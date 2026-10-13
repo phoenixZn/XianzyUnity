@@ -47,7 +47,7 @@ namespace Xease.UI
         
         public void OnClickTestBtn(GameObject obj)
         {
-            
+            G.UI.Show(UIPanelName.UIMsgList);
         }
         
         

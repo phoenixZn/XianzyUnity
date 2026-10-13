@@ -59,16 +59,21 @@ namespace Xease.UI
 
         public GroupBase groupPrefab; // 作为 cell 模板的组
         public bool isGrid; // 为真时一组内排多个 item
+        bool _delegateBound; // Delegate 与滚动开关是否已绑定
 
         public EnhancedScroller Scroller => this;
 
         public int NumberOfCellsPerRow => groupPrefab.gridCount; // 一组里的 item 数
 
         /// <summary>
-        /// 绑定委托，并按 needScroller 开关滚动。
+        /// 绑定委托，并按 needScroller 开关滚动。不可做成 Awake：会挡住基类 private Awake，Instantiate 时 OnEnable 空引用。
         /// </summary>
-        public void Awake()
+        public void Initialize()
         {
+            if (_delegateBound)
+                return;
+
+            _delegateBound = true;
             Delegate = this;
             cellViewVisibilityChanged = CellViewVisibilityChanged;
             cellViewInstantiated = CellViewInstantiated;
