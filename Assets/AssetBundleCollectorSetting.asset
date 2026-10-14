@@ -50,7 +50,7 @@ MonoBehaviour:
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-    - GroupName: Other
+    - GroupName: Config
       GroupDesc: 
       AssetTags: 
       ActiveRuleName: EnableGroup
@@ -70,6 +70,35 @@ MonoBehaviour:
         PackRuleName: PackRawFile
         FilterRuleName: CollectAll
         AssetTags: 
+        UserData: 
+    - GroupName: Localization
+      GroupDesc: 
+      AssetTags: 
+      ActiveRuleName: EnableGroup
+      Collectors:
+      - CollectPath: Assets/HotAssets/Localization/en
+        CollectorGUID: 4189e5a7f91c9934495f467e1de863c8
+        CollectorType: 0
+        AddressRuleName: AddressDisable
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: en
+        UserData: 
+      - CollectPath: Assets/HotAssets/Localization/zh_cn
+        CollectorGUID: 7e73cfc20356d544a9600d83c1f5ce00
+        CollectorType: 0
+        AddressRuleName: AddressDisable
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: zh_cn
+        UserData: 
+      - CollectPath: Assets/HotAssets/Localization/zh_tw
+        CollectorGUID: 546a34fa601527e47b59545d17198c3c
+        CollectorType: 0
+        AddressRuleName: AddressDisable
+        PackRuleName: PackRawFile
+        FilterRuleName: CollectAll
+        AssetTags: zh_tw
         UserData: 
   - PackageName: PackDemoAsset
     PackageDesc: "\u8D44\u4EA7\u5305"

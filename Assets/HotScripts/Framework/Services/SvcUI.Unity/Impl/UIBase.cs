@@ -48,9 +48,7 @@ namespace Xease.UI
         public bool IsOpenScaleOver;
 
         public GameObject gameObject;
-        public Transform root;
         public Transform scaleRoot; // 名为 Scale 的子节点，存在才播开合缩放
-        public string Name;
 
         public Transform transform => gameObject.transform;
 
@@ -65,16 +63,15 @@ namespace Xease.UI
 
         public UIBase Parent;
 
-        public string uiViewName;
+        public string uiName;
 
         public int SortingOrder;
 
-        readonly Dictionary<EUIInitType, List<ICloseClear>> _closeClearDict =
-            new Dictionary<EUIInitType, List<ICloseClear>>();
+        readonly Dictionary<EUIInitType, List<ICloseClear>> _closeClearDict = new ();
 
-        readonly List<MotionHandle> _motionList = new List<MotionHandle>(); // 关闭/销毁时 TryCancel
+        readonly List<MotionHandle> _motionList = new (); // 关闭/销毁时 TryCancel
 
-        readonly Dictionary<string, object[]> AddViewArgsDict = new Dictionary<string, object[]>();
+        readonly Dictionary<string, object[]> AddViewArgsDict = new ();
 
         protected UIManager mOwnerMng;
 
@@ -231,7 +228,6 @@ namespace Xease.UI
         public virtual void onCreate()
         {
             RegisterEvents();
-            root = transform.Find("Root");
             scaleRoot = transform.Find("Scale");
             DoScale();
         }

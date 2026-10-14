@@ -105,7 +105,7 @@ namespace Xease
             txtGo.transform.SetParent(btnGo.transform, false);
             var txt = txtGo.AddComponent<Text>();
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            txt.text = "开始";
+            txt.text = G.GetI18N("common_login");
             txt.fontSize = 48;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.black;

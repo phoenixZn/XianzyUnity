@@ -570,7 +570,7 @@ namespace Xease.UI
             var go = Object.Instantiate(prefab);
             go.name = name;
             uiPanelBase.gameObject = go;
-            uiPanelBase.uiViewName = name;
+            uiPanelBase.uiName = name;
             _name2layerDic[name] = uiPanelBase.layerId;
             uiPanelBase.Initialize();
             uiPanelBase.BindUI();
@@ -591,7 +591,7 @@ namespace Xease.UI
             var go = Object.Instantiate(prefab);
             go.name = name;
             uiPanelBase.gameObject = go;
-            uiPanelBase.uiViewName = name;
+            uiPanelBase.uiName = name;
             uiPanelBase.Initialize();
             _name2layerDic[name] = uiPanelBase.layerId;
             uiPanelBase.BindUI();
@@ -622,7 +622,7 @@ namespace Xease.UI
                 }
 
                 viewBase.Parent = uiBase;
-                viewBase.uiViewName = viewName;
+                viewBase.uiName = viewName;
                 viewBase.InitializeParams(UIParams.New(this, null));
                 viewBase.Prepare();
                 BindViewBase2Obj(uiBase.transform, viewName, viewBase);
@@ -658,7 +658,7 @@ namespace Xease.UI
                     continue;
 
                 viewBase.Parent = uiBase;
-                viewBase.uiViewName = viewName;
+                viewBase.uiName = viewName;
                 viewBase.InitializeParams(UIParams.New(this, null));
                 yield return viewBase.Prepare();
                 BindViewBase2Obj(uiBase.transform, viewName, viewBase);
@@ -688,7 +688,7 @@ namespace Xease.UI
 
             var viewBase = (UIViewBase)ci?.Invoke(null);
             viewBase.Parent = uiBase;
-            viewBase.uiViewName = name;
+            viewBase.uiName = name;
             viewBase.InitializeParams(UIParams.New(this, objs));
             yield return viewBase.Prepare();
 
@@ -721,7 +721,7 @@ namespace Xease.UI
 
             var viewBase = (UIViewBase)ci?.Invoke(null);
             viewBase.Parent = uiBase;
-            viewBase.uiViewName = name;
+            viewBase.uiName = name;
             viewBase.InitializeParams(UIParams.New(this, objs));
             viewBase.Prepare();
 

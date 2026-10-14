@@ -3,7 +3,7 @@ using TinyJson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Framework
+namespace Xease
 {
     public static class JsonHelper
     {
