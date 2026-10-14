@@ -177,7 +177,7 @@ namespace Xease
                 System.Console.WriteLine("输入不能为空，请重新输入：");
                 return;
             }
-
+            System.Console.WriteLine($"执行 -> {G.GetI18N("common_login")}");
             _nextStateID = EnvStateID.ES_Main;
         }
     }

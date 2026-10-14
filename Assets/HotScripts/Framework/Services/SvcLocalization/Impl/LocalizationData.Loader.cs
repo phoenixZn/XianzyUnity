@@ -5,13 +5,13 @@ using Newtonsoft.Json;
 
 namespace Xease
 {
-    internal partial class LocalizationData
+    internal partial class LocalizationData : ILocalizationJsonSink
     {
         /// <summary>
-        /// 切换语言并清空后，用宿主提供的加载器重新填表。
+        /// 切换语言并清空后，用宿主提供的来源重新填表。
         /// reload 为 false 时，语言未变或目标为 unknown 则直接返回。
         /// </summary>
-        public void Load(Language language, Action<Language, Action<byte[], string>> loadJson, bool reload = false)
+        public void Load(Language language, ILocalizationJsonSource source, bool reload = false)
         {
             if (!reload && (_language == language || language == Language.unknown))
                 return;
@@ -19,7 +19,7 @@ namespace Xease
             _language = language;
 
             Unload();
-            loadJson?.Invoke(language, AddRawStringByJson);
+            source?.Load(language, this);
         }
 
         /// <summary>
@@ -113,6 +113,17 @@ namespace Xease
             G.LogError(string.IsNullOrEmpty(source)
                 ? $"[Localization] AddRawStringByJson Failed: {reason}"
                 : $"[Localization] AddRawStringByJson Failed: {reason}, source: {source}");
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// ILocalizationJsonSink:
+
+        /// <summary>
+        /// 解析一份 JSON 原文写入当前字符串表。
+        /// </summary>
+        void ILocalizationJsonSink.AddJson(byte[] jsonBytes, string sourcePath)
+        {
+            AddRawStringByJson(jsonBytes, sourcePath);
         }
     }
 }

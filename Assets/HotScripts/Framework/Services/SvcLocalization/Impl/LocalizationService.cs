@@ -12,25 +12,42 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         /// This：
 
+        // 与 UnityEngine.SystemLanguage 整型值对齐，本类不引用该枚举
+        private const int SystemLanguageChinese = 6;
+        private const int SystemLanguageEnglish = 10;
+        private const int SystemLanguageVietnamese = 38;
+        private const int SystemLanguageChineseSimplified = 40;
+        private const int SystemLanguageChineseTraditional = 41;
+
+        // 命令行宿主无系统语言时注入的语言码
+        internal const int ConsoleDefaultSystemLanguage = SystemLanguageEnglish;
+
+        // 系统语言码到 Language 的映射
+        private static readonly Dictionary<int, Language> LanguageMap = new Dictionary<int, Language>
+        {
+            { SystemLanguageChinese, Language.zh_cn },
+            { SystemLanguageChineseSimplified, Language.zh_cn },
+            { SystemLanguageChineseTraditional, Language.zh_tw },
+            { SystemLanguageEnglish, Language.en },
+            { SystemLanguageVietnamese, Language.vn },
+        };
+
         // 宿主给出的系统语言码，仅在没有已保存语言时参与映射
         private readonly int _systemLanguageCode;
-        // 系统语言码到 Language 的映射，由宿主配置
-        private readonly IReadOnlyDictionary<int, Language> _languageMap;
-        // 宿主注入的 JSON 加载；第二参数消费原文与来源路径
-        private readonly Action<Language, Action<byte[], string>> _loadJson;
+        // 宿主注入的 JSON 来源：磁盘或资源包
+        private readonly ILocalizationJsonSource _jsonSource;
         // 当前语言
         private Language _language = Language.unknown;
         // 当前语言的字符串表
         private readonly LocalizationData _localizationData = new();
 
         /// <summary>
-        /// 保存宿主注入的系统语言码、映射表与 JSON 加载器。
+        /// 保存宿主注入的系统语言码与 JSON 来源。
         /// </summary>
-        public LocalizationService(int systemLanguageCode, IReadOnlyDictionary<int, Language> languageMap, Action<Language, Action<byte[], string>> loadJson)
+        public LocalizationService(int systemLanguageCode, ILocalizationJsonSource jsonSource)
         {
             _systemLanguageCode = systemLanguageCode;
-            _languageMap = languageMap ?? throw new ArgumentNullException(nameof(languageMap));
-            _loadJson = loadJson ?? throw new ArgumentNullException(nameof(loadJson));
+            _jsonSource = jsonSource ?? throw new ArgumentNullException(nameof(jsonSource));
         }
 
         // 解析默认语言并强制重载字符串表
@@ -38,7 +55,7 @@ namespace Xease
         {
             var language = GetDefaultLanguage();
             _language = language;
-            _localizationData.Load(language, _loadJson, true);
+            _localizationData.Load(language, _jsonSource, true);
             G.Log($"[Localization] Init as language {language}");
         }
 
@@ -51,7 +68,7 @@ namespace Xease
                 return setLanguage;
             }
 
-            if (_languageMap.TryGetValue(_systemLanguageCode, out var language))
+            if (LanguageMap.TryGetValue(_systemLanguageCode, out var language))
             {
                 return language;
             }
@@ -68,7 +85,7 @@ namespace Xease
             }
 
             _language = language;
-            _localizationData.Load(language, _loadJson);
+            _localizationData.Load(language, _jsonSource);
             SaveLanguageSettings();
             G.Log($"[Localization] Set language {language}");
         }
