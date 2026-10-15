@@ -9,7 +9,7 @@ namespace Xease.CoreGame
     {
         public int BuffLevel { get; protected set; } // 初始层数，上身后由 BuffLogic.Level 作为运行时真源
         public int BuffMaxLevel { get; protected set; } // 最大层数，上身后由 BuffLogic.MaxLevel 作为运行时真源
-        public float DurationAddRate { get; internal set; } // 持续时间加成比例；免疫在 AddNewBuff 中扣减
+        public float DurationAddRate { get; internal set; } // 持续时间加成比例；上身前共有策略可改写
 
         //////////////////////////////////////////////////////////////////////////
         /// IHasLogicWorld / IHasMetaWorld / IHasOwnerEntity / IHasSourceEntity:

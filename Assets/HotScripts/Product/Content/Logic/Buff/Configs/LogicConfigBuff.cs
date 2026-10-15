@@ -11,7 +11,8 @@ namespace Xease.CoreGame
             : base(name, 20)
         {
             DefaultLogicType = typeof(BuffLogic);
-            
+
+            InitAttachPolicies();
             //Buff: ID从 7000000 开始
             InitConfigs_Template();
             InitConfigs_Demo();

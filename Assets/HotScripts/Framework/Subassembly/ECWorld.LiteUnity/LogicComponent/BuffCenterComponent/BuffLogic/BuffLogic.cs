@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Xease.CoreGame
 {
-    /// <summary> 对即将承受 Buff 的目标做额外校验；返回 true 表示允许施加，false 表示拒绝（如免疫）。 </summary>
+    /// <summary> 对即将承受 Buff 的目标做额外校验；返回 true 表示允许施加，false 表示拒绝。 </summary>
     public delegate bool TargetEntityCheckerFunc(LogicEntity targetEntity);
 
     /// <summary>
@@ -16,12 +16,13 @@ namespace Xease.CoreGame
         IBuffMergeRule MergeRule { get; }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// Buff 静态配置：在 <see cref="CustomLogicCfg"/> 之上扩展 Buff 专属玩法字段。
     /// </summary>
     public class BuffCfg : CustomLogicCfg, IEntityBuffCfg
     {
-        public TargetEntityCheckerFunc TargetChecker { get; protected set; } // buff预加载检查器，用于在buff添加时对目标实体做额外的检查（比如免疫），返回true表示允许添加，false表示拒绝添加
+        public TargetEntityCheckerFunc TargetChecker { get; protected set; } // 单条配置的上身门槛；返回 true 允许添加，false 拒绝。跨组件共有规则走 IBuffAttachPolicy
         public int BuffTag { get; protected set; } // buff标签，mask格式，用于对buff进行批量管理
         public IBuffMergeRule MergeRule { get; protected set; } // 同类buff合并规则
 
@@ -68,55 +69,28 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// Buff 运行时逻辑：由 <see cref="BuffCenterComponent"/> 持有并驱动，负责持续时间倒计时、
     /// 层数管理，并把上身/移除/状态变化通知传播给各 CustomNode。
     /// </summary>
-    public partial class BuffLogic : EntityCmdLogic, IBuff, IHasOwnerEntity, IHasSourceEntity, IForceEnd
+    public partial class BuffLogic : EntityCmdLogic, IBuff, IForceEnd
     {
-        private BuffCfg _buffCfg;
-
-        private float _timeLeft; // 剩余持续时间，秒
-        private float _timeTotal; // 总持续时间，秒
-        public bool IsForever => _timeLeft <= 0; // 持续时间为配置值非正时视为永久
-        private bool _isForceEnd; // 外部强制结束标记
-
         public int Level { get; set; }
         public int MaxLevel { get; set; }
+        
+        protected BuffCfg _buffCfg;
+        protected bool _isForceEnd; // 外部强制结束标记
 
-        public float TimeLeft
-        {
-            get => _timeLeft;
-        }
-
-        public float TimeTotal
-        {
-            get => _timeTotal;
-        }
-
-        public BuffCfg BuffCfg
-        {
-            get { return _buffCfg; }
-        }
-
+        public float TimeLeft { get; protected set; } // 剩余持续时间，秒
+        public float TimeTotal { get; protected set; } // 总持续时间，秒
+        public bool IsForever => TimeLeft <= 0; // 持续时间为配置值非正时视为永久
+        
         public BuffGenInfo BuffGenInfo
         {
             get { return GetGenInfo<BuffGenInfo>(); }
         }
-
-        //////////////////////////////////////////////////////////////////////////
-        /// IHasOwnerEntity / IHasSourceEntity:
-
-        public LogicEntity OwnerEntity
-        {
-            get { return GetGenInfo<BuffGenInfo>()?.OwnerEntity; }
-        }
-
-        public LogicEntity SourceEntity
-        {
-            get { return GetGenInfo<BuffGenInfo>()?.SourceEntity; }
-        }
-
+        
         //////////////////////////////////////////////////////////////////////////
         /// CustomLogic：override
 
@@ -130,8 +104,8 @@ namespace Xease.CoreGame
             _buffCfg = (BuffCfg)cfg;
             base.InitializeNode(cfg, context);
             _isForceEnd = false;
-            _timeTotal = CalcDuration();
-            _timeLeft = _timeTotal;
+            TimeTotal = CalcDuration();
+            TimeLeft = TimeTotal;
         }
 
         private float CalcDuration()
@@ -165,7 +139,7 @@ namespace Xease.CoreGame
             if (IsForever)
                 return false;
 
-            if (_timeLeft <= 0)
+            if (TimeLeft <= 0)
             {
                 return true;
             }
@@ -185,8 +159,8 @@ namespace Xease.CoreGame
         {
             if (!IsForever)
             {
-                _timeLeft -= dt;
-                if (_timeLeft <= 0)
+                TimeLeft -= dt;
+                if (TimeLeft <= 0)
                     return;
             }
             Update(dt);
@@ -205,14 +179,14 @@ namespace Xease.CoreGame
 
         public void SetTime(float duration)
         {
-            _timeTotal = duration;
-            _timeLeft = duration;
+            TimeTotal = duration;
+            TimeLeft = duration;
         }
 
         public void ResetTime()
         {
-            _timeTotal = CalcDuration();
-            _timeLeft = _timeTotal;
+            TimeTotal = CalcDuration();
+            TimeLeft = TimeTotal;
         }
 
         public bool IsMaxLevel()
@@ -222,7 +196,7 @@ namespace Xease.CoreGame
 
         public bool HasBuffTag(int buffTag)
         {
-            return (BuffCfg.BuffTag & buffTag) == buffTag;
+            return (_buffCfg.BuffTag & buffTag) == buffTag;
         }
 
         //////////////////////////////////////////////////////////////////////////

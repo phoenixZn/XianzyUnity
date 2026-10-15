@@ -8,16 +8,16 @@ namespace Xease.CoreGame
     /// </summary>
     public sealed class BuffCenterComponent : LogicComponent, IEntityCommandHandler
     {
-        private List<IBuff> m_buffs = new List<IBuff>();
+        private List<IBuff> _buffs = new List<IBuff>();
         // Update 期间新挂的 Buff 先入队，由 FlushPendingBuffs 统一落地，避免遍历中修改集合
-        private List<BuffGenInfo> m_creatingList = new List<BuffGenInfo>();
+        private List<BuffGenInfo> _creatingList = new List<BuffGenInfo>();
         // Update 递归深度，大于 0 时 AddNewBuff 走延迟创建队列
-        private int m_updateDepth;
+        private int _updateDepth;
 
         public List<IBuff> BuffList
         {
-            get { return m_buffs; }
-            private set { m_buffs = value; }
+            get { return _buffs; }
+            private set { _buffs = value; }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -25,9 +25,9 @@ namespace Xease.CoreGame
 
         public bool HasBuff(int logicConfigId)
         {
-            for (int i = 0; i < m_buffs.Count; i++)
+            for (int i = 0; i < _buffs.Count; i++)
             {
-                if (m_buffs[i].BuffGenInfo.LogicConfigID == logicConfigId)
+                if (_buffs[i].BuffGenInfo.LogicConfigID == logicConfigId)
                     return true;
             }
             return false;
@@ -45,9 +45,9 @@ namespace Xease.CoreGame
         public BuffLogic GetBuff(int logicConfigId)
         {
             BuffLogic last = null;
-            for (int i = 0; i < m_buffs.Count; i++)
+            for (int i = 0; i < _buffs.Count; i++)
             {
-                var buff = m_buffs[i] as BuffLogic;
+                var buff = _buffs[i] as BuffLogic;
                 if (buff != null && buff.GenInfo.LogicConfigID == logicConfigId)
                     last = buff;
             }
@@ -60,9 +60,9 @@ namespace Xease.CoreGame
         public int GetBuffSumLevel(int logicConfigId)
         {
             int sum = 0;
-            for (int i = 0; i < m_buffs.Count; i++)
+            for (int i = 0; i < _buffs.Count; i++)
             {
-                var b = m_buffs[i];
+                var b = _buffs[i];
                 if (b.BuffGenInfo.LogicConfigID == logicConfigId)
                     sum += b.Level;
             }
@@ -73,7 +73,7 @@ namespace Xease.CoreGame
         /// This: 创建与移除
 
         /// <summary>
-        /// 施加新 Buff。依次经过配置校验、TargetChecker 预检测、同类合并规则；
+        /// 施加新 Buff。依次经过配置校验、TargetChecker 预检测、容器共有上身策略、同类合并规则；
         /// Update 期间调用时入待创建队列延迟落地。返回 false 表示 Buff 未上身。
         /// 一旦传入，无论成败调用方都不再 Destroy GenInfo。
         /// </summary>
@@ -96,21 +96,8 @@ namespace Xease.CoreGame
                 return false;
             }
 
-            // buff免疫（配表万分比）
-            if (HostEntity.hasComImmune)
-            {
-                var buffImmune = HostEntity.GetBuffTagImmune(cfg.BuffTag) + HostEntity.GetBuffImmune(genInfo.LogicConfigID);
-                if (buffImmune != 0)
-                {
-                    if (buffImmune >= 10000) // 完全免疫，buff无法上身
-                    {
-                        CLogger.LogDebug($"buff{genInfo.LogicConfigID} AddNewBuff 时 buff完全免疫 免疫值{buffImmune}");
-                        RecycleUnusedGenInfo(genInfo);
-                        return false;
-                    }
-                    genInfo.DurationAddRate -= buffImmune / 10000f;
-                }
-            }
+            if (!ApplyAttachPolicies(container, cfg, genInfo))
+                return false;
 
             // 同类buff合并规则
             var mergeRule = cfg.MergeRule ?? BuffMergeRule.Replace; // 默认为Replace规则
@@ -123,13 +110,33 @@ namespace Xease.CoreGame
 
             genInfo.OwnerEntity = HostEntity;
 
-            if (m_updateDepth > 0)
+            if (_updateDepth > 0)
             {
-                m_creatingList.Add(genInfo);
+                _creatingList.Add(genInfo);
                 return true;
             }
 
             CreateAndAttachBuff(genInfo);
+            return true;
+        }
+
+        // 容器未实现 IBuffAttachPolicyHost 时跳过。任一策略拒绝则回收 GenInfo。
+        private bool ApplyAttachPolicies(ILogicConfigContainer container, IEntityBuffCfg cfg, BuffGenInfo genInfo)
+        {
+            if (container is not IBuffAttachPolicyHost host)
+                return true;
+
+            var policies = host.AttachPolicies;
+            for (int i = 0; i < policies.Count; i++)
+            {
+                if (policies[i].Apply(HostEntity, cfg, genInfo))
+                    continue;
+
+                CLogger.LogDebug($"buff{genInfo.LogicConfigID} AddNewBuff 共有策略 {policies[i].GetType().Name} 拒绝上身");
+                RecycleUnusedGenInfo(genInfo);
+                return false;
+            }
+
             return true;
         }
 
@@ -139,19 +146,19 @@ namespace Xease.CoreGame
         public void FlushPendingBuffs()
         {
             const int maxPass = 8; // 安全趟数上限，防止 Buff 落地时链式创建新 Buff 导致死循环
-            for (int pass = 0; pass < maxPass && m_creatingList.Count > 0; pass++)
+            for (int pass = 0; pass < maxPass && _creatingList.Count > 0; pass++)
             {
-                var pending = m_creatingList;
-                m_creatingList = new List<BuffGenInfo>();
+                var pending = _creatingList;
+                _creatingList = new List<BuffGenInfo>();
                 for (int i = 0; i < pending.Count; i++)
                 {
                     CreateAndAttachBuff(pending[i]);
                 }
             }
 
-            if (m_creatingList.Count > 0)
+            if (_creatingList.Count > 0)
             {
-                G.LogWarning($"FlushPendingBuffs 超过安全次数仍有待创建 Buff，count={m_creatingList.Count}");
+                G.LogWarning($"FlushPendingBuffs 超过安全次数仍有待创建 Buff，count={_creatingList.Count}");
                 RecycleCreatingList();
             }
         }
@@ -165,7 +172,7 @@ namespace Xease.CoreGame
                 return;
             }
 
-            m_buffs.Add(buffLogic);
+            _buffs.Add(buffLogic);
             buffLogic.OnEntityAddBuff(HostEntity);
         }
 
@@ -176,9 +183,9 @@ namespace Xease.CoreGame
         {
             if (logicConfigId == null || logicConfigId.Length == 0) return false;
             bool removed = false;
-            for (int i = m_buffs.Count - 1; i >= 0; --i)
+            for (int i = _buffs.Count - 1; i >= 0; --i)
             {
-                var buff = m_buffs[i] as BuffLogic;
+                var buff = _buffs[i] as BuffLogic;
                 if (buff == null) continue;
                 int id = buff.BuffGenInfo.LogicConfigID;
                 for (int k = 0; k < logicConfigId.Length; k++)
@@ -186,7 +193,7 @@ namespace Xease.CoreGame
                     if (logicConfigId[k] == id)
                     {
                         DestroyBuff(buff);
-                        m_buffs.RemoveAt(i);
+                        _buffs.RemoveAt(i);
                         removed = true;
                         break;
                     }
@@ -203,16 +210,16 @@ namespace Xease.CoreGame
         {
             if (buffTag == null || buffTag.Length == 0) return false;
             bool removed = false;
-            for (int i = m_buffs.Count - 1; i >= 0; --i)
+            for (int i = _buffs.Count - 1; i >= 0; --i)
             {
-                var buff = m_buffs[i] as BuffLogic;
+                var buff = _buffs[i] as BuffLogic;
                 if (buff == null) continue;
                 for (int k = 0; k < buffTag.Length; k++)
                 {
                     if (buff.HasBuffTag(buffTag[k]))
                     {
                         DestroyBuff(buff);
-                        m_buffs.RemoveAt(i);
+                        _buffs.RemoveAt(i);
                         removed = true;
                         break;
                     }
@@ -227,11 +234,11 @@ namespace Xease.CoreGame
         /// </summary>
         public bool RemoveBuffByIndex(int index)
         {
-            if (index < 0 || index >= m_buffs.Count)
+            if (index < 0 || index >= _buffs.Count)
                 return false;
-            var buff = m_buffs[index] as BuffLogic;
+            var buff = _buffs[index] as BuffLogic;
             DestroyBuff(buff);
-            m_buffs.RemoveAt(index);
+            _buffs.RemoveAt(index);
             return true;
         }
 
@@ -240,11 +247,11 @@ namespace Xease.CoreGame
         /// </summary>
         public void RemoveAllBuffs()
         {
-            for (int i = m_buffs.Count - 1; i >= 0; --i)
+            for (int i = _buffs.Count - 1; i >= 0; --i)
             {
-                var buff = m_buffs[i] as BuffLogic;
+                var buff = _buffs[i] as BuffLogic;
                 DestroyBuff(buff);
-                m_buffs.RemoveAt(i);
+                _buffs.RemoveAt(i);
             }
 
             RecycleCreatingList();
@@ -265,11 +272,11 @@ namespace Xease.CoreGame
         // 回收待创建队列中尚未落地的 GenInfo
         private void RecycleCreatingList()
         {
-            for (int i = 0; i < m_creatingList.Count; i++)
+            for (int i = 0; i < _creatingList.Count; i++)
             {
-                RecycleUnusedGenInfo(m_creatingList[i]);
+                RecycleUnusedGenInfo(_creatingList[i]);
             }
-            m_creatingList.Clear();
+            _creatingList.Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -280,21 +287,21 @@ namespace Xease.CoreGame
         /// </summary>
         public void Update(float dt)
         {
-            m_updateDepth++;
+            _updateDepth++;
             try
             {
                 FlushPendingBuffs();
 
-                for (int i = m_buffs.Count - 1; i >= 0; --i)
+                for (int i = _buffs.Count - 1; i >= 0; --i)
                 {
-                    var buff = m_buffs[i] as BuffLogic;
+                    var buff = _buffs[i] as BuffLogic;
 
                     buff.UpdateBuff(dt);
 
                     if (buff.IsFinished())
                     {
                         DestroyBuff(buff);
-                        m_buffs.RemoveAt(i);
+                        _buffs.RemoveAt(i);
                     }
                 }
 
@@ -302,7 +309,7 @@ namespace Xease.CoreGame
             }
             finally
             {
-                m_updateDepth--;
+                _updateDepth--;
             }
         }
 
@@ -311,7 +318,7 @@ namespace Xease.CoreGame
 
         public bool HandleEntityCommand(LogicEntity entity, EntityCommand cmd)
         {
-            foreach (var buff in m_buffs)
+            foreach (var buff in _buffs)
             {
                 if (buff is IEntityCommandHandler commandHandler)
                 {
@@ -321,7 +328,6 @@ namespace Xease.CoreGame
                     }
                 }
             }
-
             return false;
         }
 
@@ -330,15 +336,15 @@ namespace Xease.CoreGame
 
         public override void DisposeOnRemove()
         {
-            for (int i = 0; i < m_buffs.Count; ++i)
+            for (int i = 0; i < _buffs.Count; ++i)
             {
-                var buff = m_buffs[i] as BuffLogic;
+                var buff = _buffs[i] as BuffLogic;
                 buff.OnBuffPreviousRemove();
                 G.CustomLogic.DestroyLogic(buff);
             }
-
             RecycleCreatingList();
-            m_buffs.Clear();
+            _buffs.Clear();
+            _updateDepth = 0;
             base.DisposeOnRemove();
         }
     }
