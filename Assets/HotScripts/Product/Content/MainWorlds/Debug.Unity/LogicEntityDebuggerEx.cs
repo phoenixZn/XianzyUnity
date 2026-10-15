@@ -50,7 +50,7 @@ namespace Xease.CoreGame.Debug
         {
             UpdateComData_ComTransform();
             // UpdateComData_ComAI();
-            // UpdateComData_ComBuffCenter();
+            UpdateComData_ComBuffCenter();
             // UpdateComData_ComFSM();
         }
         

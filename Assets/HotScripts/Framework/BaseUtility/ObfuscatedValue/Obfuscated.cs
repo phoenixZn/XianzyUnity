@@ -7,6 +7,8 @@ namespace Xease
     /// <summary>
     /// 对非托管数值做 XOR 位混淆，使内存中不直接存储明文。
     /// 轻度防扫描，并非密码学加密。可变 struct，应作为字段存放；经属性取出后再写会改到副本。
+    ///
+    /// 
     /// 支持 int、uint、float、long、ulong、double。
     /// </summary>
     public struct Obfuscated<T> : IEquatable<Obfuscated<T>> where T : unmanaged, IEquatable<T>

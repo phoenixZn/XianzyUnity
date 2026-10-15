@@ -31,7 +31,7 @@ namespace Xease.CoreGame
                     //systems.Add(new SysLocomotion(worlds));
                     //systems.Add(new SysCollision(worlds));
                     //systems.Add(new SysSubobject(worlds));
-                    //systems.Add(new SysBuff(worlds));
+                    systems.Add(new SysBuff(worlds));
                     // 表现：
                     systems.Add(new SysViewLoader(worlds));
                     systems.Add(new SysSyncViewTransform(worlds));

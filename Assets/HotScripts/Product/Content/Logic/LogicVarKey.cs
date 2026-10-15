@@ -56,7 +56,6 @@ namespace Xease.CoreGame
 
         // Buff
         public const string CV_BuffDuration = "CV_BuffDuration"; // Buff持续时间
-        public const string CV_CurBuff = "CV_CurBuff"; // 当前buff
         public const string CV_BuffMaxLevel = "CV_BuffMaxLevel";  //buff最大等级
         public const string CV_DisperseBuffList = "CV_DisperseBuffList"; //驱散buff列表
     }
