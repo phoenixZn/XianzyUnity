@@ -19,12 +19,14 @@ namespace Xease.CoreGame
 
         private void InitConfigs_Template()
         {
-            AddConfig(7100000, new List<ICustomNodeCfg>()
+            AddBuff(7100000, new List<ICustomNodeCfg>()
             {
                 InitializeCall((CustomNode node) =>
                 {
                     G.Log("测试Buff模版 7100000");
                 }),
+            }).DefaultVar(env =>
+            {
             });
         }
 
@@ -32,9 +34,16 @@ namespace Xease.CoreGame
         /// 登记一个 Buff 配置（产出 <see cref="BuffCfg"/>，满足 BuffCenterComponent 的 IEntityBuffCfg 校验）。
         /// 返回的 cfg 可继续链式 WithBuffTag / WithTargetChecker / WithMergeRule。
         /// </summary>
-        protected BuffCfg AddBuffConfig(int id, Nodes nodes, string desc = null)
+        protected BuffCfg AddBuff(int id, Nodes nodes, string desc = null)
         {
-            var logicCfg = new BuffCfg(id, nodes, DefaultLogicType, desc);
+            var logicCfg = new BuffCfg(id, nodes, DefaultLogicType, desc).WithDuration(CvKey.CV_BuffDuration);
+            Add(id, logicCfg);
+            return logicCfg;
+        }
+        
+        protected BuffCfg AddBuff(int id, Nodes nodes, float buffDuration, string desc = null)
+        {
+            var logicCfg = new BuffCfg(id, nodes, DefaultLogicType, desc).WithDuration(CvKey.CV_BuffDuration, buffDuration);
             Add(id, logicCfg);
             return logicCfg;
         }

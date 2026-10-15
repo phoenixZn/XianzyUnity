@@ -61,7 +61,7 @@ namespace Xease.CoreGame
                 {
                     return true;
                 }
-                if (oldBuff.BuffGenInfo.BuffLevel > genInfo.BuffLevel)
+                if (oldBuff.Level > genInfo.BuffLevel)
                 {
                     return false;
                 }
@@ -89,14 +89,11 @@ namespace Xease.CoreGame
                 var oldLevel = oldBuff.Level;
                 oldBuff.MaxLevel = genInfo.BuffMaxLevel;
                 oldBuff.Level = System.Math.Min(oldBuff.Level + genInfo.BuffLevel, genInfo.BuffMaxLevel);
-                oldBuff.BuffGenInfo.BuffLevel = oldBuff.Level;
-                oldBuff.BuffGenInfo.BuffMaxLevel = oldBuff.MaxLevel;
                 var levelIncreased = oldBuff.Level > oldLevel;
                 if (ResetDurationOnMerge && (!ResetDurationOnlyWhenLevelIncreases || levelIncreased))
                 {
                     oldBuff.ResetTime();
                 }
-                oldBuff.Upgrade();
                 oldBuff.OnBuffStateChanged(buffCenter.HostEntity);
                 return false;
             }
@@ -119,7 +116,7 @@ namespace Xease.CoreGame
                     {
                         continue;
                     }
-                    sumLevel += buff.BuffGenInfo.BuffLevel;
+                    sumLevel += buff.Level;
                     if (sumLevel > genInfo.BuffMaxLevel)
                     {
                         buffCenter.RemoveBuffByIndex(i);

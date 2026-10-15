@@ -16,7 +16,5 @@ namespace Xease.CoreGame
         bool IsFinished();
 
         void UpdateBuff(float dt);
-
-        void Upgrade();
     }
 }

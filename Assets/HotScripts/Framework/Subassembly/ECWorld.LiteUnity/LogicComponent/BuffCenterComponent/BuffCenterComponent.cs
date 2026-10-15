@@ -75,6 +75,7 @@ namespace Xease.CoreGame
         /// <summary>
         /// 施加新 Buff。依次经过配置校验、TargetChecker 预检测、同类合并规则；
         /// Update 期间调用时入待创建队列延迟落地。返回 false 表示 Buff 未上身。
+        /// 一旦传入，无论成败调用方都不再 Destroy GenInfo。
         /// </summary>
         public bool AddNewBuff(BuffGenInfo genInfo)
         {
@@ -83,6 +84,7 @@ namespace Xease.CoreGame
             if (cfg == null)
             {
                 G.LogWarning($"buff{genInfo.LogicConfigID} AddNewBuff cfg不是 IEntityBuffCfg");
+                RecycleUnusedGenInfo(genInfo);
                 return false;
             }
 
@@ -90,6 +92,7 @@ namespace Xease.CoreGame
             if (cfg.TargetChecker != null && !cfg.TargetChecker(HostEntity))
             {
                 G.LogWarning($"buff{genInfo.LogicConfigID} AddNewBuff 时 TargetChecker 检查不通过");
+                RecycleUnusedGenInfo(genInfo);
                 return false;
             }
 
@@ -102,6 +105,7 @@ namespace Xease.CoreGame
                     if (buffImmune >= 10000) // 完全免疫，buff无法上身
                     {
                         CLogger.LogDebug($"buff{genInfo.LogicConfigID} AddNewBuff 时 buff完全免疫 免疫值{buffImmune}");
+                        RecycleUnusedGenInfo(genInfo);
                         return false;
                     }
                     genInfo.DurationAddRate -= buffImmune / 10000f;
@@ -113,10 +117,11 @@ namespace Xease.CoreGame
             if (!mergeRule.Merge(this, genInfo))
             {
                 CLogger.LogDebug($"buff{genInfo.LogicConfigID} AddNewBuff 合并规则 {mergeRule.GetType().Name}");
+                RecycleUnusedGenInfo(genInfo);
                 return false;
             }
 
-            genInfo.Owner = HostEntity;
+            genInfo.OwnerEntity = HostEntity;
 
             if (m_updateDepth > 0)
             {
@@ -147,6 +152,7 @@ namespace Xease.CoreGame
             if (m_creatingList.Count > 0)
             {
                 G.LogWarning($"FlushPendingBuffs 超过安全次数仍有待创建 Buff，count={m_creatingList.Count}");
+                RecycleCreatingList();
             }
         }
 
@@ -154,7 +160,10 @@ namespace Xease.CoreGame
         {
             var buffLogic = G.CustomLogic.CreateLogic<BuffLogic>(genInfo);
             if (buffLogic == null)
+            {
+                RecycleUnusedGenInfo(genInfo);
                 return;
+            }
 
             m_buffs.Add(buffLogic);
             buffLogic.OnEntityAddBuff(HostEntity);
@@ -238,13 +247,29 @@ namespace Xease.CoreGame
                 m_buffs.RemoveAt(i);
             }
 
-            m_creatingList.Clear();
+            RecycleCreatingList();
         }
 
         private void DestroyBuff(BuffLogic buff)
         {
             buff.OnBuffPreviousRemove();
             G.CustomLogic.DestroyLogic(buff);
+        }
+
+        // 尚未 CreateLogic 的 GenInfo 由本组件回收，避免失败路径泄漏
+        private static void RecycleUnusedGenInfo(BuffGenInfo genInfo)
+        {
+            G.CustomLogic.DestroyGenInfo(genInfo);
+        }
+
+        // 回收待创建队列中尚未落地的 GenInfo
+        private void RecycleCreatingList()
+        {
+            for (int i = 0; i < m_creatingList.Count; i++)
+            {
+                RecycleUnusedGenInfo(m_creatingList[i]);
+            }
+            m_creatingList.Clear();
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -312,7 +337,7 @@ namespace Xease.CoreGame
                 G.CustomLogic.DestroyLogic(buff);
             }
 
-            m_creatingList.Clear();
+            RecycleCreatingList();
             m_buffs.Clear();
             base.DisposeOnRemove();
         }

@@ -45,6 +45,20 @@ namespace Xease.CoreGame
             self.LogError("node.GetOwnerEntity owner == null");
             return null;
         }
+
+        /// <summary>
+        /// 当前逻辑节获取: 来源实体。
+        /// </summary>
+        public static LogicEntity GetSourceEntity(this CustomNode self)
+        {
+            var genInfo = self.GetGenInfo<IHasSourceEntity>(false);
+            if (genInfo != null)
+            {
+                return genInfo.SourceEntity;
+            }
+            self.LogError("node.GetSourceEntity source == null");
+            return null;
+        }
         
         /// <summary>
         /// 当前逻辑节获取: 玩家信息。

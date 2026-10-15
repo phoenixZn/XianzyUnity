@@ -48,6 +48,11 @@
             {
                 return theLogic;
             }
+            if (logic == null)
+            {
+                CLogger.LogError($"CreateLogic<T> logic == null, T = {typeof(T)}, LogicConfigID = {genInfo.LogicConfigID}");
+                return null;
+            }
             CLogger.LogError($"CreateLogic logic = {genInfo.LogicConfigID} logic({logic.GetType()}) is not {typeof(T)}");
             return null;
         }
@@ -63,6 +68,16 @@
         public T NewGenInfo<T>() where T : CustomLogicGenInfo, new()
         {
             return _factory.CreatePart<T>();
+        }
+
+        /// <summary>
+        /// 回收尚未交给 Logic 的 GenInfo；CreateLogic 成功后改由 DestroyLogic 回收。
+        /// </summary>
+        public void DestroyGenInfo(CustomLogicGenInfo genInfo)
+        {
+            if (genInfo == null)
+                return;
+            _factory.DestroyPart(genInfo);
         }
 
         public VarEnv NewVarEnv()

@@ -21,14 +21,16 @@ namespace Xease.CoreGame
     /// </summary>
     public class BuffCfg : CustomLogicCfg, IEntityBuffCfg
     {
+        public TargetEntityCheckerFunc TargetChecker { get; protected set; } // buff预加载检查器，用于在buff添加时对目标实体做额外的检查（比如免疫），返回true表示允许添加，false表示拒绝添加
+        public int BuffTag { get; protected set; } // buff标签，mask格式，用于对buff进行批量管理
+        public IBuffMergeRule MergeRule { get; protected set; } // 同类buff合并规则
+
+        public FloatCfg TotalDuration = new FloatCfg(-1);
+        
         public override System.Type NodeType()
         {
             return typeof(BuffLogic);
         }
-
-        public TargetEntityCheckerFunc TargetChecker { get; protected set; } // buff预加载检查器，用于在buff添加时对目标实体做额外的检查（比如免疫），返回true表示允许添加，false表示拒绝添加
-        public int BuffTag { get; protected set; } // buff标签，mask格式，用于对buff进行批量管理
-        public IBuffMergeRule MergeRule { get; protected set; } // 同类buff合并规则
 
         public BuffCfg WithTargetChecker(TargetEntityCheckerFunc checkFuc)
         {
@@ -47,6 +49,19 @@ namespace Xease.CoreGame
             MergeRule = mergeRule;
             return this;
         }
+        
+        public BuffCfg WithDuration(string varID, float defaultValue = -1)
+        {
+            TotalDuration.SetVarID(varID);
+            TotalDuration.ResetDefaultValue(defaultValue);
+            return this;
+        }
+        
+        public BuffCfg WithDuration(float defaultValue)
+        {
+            TotalDuration.ResetDefaultValue(defaultValue);
+            return this;
+        }
 
         public BuffCfg(int id, List<ICustomNodeCfg> nodeCfgList, System.Type logicType, string desc = null) : base(id, nodeCfgList, logicType, desc)
         {
@@ -59,35 +74,34 @@ namespace Xease.CoreGame
     /// </summary>
     public partial class BuffLogic : EntityCmdLogic, IBuff, IHasOwnerEntity, IHasSourceEntity, IForceEnd
     {
-        private BuffCfg m_buffCfg;
-        private BuffGenInfo m_buffGenInfo;
+        private BuffCfg _buffCfg;
 
-        private float m_timeLeft; // 剩余持续时间，秒
-        private float m_timeTotal; // 总持续时间，秒
-        private bool m_isForever; // 持续时间为配置值非正时视为永久
-        private bool m_isForceEnd; // 外部强制结束标记
+        private float _timeLeft; // 剩余持续时间，秒
+        private float _timeTotal; // 总持续时间，秒
+        public bool IsForever => _timeLeft <= 0; // 持续时间为配置值非正时视为永久
+        private bool _isForceEnd; // 外部强制结束标记
 
         public int Level { get; set; }
         public int MaxLevel { get; set; }
 
         public float TimeLeft
         {
-            get => m_timeLeft;
+            get => _timeLeft;
         }
 
         public float TimeTotal
         {
-            get => m_timeTotal;
+            get => _timeTotal;
         }
 
         public BuffCfg BuffCfg
         {
-            get { return m_buffCfg; }
+            get { return _buffCfg; }
         }
 
         public BuffGenInfo BuffGenInfo
         {
-            get { return m_buffGenInfo; }
+            get { return GetGenInfo<BuffGenInfo>(); }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -95,12 +109,12 @@ namespace Xease.CoreGame
 
         public LogicEntity OwnerEntity
         {
-            get { return m_buffGenInfo.Owner; }
+            get { return GetGenInfo<BuffGenInfo>()?.OwnerEntity; }
         }
 
         public LogicEntity SourceEntity
         {
-            get { return m_buffGenInfo.Sourcer; }
+            get { return GetGenInfo<BuffGenInfo>()?.SourceEntity; }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -108,60 +122,50 @@ namespace Xease.CoreGame
 
         public override void InitializeNode(ICustomNodeCfg cfg, in CustomNodeContext context)
         {
-            PreInitializeNode(cfg, context);
-            base.InitializeNode(cfg, context);
-            m_isForceEnd = false;
-            m_timeTotal = CalcDuration();
-            m_timeLeft = m_timeTotal;
-            m_isForever = m_timeLeft <= 0;
-        }
+            if (!(context.GenInfo is BuffGenInfo))
+            {
+                G.LogError($"BuffLogic InitializeNode GenInfo is not BuffGenInfo, GenInfo={context.GenInfo.GetType()}");
+            }
 
-        private void PreInitializeNode(ICustomNodeCfg cfg, CustomNodeContext context)
-        {
-            m_buffCfg = (BuffCfg)cfg;
-            m_buffGenInfo = (BuffGenInfo)context.GenInfo;
+            _buffCfg = (BuffCfg)cfg;
+            base.InitializeNode(cfg, context);
+            _isForceEnd = false;
+            _timeTotal = CalcDuration();
+            _timeLeft = _timeTotal;
         }
 
         private float CalcDuration()
         {
-            var durationCfg = GetVar<FloatCfg>(CvKey.CV_BuffDuration);
+            var durationCfg = _buffCfg.TotalDuration;
             var duration = durationCfg.GetValue(this);
             if (duration <= 0)
             {
                 return duration;
             }
 
-            if (m_buffGenInfo.DurationAddSeconds != 0)
-            {
-                duration += m_buffGenInfo.DurationAddSeconds;
-            }
-            if (m_buffGenInfo.SourceDurationAddRate != 0)
-            {
-                duration *= (1 + m_buffGenInfo.SourceDurationAddRate);
-            }
             // buff生成时的持续时间加成
-            if (m_buffGenInfo.DurationAddRate != 0)
+            var genInfo = GetGenInfo<BuffGenInfo>();
+            if (genInfo != null && genInfo.DurationAddRate != 0)
             {
-                duration *= (1 + m_buffGenInfo.DurationAddRate);
+                duration *= (1 + genInfo.DurationAddRate);
             }
             return duration;
         }
 
         public override void Destroy()
         {
-            m_buffCfg = null;
-            m_buffGenInfo.Clear();
-            m_isForceEnd = false;
+            _buffCfg = null;
+            _isForceEnd = false;
 
             base.Destroy();
         }
 
         public override bool CanStop()
         {
-            if (m_isForever)
+            if (IsForever)
                 return false;
 
-            if (m_timeLeft <= 0)
+            if (_timeLeft <= 0)
             {
                 return true;
             }
@@ -174,23 +178,18 @@ namespace Xease.CoreGame
 
         public bool IsFinished()
         {
-            return m_isForceEnd || CanStop();
+            return _isForceEnd || CanStop();
         }
 
         public void UpdateBuff(float dt)
         {
-            if (!m_isForever)
+            if (!IsForever)
             {
-                m_timeLeft -= dt;
-                if (m_timeLeft <= 0)
+                _timeLeft -= dt;
+                if (_timeLeft <= 0)
                     return;
             }
-
             Update(dt);
-        }
-
-        public void Upgrade()
-        {
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -198,7 +197,7 @@ namespace Xease.CoreGame
 
         public void ForceEnd()
         {
-            m_isForceEnd = true;
+            _isForceEnd = true;
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -206,14 +205,14 @@ namespace Xease.CoreGame
 
         public void SetTime(float duration)
         {
-            m_timeTotal = duration;
-            m_timeLeft = duration;
+            _timeTotal = duration;
+            _timeLeft = duration;
         }
 
         public void ResetTime()
         {
-            m_timeTotal = CalcDuration();
-            m_timeLeft = m_timeTotal;
+            _timeTotal = CalcDuration();
+            _timeLeft = _timeTotal;
         }
 
         public bool IsMaxLevel()
@@ -254,8 +253,12 @@ namespace Xease.CoreGame
 
         public virtual void OnEntityAddBuff(LogicEntity e)
         {
-            Level = m_buffGenInfo.BuffLevel;
-            MaxLevel = m_buffGenInfo.BuffMaxLevel;
+            var genInfo = GetGenInfo<BuffGenInfo>();
+            if (genInfo != null)
+            {
+                Level = genInfo.BuffLevel;
+                MaxLevel = genInfo.BuffMaxLevel;
+            }
             foreach (var c in mBuffAddList)
             {
                 var node = c as ICustomNode;
