@@ -11,10 +11,9 @@ namespace ModelPointTool.Editor
     public static class GenerateModelPoint
     {
         // 生成结果固定写入热更侧 Gen 文件
-        const string OutputAssetPath = "Assets/HotScripts/Product/Subassembly/ModelPointTool.Gen/ModelPointGetter.Gen.cs";
+        const string OutputAssetPath = "Assets/HotScripts/Product/Content/Gen/ModelPoints/ModelPointGetter.Gen.cs";
         // 项目侧配置，找不到 Settings 时在此创建
-        const string DefaultSettingsAssetPath =
-            "Assets/HotScripts/Product/Subassembly/ModelPointTool.Gen/ModelPointSettings.asset";
+        const string DefaultSettingsAssetPath = "Assets/HotScripts/Product/Content/Gen/ModelPoints/ModelPointSettings.asset";
 
         // 生成文件头部（含 RegisterAll 起始）
         const string FileHeader =
@@ -123,8 +122,9 @@ namespace Xease.ModelPointTool.Gen
 
         static void WriteGeneratedFile(string content)
         {
-            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath,
-                "HotScripts/Product/Subassembly/ModelPointTool.Gen/ModelPointGetter.Gen.cs"));
+            // dataPath 已是 Assets 目录，去掉资源路径前缀
+            var relativeToAssets = OutputAssetPath.Substring("Assets/".Length);
+            var fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, relativeToAssets));
             var dir = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
