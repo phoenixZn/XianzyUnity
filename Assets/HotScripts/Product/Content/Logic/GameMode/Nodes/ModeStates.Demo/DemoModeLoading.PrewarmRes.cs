@@ -44,7 +44,7 @@ namespace Xease.CoreGame
             PrewarmViewsAsync(_prewarmCts.Token).Forget();
         }
 
-        // 并行预热 Cube/Sphere；取消不切状态，其它失败仍放行以免卡死
+        // 并行预热；取消不切状态，其它失败仍放行以免卡死
         private async UniTaskVoid PrewarmViewsAsync(CancellationToken ct)
         {
             try
@@ -57,8 +57,8 @@ namespace Xease.CoreGame
                 }
 
                 await UniTask.WhenAll(
-                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetCube, PrewarmCount, ct),
-                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetSphere, PrewarmCount, ct));
+                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetBody, PrewarmCount, ct),
+                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetOrnament, PrewarmCount, ct));
             }
             catch (System.OperationCanceledException)
             {

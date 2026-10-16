@@ -1,21 +1,18 @@
 ﻿using UnityEngine;
-#if !CONSOLE_CLIENT
-using Xease.ModelPointTool;
-#endif
 
 namespace Xease.CoreGame
 {
     /// <summary>
-    /// Demo 出生：加载 ActorCube+ActorSphere，就绪后将 Sphere 挂到 Cube 的 Head，绑定 Collider 再进入 Idle。
+    /// Demo 出生：加载身体与装饰部件，就绪后将装饰部件挂到主视图挂点，绑定 Collider 再进入 Idle。
     /// </summary>
     public class DemoStateBorn : MainStateBase
     {
         // YooAsset location；DemoModeLoading 预热与 Born 加载共用
-        internal const string DemoViewAssetCube = "ActorCube";
-        internal const string DemoViewAssetSphere = "Bats-T";//"ActorSphere";
+        internal const string DemoViewAssetBody = "ActorCube";
+        internal const string DemoViewAssetOrnament = "Bats-T";//"ActorSphere";
 #if !CONSOLE_CLIENT
-        // ActorCube 上用于挂载 Sphere 的挂点名（与生成表一致）
-        private const string CubeHeadPoint = "Head";
+        // 身体上用于挂载装饰部件的挂点名（与生成表一致）
+        private const string BodyBindPoint = "Head";
 #endif
 
         //////////////////////////////////////////////////////////////////////////
@@ -41,9 +38,9 @@ namespace Xease.CoreGame
                 0f);
             _ownerEntity.SetPosition(pos);
             _ownerEntity.AddComCommandSender<EntityCmdPreHandler_SimpleImmediately>();
-            //_ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetCube);
-            _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetCube);
-            _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetSphere);
+            //_ownerEntity.RequestViewLoad<AsyncAssetViewWrapper>(DemoViewAssetBody);
+            _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetBody);
+            _ownerEntity.RequestViewLoad<PooledAssetViewWrapper>(DemoViewAssetOrnament);
             
 #if !CONSOLE_CLIENT
             // 命令行宿主不注册音频服务
@@ -52,7 +49,7 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle；全部成功则挂接 Head 并绑定 Collider。
+        /// 轮询 View 加载结束（Ready 或 Failed）后再切 Idle；全部成功则把装饰部件挂到主视图挂点并绑定 Collider。
         /// </summary>
         public override float Update(float dt)
         {
@@ -66,7 +63,7 @@ namespace Xease.CoreGame
                 return dt;
             }
 
-            AttachSphereToCubeHead();
+            AttachOrnamentToMainViewBind();
             BindColliderUnityObjects();
             ChooseNextState("MST_Idle");
             return dt;
@@ -105,37 +102,45 @@ namespace Xease.CoreGame
             return true;
         }
 
-        // Sphere 挂到 Cube 的 Head，并关闭 Sphere 的逻辑 Transform 同步
-        private void AttachSphereToCubeHead()
+        // 装饰部件挂到主视图挂点，并关闭装饰部件的逻辑 Transform 同步
+        private void AttachOrnamentToMainViewBind()
         {
 #if !CONSOLE_CLIENT
-            if (!TryGetLoadedView(DemoViewAssetCube, out var cubeGo, out _)
-                || !TryGetLoadedView(DemoViewAssetSphere, out var sphereGo, out var sphereSync))
+            if (!TryGetLoadedView(DemoViewAssetOrnament, out var ornamentProxy, out var ornamentSync))
             {
-                this.LogError("DemoStateBorn attach failed: cube or sphere view missing");
+                this.LogError("DemoStateBorn attach failed: ornament view missing");
                 return;
             }
 
-            var head = ModelPointGetter.FindBindPoint(cubeGo.transform, DemoViewAssetCube, CubeHeadPoint);
-            if (head == null)
+            var mount = _ownerEntity.GetMainViewBindTransform(BodyBindPoint);
+            // 空挂点名返回当前绑定根；与挂点结果相同表示未登记或未找到
+            var mainRoot = _ownerEntity.GetMainViewBindTransform(null);
+            if (mount == null || mount == mainRoot)
             {
-                this.LogError($"DemoStateBorn attach failed: {CubeHeadPoint} not found on {DemoViewAssetCube}");
+                this.LogError($"DemoStateBorn attach failed: {BodyBindPoint} not found on main view");
                 return;
             }
 
-            sphereGo.transform.SetParent(head, false);
-            sphereGo.transform.localPosition = Vector3.zero;
-            sphereGo.transform.localRotation = Quaternion.identity;
-            if (sphereSync != null)
-                sphereSync.NeedsSyncTransform = false;
+            var ornamentRoot = ornamentProxy.GetBindPoint(null);
+            if (ornamentRoot == null)
+            {
+                this.LogError("DemoStateBorn attach failed: ornament root missing");
+                return;
+            }
+
+            ornamentRoot.SetParent(mount, false);
+            ornamentRoot.localPosition = Vector3.zero;
+            ornamentRoot.localRotation = Quaternion.identity;
+            if (ornamentSync != null)
+                ornamentSync.NeedsSyncTransform = false;
 #endif
         }
 
 #if !CONSOLE_CLIENT
-        // 按 AssetLocation 取已加载 GO；sync 为同一 wrapper 的 IViewTransformSyncable（可空）
-        private bool TryGetLoadedView(string location, out GameObject go, out IViewTransformSyncable sync)
+        // 按 AssetLocation 取已绑定的 Unity 代理；sync 为同一 wrapper 的 IViewTransformSyncable（可空）
+        private bool TryGetLoadedView(string location, out UnityViewTransformProxy proxy, out IViewTransformSyncable sync)
         {
-            go = null;
+            proxy = null;
             sync = null;
             if (_ownerEntity == null || !_ownerEntity.hasComView)
                 return false;
@@ -146,10 +151,10 @@ namespace Xease.CoreGame
                 var wrapper = wrappers[i];
                 if (wrapper is not IViewAssetLocatable loc || loc.AssetLocation != location)
                     continue;
-                if (wrapper is not IViewGameObjectHolder holder || holder.Instance == null)
+                if (wrapper is not ViewWrapperBase view || view.Proxy is not UnityViewTransformProxy unity || !unity.IsValid)
                     continue;
 
-                go = holder.Instance;
+                proxy = unity;
                 sync = wrapper as IViewTransformSyncable;
                 return true;
             }

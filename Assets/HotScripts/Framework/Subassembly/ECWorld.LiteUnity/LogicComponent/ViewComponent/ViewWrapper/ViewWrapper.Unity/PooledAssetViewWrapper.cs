@@ -166,7 +166,7 @@ namespace Xease.CoreGame
 
             ReleaseOwnedAsset();
             _instance = instance;
-            BindProxy(UnityViewTransformProxy.Rent(_instance.transform));
+            BindProxy(UnityViewTransformProxy.Rent(_instance.transform, _assetLocation));
             InvokePendingCompleted(true);
         }
 

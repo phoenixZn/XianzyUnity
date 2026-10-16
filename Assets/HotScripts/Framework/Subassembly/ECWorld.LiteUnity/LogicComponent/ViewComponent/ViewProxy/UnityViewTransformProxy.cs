@@ -23,25 +23,28 @@ namespace Xease.CoreGame
         /// This:
 
         /// <summary>
-        /// 从 SharedPool 租用并绑定 Transform 引用；Dispose 时归还。
+        /// 从 SharedPool 租用并绑定 Transform 与预制体名；Dispose 时归还。
         /// </summary>
-        public static UnityViewTransformProxy Rent(Transform transformRef)
+        /// <param name="prefabName">挂点查表用的预制体名，通常为 AssetLocation。</param>
+        public static UnityViewTransformProxy Rent(Transform transformRef, string prefabName)
         {
             var proxy = G.SharedPool.Rent<UnityViewTransformProxy>();
             proxy._fromPool = true;
-            proxy.Bind(transformRef);
+            proxy.Bind(transformRef, prefabName);
             return proxy;
         }
 
         /// <summary>
-        /// 写入 Transform / GameObject 聚合引用，不改变所有权。
+        /// 写入 Transform / GameObject 聚合引用与预制体名，不改变所有权。
         /// </summary>
-        public void Bind(Transform transformRef)
+        /// <param name="prefabName">挂点查表用的预制体名，通常为 AssetLocation。</param>
+        public void Bind(Transform transformRef, string prefabName)
         {
             // 换绑前丢掉上一份挂点，避免字典指向旧层级
             ClearBindPoints();
             _transformRef = transformRef;
             _gameObjectRef = transformRef != null ? transformRef.gameObject : null;
+            _prefabName = prefabName;
         }
 
         //////////////////////////////////////////////////////////////////////////
