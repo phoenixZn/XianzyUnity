@@ -5,7 +5,7 @@ namespace Xease.CoreGame
     /// <summary>
     /// Unity Transform 聚合引用代理：不拥有 GameObject。Rent 入池；new+Bind 不入池。Dispose 清引用，仅入池实例归还。
     /// </summary>
-    public sealed class UnityViewTransformProxy : IViewTransformProxy
+    public sealed partial class UnityViewTransformProxy : IViewTransformProxy
     {
         // 聚合引用，不拥有 GameObject 生命周期
         private Transform _transformRef;
@@ -38,6 +38,8 @@ namespace Xease.CoreGame
         /// </summary>
         public void Bind(Transform transformRef)
         {
+            // 换绑前丢掉上一份挂点，避免字典指向旧层级
+            ClearBindPoints();
             _transformRef = transformRef;
             _gameObjectRef = transformRef != null ? transformRef.gameObject : null;
         }
@@ -79,6 +81,8 @@ namespace Xease.CoreGame
         /// </summary>
         public void Dispose()
         {
+            // 还池前丢掉挂点，避免池内代理留着已销毁的 Transform
+            ClearBindPoints();
             _gameObjectRef = null;
             _transformRef = null;
             if (!_fromPool)

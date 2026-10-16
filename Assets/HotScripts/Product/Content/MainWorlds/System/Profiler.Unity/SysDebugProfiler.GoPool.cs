@@ -22,7 +22,7 @@ namespace Xease.CoreGame.Debug
             }
             if (ExecuteAcc % 100 == 50)
             {
-                G.GameObjectPool_Core.Clear("ActorSphere");
+                G.GOPool.Clear("ActorSphere");
             }
         }
 
@@ -31,7 +31,7 @@ namespace Xease.CoreGame.Debug
         // Execute 周期触发：异步租预制体，摆到位姿后再激活（Rent 交出未激活实例）
         private async UniTaskVoid RentDemoGoAsync(string path)
         {
-            var testGo = await G.GameObjectPool_Core.RentAsync(path);
+            var testGo = await G.GOPool.RentAsync(path);
 
             var x = G.Random.RandFloat(-6f, 6f);
             var y = G.Random.RandFloat(-8f, 8f);
@@ -48,7 +48,7 @@ namespace Xease.CoreGame.Debug
                 testGo?.SetScale(Vector3.one * 1.5f);
                 G.Timer.AddTimer(c =>
                 {
-                    G.GameObjectPool_Core.Return(testGo);
+                    G.GOPool.Return(testGo);
                     testGo = null;
                 }, life);
             }, 1);

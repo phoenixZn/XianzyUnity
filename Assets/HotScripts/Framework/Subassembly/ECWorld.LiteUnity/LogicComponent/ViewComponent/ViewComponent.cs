@@ -229,6 +229,24 @@ namespace Xease.CoreGame
             wrapper.SetAssetLocation(assetLocation);
             entity.SetComView(wrapper);
         }
+
+        /// <summary>
+        /// 取主视图（第一个包装）上的挂点。当前代理不是 Unity Transform 绑定时返回 null。
+        /// </summary>
+        public static Transform GetMainViewBindTransform(this LogicEntity entity, string bpName)
+        {
+            if (entity == null || !entity.hasComView)
+                return null;
+
+            var wrappers = entity.comView.Wrappers;
+            if (wrappers.Count == 0)
+                return null;
+            if (wrappers[0] is not ViewWrapperBase wrapper)
+                return null;
+            if (wrapper.Proxy is not UnityViewTransformProxy unity)
+                return null;
+            return unity.GetBindPoint(bpName);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

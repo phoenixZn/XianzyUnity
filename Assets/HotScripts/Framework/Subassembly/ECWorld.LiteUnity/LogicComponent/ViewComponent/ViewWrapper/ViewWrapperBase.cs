@@ -87,6 +87,11 @@ namespace Xease.CoreGame
             OnReset();
         }
 
+        /// <summary>
+        /// 当前位姿代理。尚未换绑时为空代理。
+        /// </summary>
+        public IViewTransformProxy Proxy => _proxy;
+
         public void BindProxy(IViewTransformProxy proxy)
         {
             if (_disposed)

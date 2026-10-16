@@ -49,15 +49,15 @@ namespace Xease.CoreGame
                 return false;
             }
 
-            // if (HasBindPoint)
-            // {
-            //     var tf = entity.GetMainViewBindTransform(BindPoint);
-            //     if (tf != null)
-            //     {
-            //         pos = tf.position;
-            //         return true;
-            //     }
-            // }
+            if (HasBindPoint)
+            {
+                var tf = entity.GetMainViewBindTransform(BindPoint);
+                if (tf != null)
+                {
+                    pos = tf.position;
+                    return true;
+                }
+            }
 
             if (!entity.hasComTransform)
             {
