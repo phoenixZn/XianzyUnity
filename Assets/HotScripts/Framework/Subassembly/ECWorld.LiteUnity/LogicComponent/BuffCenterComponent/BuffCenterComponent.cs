@@ -350,6 +350,7 @@ namespace Xease.CoreGame
     }
 
 
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public BuffCenterComponent comBuffCenter
@@ -361,45 +362,43 @@ namespace Xease.CoreGame
         {
             get { return HasComponent(LogicComponentsLookup.ComBuffCenter); }
         }
+        
+        public void AddBuffCenter()
+        {
+            if (hasComBuffCenter)
+            {
+                return;
+            }
+            var index = LogicComponentsLookup.ComBuffCenter;
+            var component = (BuffCenterComponent)CreateComponent(index, typeof(BuffCenterComponent));
+            AddComponent(index, component);
+        }
 
         public void RemoveComBuffCenter()
         {
             RemoveComponent(LogicComponentsLookup.ComBuffCenter);
         }
+    }
 
-        public bool HasBuff(int buffLogicId)
+    //////////////////////////////////////////////////////////////////////////
+    public static class LogicEntityExtend_BuffCenter
+    {
+        static public bool HasBuff(this LogicEntity e, int buffLogicId)
         {
-            if (!hasComBuffCenter)
+            if (!e.hasComBuffCenter)
             {
                 return false;
             }
-            return comBuffCenter.HasBuff(buffLogicId);
+            return e.comBuffCenter.HasBuff(buffLogicId);
         }
-    }
-
-    public static class LogicEntityExtend_BuffCenter
-    {
-        static public void SetBuffCenter(this LogicEntity e)
-        {
-            if (e.hasComBuffCenter)
-            {
-                G.LogError("SetBuffCenter Error, has buffCenter already");
-                return;
-            }
-
-            var index = LogicComponentsLookup.ComBuffCenter;
-            var component = (BuffCenterComponent)e.CreateComponent(index, typeof(BuffCenterComponent));
-            e.AddComponent(index, component);
-        }
-
+        
         static public void AddBuff(this LogicEntity e, BuffGenInfo genInfo)
         {
             if (!e.hasComBuffCenter)
             {
                 CLogger.LogDebug("AddBuff unusual, cant find buffCenter");
-                e.SetBuffCenter();
+                e.AddBuffCenter();
             }
-
             e.comBuffCenter.AddNewBuff(genInfo);
         }
 
@@ -412,6 +411,7 @@ namespace Xease.CoreGame
     }
 
 
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComBuffCenterIndex = new(typeof(BuffCenterComponent));

@@ -202,6 +202,7 @@ namespace Xease.CoreGame
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
     public partial class LogicEntity
     {
         public ImmuneComponent comImmune
@@ -257,7 +258,7 @@ namespace Xease.CoreGame
         }
     }
 
-
+    //////////////////////////////////////////////////////////////////////////
     public static partial class LogicComponentsLookup
     {
         private static ComponentTypeIndex _ComImmuneIndex = new(typeof(ImmuneComponent));
