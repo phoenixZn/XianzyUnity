@@ -168,6 +168,8 @@ namespace Xease
         {
             Param.LogInfo("[Core]: Env Modules 初始化");
             Modules = new ModuleManager();
+            Modules.Init(ModuleAutoRegister.Collect(typeof(GEnv).Assembly));
+            Modules.Start();
         }
 
         protected virtual void Inner_CreateManagers()

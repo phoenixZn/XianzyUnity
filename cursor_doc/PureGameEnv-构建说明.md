@@ -9,7 +9,7 @@
 
 ## 环境与目标框架
 
-- 当前仓库所在机器仅有 **.NET SDK 5.0** 时，工程使用 **`net5.0`**，与 Unity 2022.3 常用的 netstandard2.1 语义兼容。
+- 当前仓库所在机器仅有 **.NET SDK 5.0** 时，工程使用 `net5.0`，与 Unity 2022.3 常用的 netstandard2.1 语义兼容。
 - 若已安装 **.NET 6+ SDK**，可将 csproj 中 `<TargetFramework>net5.0</TargetFramework>` 改为 `net6.0` 或 `net8.0` 后重新构建。
 
 ## Unity 托管引用（refs）
@@ -29,20 +29,24 @@
 - **排除 Editor**：任意路径段名为 `Editor` 的目录内所有 `.cs`（如 `ModelPointTool/Editor`）。CLI 不引用 `UnityEditor.dll`，`CustomEditor` / `MenuItem` 等编辑器 API 无法编译。
 - **排除 UI**：`Product/Content/UIScripts`。这些脚本依赖已排除的 `SvcUI.Unity` 以及 `UnityEngine.UI`。
 - **Newtonsoft**：`JsonHelper` 引用 `Assets/Plugins/Newtonsoft.Json.dll`，csproj 显式引用该 DLL。
-- `*.Unity.cs`、`.Unity` 目录与 `Editor` 目录已排除；命令行宿主由 `src/shim/GameEntry.Shim.cs` 提供 `GameEntry` / `ConsoleGameEnv`（不注册 Asset/Input/GOPool；协程服务注册 CLI 实现，由 `IEnvUpdate` 帧泵驱动，yield 仅支持 null / 嵌套 IEnumerator / handler 最小集）。
-- **Luban 配表**：`SvcConfig` 会编入。`ConsoleGameEnv` 调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读 JSON。生成代码 `Product/Content/Gen/Luban` 依赖 UPM `Luban.Runtime`，csproj 用通配编入 `Library/PackageCache/com.code-philosophy.luban@*/Runtime/**/*.cs`（本机需已用 Unity 导入该包，与 `refs/*.dll` 一样不进 git）。
+- `*.Unity.cs`、`.Unity` 目录与 `Editor` 目录已排除。`GameEntry` 与 `GEnvProduct` 在 Assets 共享源码里用 `CONSOLE_CLIENT` 分叉，不再放 shim：`Framework/GameEntry.cs` 提供帧驱动；`Product/GameEnv/GEnvEx.Product.cs` 的 `GEnvProduct` 在 `CONSOLE_CLIENT` 下跳过 Asset/Input/GOPool 等 `*.Unity` 服务，协程走无参重载，由 `IEnvUpdate` 帧泵驱动，yield 仅支持 null / 嵌套 IEnumerator / handler 最小集。
+- **Luban 配表**：`SvcConfig` 会编入。`GEnvProduct` 调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读 JSON。生成代码 `Product/Content/Gen/Luban` 依赖 UPM `Luban.Runtime`，csproj 用通配编入 `Library/PackageCache/com.code-philosophy.luban@*/Runtime/**/*.cs`（本机需已用 Unity 导入该包，与 `refs/*.dll` 一样不进 git）。
 - LitMotion 源码在 `Assets/AOTScripts/ThirdParty/LitMotion`，不在 HotScripts 通配范围内；CLI 走 `PureCsproj/LitMotion` 的 `ProjectReference`。
 
-## PureGameEnv 内 shim（未改 Unity 源码）
 
-为在排除 `.Unity` 树后仍能编译，下列文件**仅存在于 PureGameEnv**，不向 Assets 拷贝：
 
-| 文件 | 作用 |
-|------|------|
-| `src/shim/AsyncAssetViewWrapper.Shim.cs` | 替代 `YooAssetView.Unity/AsyncAssetViewWrapper`，供 View 包装器编译通过 |
-| `src/shim/GameEntry.Shim.cs` | 替代 `GameEntry.Unity` / `GameEntryEx.Unity` / `GEnvEx.Unity`：命令行初始化 GEnv 并提供 FixedUpdate/Update/LateUpdate |
+## PureGameEnv 内 shim
 
-`SysDebugProfiler` 已迁到 `Assets/.../System/Debug/`，用 `#if CONSOLE_CLIENT` 提供空实现，不再需要工程内 shim。
+为在排除 `.Unity` 树后仍能编译，下列文件**仅存在于 PureGameEnv**，不向 Assets 拷贝。
+
+
+| 文件                                        | 作用                                                            |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `src/shim/AsyncAssetViewWrapper.Shim.cs`  | 替代 `YooAssetView.Unity/AsyncAssetViewWrapper`，供 View 包装器编译通过  |
+| `src/shim/PooledAssetViewWrapper.Shim.cs` | 替代 `ViewWrapper.Unity/PooledAssetViewWrapper`，供 View 泛型约束编译通过 |
+
+
+
 
 ## UniTask（Unity 无关子集）
 
@@ -56,7 +60,7 @@
 
 `PureCsproj/LitMotion` 引用 `Assets/AOTScripts/ThirdParty/LitMotion/Runtime`，排除 Extensions / PlayerLoop 注入 / Punch-Shake-String / Native 曲线 / Job。`src/shim/` 提供托管 `UpdateRunner`、空 Allocator、`UnsafeUtility.As` 的委托转换，以及 Burst / Mathematics / Collections 编译桩。
 
-`GameEntry.Awake` 设置 `MotionScheduler.DefaultScheduler = MotionScheduler.Manual`，`Update` 中 `ManualMotionDispatcher.Default.Update(G.deltaTime)`（控制台 dt 固定 0.02）。
+`Framework/GameEntry.cs` 在 `CONSOLE_CLIENT` 下于 `Awake` 设置 `MotionScheduler.DefaultScheduler = MotionScheduler.Manual`，`Update` 中 `ManualMotionDispatcher.Default.Update(G.deltaTime)`（控制台 dt 固定 0.02）。
 
 **可用**：`LMotion.Create` + `WithEase(Ease)` + `Bind` + `WithOnComplete`。
 
@@ -69,13 +73,16 @@ dotnet build PureCsproj/PureGameEnv/PureGameEnv.csproj -c Debug
 dotnet run --project PureCsproj/PureGameEnv/PureGameEnv.csproj
 ```
 
-`Program` 会构造 `GameEntry` 并以 20ms 步长调用 FixedUpdate/Update/LateUpdate。Ctrl+C 后销毁 GEnv 并退出。无 GUI 时环境停在 `ES_Login`。
+`Program` 会 `new GameEntry()` 并调用 `CLI_Init`，再以 20ms 步长调用 FixedUpdate/Update/LateUpdate。Ctrl+C 后 `Destroy` 销毁 GEnv 并退出。无 GUI 时环境停在 `ES_Login`。
 
 ## 当前编译结果
 
 - **已通过**：`dotnet build`（Debug）0 error。运行可见 `AddService_Config` 与 `[Config] Tables ready`（示例表首行 id `1001`）。
 
+
+
 ## 后续治理方向（按需）
 
 - 为 `GEnv.Ex` / `IAssetService` 等增加纯逻辑抽象或 `Compile Remove` 更细粒度文件，而不是长期依赖 shim。
 - CLI 运行时若调用 `Resources.Load` 等 API，需单独做资源加载抽象（编译期有 UnityEngine 不等于运行期可用）。
+

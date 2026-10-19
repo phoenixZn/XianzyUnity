@@ -1,50 +1,31 @@
 using System;
-using System.Collections.Generic;
 
 namespace Xease
 {
     /// <summary>
     /// 本地化文本服务：按语言加载 JSON 字符串表，并提供格式化取值。
-    /// 系统语言码与 JSON 来源由宿主注入，本类不引用 Unity。
+    /// 系统语言码、语言映射与 JSON 来源由宿主注入，本类不引用 Unity。
     /// </summary>
     internal class LocalizationService : ILocalizationService
     {
         //////////////////////////////////////////////////////////////////////////
         /// This：
 
-        // 与 UnityEngine.SystemLanguage 整型值对齐，本类不引用该枚举
-        private const int SystemLanguageChinese = 6;
-        private const int SystemLanguageEnglish = 10;
-        private const int SystemLanguageVietnamese = 38;
-        private const int SystemLanguageChineseSimplified = 40;
-        private const int SystemLanguageChineseTraditional = 41;
-
-        // 命令行宿主无系统语言时注入的语言码
-        internal const int ConsoleDefaultSystemLanguage = SystemLanguageEnglish;
-
-        // 系统语言码到 Language 的映射
-        private static readonly Dictionary<int, Language> LanguageMap = new Dictionary<int, Language>
-        {
-            { SystemLanguageChinese, Language.zh_cn },
-            { SystemLanguageChineseSimplified, Language.zh_cn },
-            { SystemLanguageChineseTraditional, Language.zh_tw },
-            { SystemLanguageEnglish, Language.en },
-            { SystemLanguageVietnamese, Language.vn },
-        };
-
-        // 宿主给出的系统语言码，仅在没有已保存语言时参与映射
-        private readonly int _systemLanguageCode;
+        // 宿主给出的系统语言码；命令行宿主没有系统语言时为空，不参与映射
+        private readonly int? _systemLanguageCode;
         // 宿主注入的 JSON 来源：磁盘或资源包
         private readonly ILocalizationJsonSource _jsonSource;
+        // Init 传入的语言映射与回落语言；未初始化时为空
+        private ILocalizationLanguageCfg _languageCfg;
         // 当前语言
         private Language _language = Language.unknown;
         // 当前语言的字符串表
         private readonly LocalizationData _localizationData = new();
 
         /// <summary>
-        /// 保存宿主注入的系统语言码与 JSON 来源。
+        /// 保存宿主注入的系统语言码与 JSON 来源。没有系统语言时语言码为空，不参与映射。
         /// </summary>
-        public LocalizationService(int systemLanguageCode, ILocalizationJsonSource jsonSource)
+        public LocalizationService(int? systemLanguageCode, ILocalizationJsonSource jsonSource)
         {
             _systemLanguageCode = systemLanguageCode;
             _jsonSource = jsonSource ?? throw new ArgumentNullException(nameof(jsonSource));
@@ -59,7 +40,7 @@ namespace Xease
             G.Log($"[Localization] Init as language {language}");
         }
 
-        // 已保存语言优先，否则用系统语言码映射，仍未命中则回落英语
+        // 已保存语言优先，否则用系统语言码查表，仍未命中则用 Init 传入的回落语言
         private Language GetDefaultLanguage()
         {
             var setLanguage = LoadLanguageSettings();
@@ -68,12 +49,15 @@ namespace Xease
                 return setLanguage;
             }
 
-            if (LanguageMap.TryGetValue(_systemLanguageCode, out var language))
+            var map = _languageCfg?.SystemLanguageMap;
+            if (_systemLanguageCode.HasValue
+                && map != null
+                && map.TryGetValue(_systemLanguageCode.Value, out var language))
             {
                 return language;
             }
 
-            return Language.en;
+            return _languageCfg?.FallbackLanguage ?? Language.unknown;
         }
 
         // 切换语言并加载文本；相同语言不重复加载
@@ -134,10 +118,19 @@ namespace Xease
         }
 
         /// <summary>
-        /// 按已保存语言或系统语言码加载默认文本。
+        /// 保存宿主给出的语言配置，并按已保存语言或系统语言码加载默认文本。
         /// </summary>
-        public void Init()
+        public void Init(ILocalizationLanguageCfg languageCfg)
         {
+            if (languageCfg?.SystemLanguageMap == null)
+            {
+                G.LogError("[Localization] Init languageCfg or SystemLanguageMap is null");
+                _language = Language.unknown;
+                _localizationData.Unload();
+                return;
+            }
+
+            _languageCfg = languageCfg;
             LoadDefaultLanguage();
         }
 

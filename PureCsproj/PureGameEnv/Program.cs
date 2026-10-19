@@ -32,7 +32,7 @@ namespace PureGameEnv
                 Thread.Sleep(20);
             }
 
-            gameEntry.Destroy();
+            gameEntry.DestroyEntry();
         }
     }
 }

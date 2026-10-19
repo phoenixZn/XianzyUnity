@@ -8,6 +8,7 @@ namespace Xease
         WorldCreationInfo Get(string worldCfgID);
     }
     
+    [ModuleAutoRegister]
     public partial class ModuleWorlds : Module, IEnvUpdate, IEnvFixedUpdate, IEnvLateUpdate, IEnvDrawGizmos, IEnvOnGUI
     {
         // MainWorld:

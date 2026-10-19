@@ -2,7 +2,6 @@
 
 namespace Xease
 {
-    //[SkipModuleAutoRegister]
     public partial class ModuleDemo
     {
         //////////////////////////////////////////////////////////////////////////

@@ -2,6 +2,7 @@
 
 namespace Xease
 {
+    [ModuleAutoRegister]
     public partial class ModuleDebug : Module
     {
         public ModuleDebug()

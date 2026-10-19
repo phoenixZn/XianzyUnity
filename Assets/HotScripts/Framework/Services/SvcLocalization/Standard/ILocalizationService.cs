@@ -2,7 +2,7 @@ namespace Xease
 {
     /// <summary>
     /// 本地化文本服务：按当前语言提供字符串表查询与格式化。
-    /// 系统语言码和 JSON 来源由宿主注入，接口不依赖 Unity。
+    /// 系统语言码、语言映射和 JSON 来源由宿主注入，接口不依赖 Unity。
     /// </summary>
     public interface ILocalizationService : IService
     {
@@ -12,9 +12,10 @@ namespace Xease
         Language Language { get; set; }
 
         /// <summary>
-        /// 按已保存语言或系统语言码加载默认文本。
+        /// 保存宿主给出的语言配置，并按已保存语言或系统语言码加载默认文本。
         /// </summary>
-        void Init();
+        /// <param name="languageCfg">语言映射与回落语言。配置或其 <see cref="ILocalizationLanguageCfg.SystemLanguageMap"/> 为空则不加载。</param>
+        void Init(ILocalizationLanguageCfg languageCfg);
 
         /// <summary>
         /// 取本地化文本；没有则返回 key。

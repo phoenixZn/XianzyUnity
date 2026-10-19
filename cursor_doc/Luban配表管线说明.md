@@ -39,10 +39,10 @@ DataTables\gen_client.bat
 
 ### 1.3 运行时读取
 
-`UnityGameEnv` 在 `AddService_Asset()` 之后调用 `AddService_Config()`。`TableConfigService` 用宿主注入的 loader 同步 `Init()`：按 `Tables` 构造器给出的文件名加载 JSON 再 `JSON.Parse`。
+`GEnvProduct` 在 `AddService_Asset()` 之后调用 `AddService_Config()`（命令行无 Asset 服务，则在协程服务之后调用）。`TableConfigService` 用宿主注入的 loader 同步 `Init()`：按 `Tables` 构造器给出的文件名加载 JSON 再 `JSON.Parse`。
 
 - Unity：`G.Asset.LoadAssetRawFileSync` 读 **PackMainScript** RawFile，文本拷贝后 `Release`。
-- 命令行：`ConsoleGameEnv` 同样调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读同名 `.json`。
+- 命令行：`GEnvProduct` 同样调用 `AddService_Config()`，从 `Assets/HotAssets/Config/Luban` 读同名 `.json`。
 
 业务侧：
 
@@ -189,7 +189,6 @@ CSV 第一列是行标记，数据行该列留空；含逗号的单元格必须�
 | `SvcConfig/Standard/IConfigService.cs` | `Tables` / `Initialized` / `Init`。不关心数据来源。 |
 | `SvcConfig/Impl/TableConfigService.cs` | 构造时注入 loader，`new Tables(loader)`。 |
 | `SvcConfig/InstallSvc.cs` | `G.Config`、`AddService_Config()`。`CONSOLE_CLIENT` 读 JSON 文件，否则走 `G.Asset`。 |
-| `Product/GameEnv/GEnvEx.Unity.cs` | `AddService_Asset()` 之后 `AddService_Config()`。 |
-| `PureCsproj/.../GameEntry.Shim.cs` | `ConsoleGameEnv` 在协程服务之后 `AddService_Config()`。 |
+| `Product/GameEnv/GEnvEx.Product.cs` | `GEnvProduct` 在 `AddService_Asset()` 之后调用 `AddService_Config()`；命令行则在协程服务之后调用。 |
 
 业务以 `G.Config.Tables` 为准。

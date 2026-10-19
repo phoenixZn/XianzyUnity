@@ -79,6 +79,7 @@ PureCsproj/
 
 - 命名建议 `*.Shim.cs`，放在 `src/shim/`，**不要**写回 `Assets/`
 - 在 csproj 中用 `<Compile Include="src\shim\**\*.cs" />` 纳入
+- `GameEntry` 与 `GEnvProduct` 已是 Assets 共享源码（`Framework/GameEntry.cs`、`Product/GameEnv/GEnvEx.Product.cs`），用 `CONSOLE_CLIENT` 分叉，不再放 `src/shim/`
 
 
 

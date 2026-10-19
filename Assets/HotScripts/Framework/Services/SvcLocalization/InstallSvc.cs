@@ -47,21 +47,22 @@ namespace Xease
         public ILocalizationService LocalizationSvc => _localizationSvc;
 
         /// <summary>
-        /// 注册本地化服务并加载默认语言。
+        /// 注册本地化服务，并用 <paramref name="languageCfg"/> 加载默认语言。
         /// </summary>
-        public void AddService_Localization()
+        public ILocalizationService AddService_Localization(ILocalizationLanguageCfg languageCfg)
         {
             G.Log("AddService_Localization");
 #if CONSOLE_CLIENT
-            var systemLanguage = LocalizationService.ConsoleDefaultSystemLanguage;
+            int? systemLanguage = null;
             ILocalizationJsonSource source = LocalizationDiskSource.FromAppBase();
 #else
-            var systemLanguage = (int)Application.systemLanguage;
+            int? systemLanguage = (int)Application.systemLanguage;
             ILocalizationJsonSource source = new LocalizationAssetSource();
 #endif
             var svc = new LocalizationService(systemLanguage, source);
-            svc.Init();
             AddService(svc, out _localizationSvc);
+            svc.Init(languageCfg);
+            return svc;
         }
     }
 }

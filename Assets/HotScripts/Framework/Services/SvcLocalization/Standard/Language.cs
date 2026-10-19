@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Xease
 {
     /// <summary>
@@ -22,5 +24,18 @@ namespace Xease
         /// 越南语
         /// </summary>
         vn,
+    }
+    
+    public interface ILocalizationLanguageCfg
+    {
+        /// <summary>
+        /// 系统语言码到 <see cref="Language"/> 的映射。
+        /// </summary>
+        public IReadOnlyDictionary<int, Language> SystemLanguageMap { get; }
+
+        /// <summary>
+        /// 没有已保存语言且系统语言码未命中时使用。
+        /// </summary>
+        public Language FallbackLanguage { get; }
     }
 }

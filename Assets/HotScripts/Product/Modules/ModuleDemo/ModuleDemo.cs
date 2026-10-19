@@ -1,7 +1,7 @@
 ﻿
 namespace Xease
 {
-    [SkipModuleAutoRegister]
+    // 演示模块，不参与自动注册
     public partial class ModuleDemo : Module, IEnvOnGUI
     {
         public ModuleDemo()
