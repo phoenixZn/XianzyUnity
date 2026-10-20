@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text;
 using IngameDebugConsole;
 
 namespace Xease
@@ -91,6 +92,20 @@ namespace Xease
 
             preset = 0f;
             return false;
+        }
+        
+        /// <summary>把 <see cref="Presets"/> 拼成展示文本。</summary>
+        public static string FormatPresets()
+        {
+            var text = new StringBuilder();
+            for (int i = 0; i < Presets.Length; i++)
+            {
+                if (i > 0)
+                    text.Append('/');
+                text.Append(FormatSpeed(Presets[i]));
+            }
+
+            return text.ToString();
         }
     }
 }

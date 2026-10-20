@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Text;
 
 namespace Xease
 {
@@ -14,7 +13,7 @@ namespace Xease
         public const string CommandName = "speed"; // 本块独占的命令键
 
         // 编辑器与真机窗的倍速选项。三处视图只读这一份，不另存列表
-        public static readonly float[] Presets = { 0.5f, 1f, 1.5f, 2f };
+        public static readonly float[] Presets = {0.1f, 0.5f, 1f, 1.5f, 2f, 3f};
 
         // 文本解析值与预设视为同一档的绝对差上限
         const float PresetMatchEpsilon = 0.001f;
@@ -53,21 +52,7 @@ namespace Xease
             return true;
         }
 
-        /// <summary>把 <see cref="Presets"/> 拼成展示文本。</summary>
-        public static string FormatPresets()
-        {
-            var text = new StringBuilder();
-            for (int i = 0; i < Presets.Length; i++)
-            {
-                if (i > 0)
-                    text.Append('/');
-                text.Append(FormatSpeed(Presets[i]));
-            }
-
-            return text.ToString();
-        }
-
-        /// <summary>倍速的展示文本，三处视图共用。</summary>
+        /// <summary>倍速的展示文本</summary>
         public static string FormatSpeed(float speed)
         {
             return speed.ToString(CultureInfo.InvariantCulture);
