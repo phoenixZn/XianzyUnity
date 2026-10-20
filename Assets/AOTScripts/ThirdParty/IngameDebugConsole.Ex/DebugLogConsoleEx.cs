@@ -91,6 +91,17 @@ namespace IngameDebugConsole
             // 让插件自带的自动补全/候选预览 UI 能显示该命令。
             AddCommand(command, description, TempCmdMethodPlaceholder);
         }
+
+        /// <summary>撤销 <see cref="AddCommand_Spec"/> 的登记，并从控制台补全列表移除该命令。</summary>
+        /// <param name="command">与登记时相同的命令键。</param>
+        public static void RemoveCommand_Spec(string command)
+        {
+            if (string.IsNullOrEmpty(command))
+                return;
+            if (!CmdsGroupDic.Remove(command))
+                return;
+            RemoveCommand(command);
+        }
         
 
         //////////////////////////////////////////////////////////////////////////

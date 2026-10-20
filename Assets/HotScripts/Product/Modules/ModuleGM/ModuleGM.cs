@@ -9,9 +9,6 @@ namespace Xease
     [ModuleAutoRegister]
     public partial class ModuleGM : Module
     {
-        public const string CommandGroup = "CmdGroup_GM"; // 各块注册命令时使用的 DebugLogConsole 组
-        public const string ShowCanvasCommand = "gm.ui"; // 打开运行时调试窗，不属于具体功能块
-
         readonly List<IGmBlock> _blocks = new();
 
         /// <summary>已插装的功能块，顺序与目录一致。</summary>
@@ -26,11 +23,13 @@ namespace Xease
         protected override void OnStart()
         {
             base.OnStart();
+            BindLogConsole();
             BindRuntimeViews();
         }
 
         protected override void OnShutdown()
         {
+            UnBindLogConsole();
             UnbindRuntimeViews();
             _blocks.Clear();
             base.OnShutdown();
@@ -48,7 +47,11 @@ namespace Xease
         }
 
         // 视图实现在 *.Unity.cs；命令行宿主不编入该文件时，这两处调用会被抹掉
+        partial void BindLogConsole();
+        partial void UnBindLogConsole();
+        
         partial void BindRuntimeViews();
         partial void UnbindRuntimeViews();
+
     }
 }

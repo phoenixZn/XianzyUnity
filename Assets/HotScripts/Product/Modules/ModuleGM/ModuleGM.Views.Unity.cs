@@ -7,21 +7,6 @@ using UnityEngine.UI;
 
 namespace Xease
 {
-    /// <summary>
-    /// 功能块的命令行视图。由模块统一分发，块只处理自己的命令键。
-    /// </summary>
-    public interface IGmConsoleBlock
-    {
-        /// <summary>把本块命令登记进 <see cref="ModuleGM.CommandGroup"/>。</summary>
-        void RegisterConsole();
-
-        /// <summary>
-        /// 处理一条命令。
-        /// </summary>
-        /// <param name="raw">控制台原文。</param>
-        /// <returns>命令键属于本块时为 true，无论参数是否被接受。</returns>
-        bool TryExecute(string raw);
-    }
 
     /// <summary>
     /// 功能块的真机调试窗视图。只负责往滚动内容里加自己的一块。
@@ -48,45 +33,17 @@ namespace Xease
 
         partial void BindRuntimeViews()
         {
-            DebugLogConsole.SetSpecCommandHandler(CommandGroup, DispatchCommand);
             DebugLogConsole.AddCommand_Spec(ShowCanvasCommand, CommandGroup, "打开 GM 调试窗");
-            for (int i = 0; i < _blocks.Count; i++)
-            {
-                if (_blocks[i] is IGmConsoleBlock consoleBlock)
-                    consoleBlock.RegisterConsole();
-            }
         }
-
+        
         partial void UnbindRuntimeViews()
         {
-            DebugLogConsole.SetSpecCommandHandler(CommandGroup, IgnoreCommand);
+            DebugLogConsole.RemoveCommand_Spec(ShowCanvasCommand);
             if (_canvas != null)
             {
                 _canvas.Destroy();
                 _canvas = null;
             }
-        }
-
-        bool DispatchCommand(string raw)
-        {
-            if (DebugLogConsole.ExtractCmdKey(raw) == ShowCanvasCommand)
-            {
-                ShowCanvas();
-                return true;
-            }
-
-            for (int i = 0; i < _blocks.Count; i++)
-            {
-                if (_blocks[i] is IGmConsoleBlock consoleBlock && consoleBlock.TryExecute(raw))
-                    return true;
-            }
-
-            return false;
-        }
-
-        static bool IgnoreCommand(string raw)
-        {
-            return false;
         }
     }
 
