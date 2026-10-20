@@ -1,39 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Xease
 {
-    public class TimeService_Unity : ITimeService
+    public class TimeService_Unity : TimeServiceBase
     {
-        public void Shutdown()
+        public override void Shutdown()
         {
+            ResetTimeScale();
         }
 
         //////////////////////////////////////////////////////////////////////////
-        public float fixedDeltaTime        {
+        /// ITickTimeService：
+
+        public override float fixedDeltaTime
+        {
             get => Time.fixedDeltaTime;
         }
-        
-        public float fixedUnscaledDeltaTime
+
+        public override float fixedUnscaledDeltaTime
         {
             get => Time.fixedUnscaledDeltaTime;
         }
 
-        public float deltaTime
+        public override float deltaTime
         {
             get => Time.deltaTime;
         }
-        
-        public float unscaledDeltaTime
+
+        public override float unscaledDeltaTime
         {
-            get => Time.unscaledDeltaTime; 
+            get => Time.unscaledDeltaTime;
         }
 
-        public float timeScale
+        public override float timeScale
         {
             get => Time.timeScale;
-            set
+            protected set
             {
                 Time.timeScale = value;
             }

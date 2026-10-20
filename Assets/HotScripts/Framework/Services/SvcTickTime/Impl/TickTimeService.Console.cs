@@ -1,41 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace Xease
+﻿namespace Xease
 {
-    public class TimeService_Console : ITimeService
+    public class TimeService_Console : TimeServiceBase
     {
-        public void Shutdown()
+        public override void Shutdown()
         {
+            ResetTimeScale();
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        public float fixedDeltaTime        
-        {
-            get => 0.02f * _timeScale;
-        }
-        
-        public float fixedUnscaledDeltaTime
-        {
-            get => 0.02f;
-        }
-
-        public float deltaTime
-        {
-            get => 0.02f * _timeScale;
-        }
-        
-        public float unscaledDeltaTime
-        {
-            get => 0.02f; 
-        }
-
+        public const float CLI_TickDt = 0.02f;
+        // 平台内的时间缩放载体，由基类 SyncTimeScale 写入
         private float _timeScale = 1f;
-        public float timeScale
+        
+        //////////////////////////////////////////////////////////////////////////
+        /// ITickTimeService：
+        public override float fixedDeltaTime
+        {
+            get => CLI_TickDt * _timeScale;
+        }
+
+        public override float fixedUnscaledDeltaTime
+        {
+            get => CLI_TickDt;
+        }
+
+        public override float deltaTime
+        {
+            get => CLI_TickDt * _timeScale;
+        }
+
+        public override float unscaledDeltaTime
+        {
+            get => CLI_TickDt;
+        }
+        
+        public override float timeScale
         {
             get => _timeScale;
-            set
+            protected set
             {
                 _timeScale = value;
             }

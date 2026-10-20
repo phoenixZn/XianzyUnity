@@ -2,7 +2,7 @@ namespace Xease
 {
     public static partial class G
     {
-        public static ITimeService TickTime => GEnv.Inst.Services.TickTime;
+        public static ITickTimeService TickTime => GEnv.Inst.Services.TickTime;
 
         public static float fixedDeltaTime => TickTime.fixedDeltaTime;
         public static float fixedUnscaledDeltaTime => TickTime.fixedUnscaledDeltaTime;
@@ -12,8 +12,8 @@ namespace Xease
     
     public partial class ServicesProvider
     {
-        protected ITimeService _tickTimeSvc;
-        public ITimeService TickTime
+        protected ITickTimeService _tickTimeSvc;
+        public ITickTimeService TickTime
         {
             get { return _tickTimeSvc; }
         }
