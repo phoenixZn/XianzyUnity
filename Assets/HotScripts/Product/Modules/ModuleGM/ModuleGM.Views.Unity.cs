@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using IngameDebugConsole;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -36,7 +37,7 @@ namespace Xease
     {
         GmDebugCanvas _canvas; // 代码生成的调试窗，关闭模块时销毁
 
-        /// <summary>生成或重新显示运行时 GM 窗。窗体只搭一次，各块在滚动列表里各占一块。</summary>
+        /// <summary>生成或重新显示运行时 GM 窗。窗体只搭一次，顶条切换当前页。</summary>
         public void ShowCanvas()
         {
             if (_canvas == null || _canvas.Root == null)
@@ -90,17 +91,29 @@ namespace Xease
     }
 
     /// <summary>
-    /// 运行时 GM 窗。代码生成 Overlay 画布和滚动列表，不经过 UI 服务，也不持有任何功能块的配置。
+    /// 运行时 GM 窗。代码生成全屏 Overlay，并按页签切换滚动内容。不经过 UI 服务，也不持有任何功能块的配置。
     /// </summary>
     public sealed class GmDebugCanvas
     {
         const int CanvasSortOrder = 32000; // 高于界面最顶层，保证调试窗可点
         const string RootName = "GmDebugCanvas";
 
+        // 顶条当前页、其余页、按下时的底色。只影响显示
+        static readonly Color IdleTint = new Color(0.25f, 0.27f, 0.3f, 1f);
+        static readonly Color ActiveTint = new Color(0.22f, 0.48f, 0.32f, 1f);
+        static readonly Color PressedTint = new Color(0.15f, 0.16f, 0.18f, 1f);
+
+        readonly List<string> _tabNames = new(); // 顶条顺序
+        readonly List<RectTransform> _pages = new(); // 与 _tabNames 下标对齐
+        readonly List<Button> _tabButtons = new(); // 与 _tabNames 下标对齐
+
+        RectTransform _panel; // 全屏面板，切页后用来重排
+        string _selectedTab; // 当前页签名
+
         /// <summary>Overlay 根物体，用来显示、隐藏和销毁调试窗。</summary>
         public GameObject Root { get; private set; }
 
-        /// <summary>创建画布并让每个实现了画布视图的块往滚动内容里加一块。</summary>
+        /// <summary>创建全屏画布，按页签把实现了画布视图的块放进对应页。</summary>
         public static GmDebugCanvas Create(ModuleGM module)
         {
             var canvas = new GmDebugCanvas();
@@ -134,10 +147,8 @@ namespace Xease
             root.AddComponent<GraphicRaycaster>();
 
             var panel = GmRuntimeUi.CreateRect("Panel", root.transform);
-            panel.anchorMin = new Vector2(0.52f, 0.08f);
-            panel.anchorMax = new Vector2(0.98f, 0.92f);
-            panel.offsetMin = Vector2.zero;
-            panel.offsetMax = Vector2.zero;
+            _panel = panel;
+            GmRuntimeUi.Stretch(panel);
             var panelImage = panel.gameObject.AddComponent<Image>();
             panelImage.sprite = GmRuntimeUi.WhiteSprite;
             panelImage.color = new Color(0.08f, 0.08f, 0.1f, 0.94f);
@@ -166,6 +177,10 @@ namespace Xease
             var closeElement = close.GetComponent<LayoutElement>();
             closeElement.flexibleWidth = 0;
             closeElement.preferredWidth = 180;
+
+            CollectTabNames(module);
+            if (_tabNames.Count > 0)
+                BuildTabBar(panel);
 
             var scrollRoot = GmRuntimeUi.CreateRect("Scroll", panel);
             var scrollElement = scrollRoot.gameObject.AddComponent<LayoutElement>();
@@ -199,17 +214,121 @@ namespace Xease
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             scroll.content = content;
 
-            var blocks = module.Blocks;
-            for (int i = 0; i < blocks.Count; i++)
-            {
-                if (blocks[i] is IGmCanvasBlock canvasBlock)
-                    canvasBlock.AddToCanvas(content);
-            }
+            BuildPages(module, content);
 
             var uiLayer = LayerMask.NameToLayer("UI");
             if (uiLayer >= 0)
                 SetLayer(root.transform, uiLayer);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
+            if (_tabNames.Count > 0)
+                SelectTab(_tabNames[0]);
+            else
+                LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
+        }
+
+        // 按目录首次出现去重；空页签名不进顶条
+        void CollectTabNames(ModuleGM module)
+        {
+            var blocks = module.Blocks;
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                if (blocks[i] is not IGmCanvasBlock)
+                    continue;
+                var tab = blocks[i].Tab;
+                if (string.IsNullOrEmpty(tab) || _tabNames.Contains(tab))
+                    continue;
+                _tabNames.Add(tab);
+            }
+        }
+
+        void BuildTabBar(Transform parent)
+        {
+            var tabRow = GmRuntimeUi.CreateRect("TabBar", parent);
+            var tabLayout = tabRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            tabLayout.spacing = 12;
+            tabLayout.childAlignment = TextAnchor.MiddleCenter;
+            tabLayout.childControlWidth = true;
+            tabLayout.childControlHeight = true;
+            tabLayout.childForceExpandWidth = true;
+            tabLayout.childForceExpandHeight = true;
+            var tabRowElement = tabRow.gameObject.AddComponent<LayoutElement>();
+            tabRowElement.preferredHeight = GmRuntimeUi.ButtonHeight;
+            tabRowElement.minHeight = GmRuntimeUi.ButtonHeight;
+
+            for (int i = 0; i < _tabNames.Count; i++)
+            {
+                var tab = _tabNames[i];
+                _tabButtons.Add(GmRuntimeUi.CreateButton(tab, tabRow, () => SelectTab(tab)));
+            }
+        }
+
+        // 块画进与自己的 Tab 同名的页
+        void BuildPages(ModuleGM module, RectTransform content)
+        {
+            for (int i = 0; i < _tabNames.Count; i++)
+                _pages.Add(CreatePage(_tabNames[i], content));
+
+            var blocks = module.Blocks;
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                if (blocks[i] is not IGmCanvasBlock canvasBlock)
+                    continue;
+                var tab = blocks[i].Tab;
+                if (string.IsNullOrEmpty(tab))
+                    continue;
+                canvasBlock.AddToCanvas(PageOf(tab));
+            }
+        }
+
+        static RectTransform CreatePage(string tab, RectTransform content)
+        {
+            var page = GmRuntimeUi.CreateRect("Page_" + tab, content);
+            var layout = page.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 12;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            return page;
+        }
+
+        RectTransform PageOf(string tab)
+        {
+            for (int i = 0; i < _tabNames.Count; i++)
+            {
+                if (_tabNames[i] == tab)
+                    return _pages[i];
+            }
+
+            return null;
+        }
+
+        void SelectTab(string tab)
+        {
+            if (_selectedTab == tab)
+                return;
+
+            _selectedTab = tab;
+            for (int i = 0; i < _tabNames.Count; i++)
+            {
+                var on = _tabNames[i] == tab;
+                _pages[i].gameObject.SetActive(on);
+                ApplyTabTint(_tabButtons[i], on);
+            }
+
+            if (_panel != null)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_panel);
+        }
+
+        static void ApplyTabTint(Button button, bool selected)
+        {
+            var colors = button.colors;
+            var tint = selected ? ActiveTint : IdleTint;
+            colors.normalColor = tint;
+            colors.highlightedColor = tint;
+            colors.selectedColor = tint;
+            colors.pressedColor = PressedTint;
+            colors.fadeDuration = 0f;
+            button.colors = colors;
         }
 
         static void EnsureEventSystem()

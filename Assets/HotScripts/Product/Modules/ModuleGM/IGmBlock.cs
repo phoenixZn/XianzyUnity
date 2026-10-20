@@ -10,5 +10,8 @@ namespace Xease
 
         /// <summary>各视图上的标题。</summary>
         string Title { get; }
+
+        /// <summary>顶条页签名。同名块画在同一页，顺序跟目录。编辑器和真机窗共用。</summary>
+        string Tab { get; }
     }
 }

@@ -26,6 +26,9 @@ namespace Xease
 
         public string Title => "修改游戏速度";
 
+        /// <summary>本块所在的顶条页。编辑器和真机窗共用。</summary>
+        public string Tab => "Base";
+
         //////////////////////////////////////////////////////////////////////////
         /// This：
 
