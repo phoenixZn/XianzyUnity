@@ -5,7 +5,7 @@ using System.Text;
 namespace Xease
 {
     /// <summary>
-    /// 修改游戏基准倍速的 GM 功能块。预设只存在本类；编辑器、命令行、真机窗都调用这里。
+    /// 修改游戏基准倍速的 GM 功能块。预设只存在本类，供编辑器与真机窗做选项；写入不要求命中预设。
     /// 当前值读 <see cref="ITickTimeService.GameSpeed"/>。减速档也写基准倍速，不进入减速栈，也不改平台 timeScale。
     /// </summary>
     public partial class GmGameSpeed : IGmBlock
@@ -13,7 +13,7 @@ namespace Xease
         public const string BlockId = "game_speed"; // 插装标识
         public const string CommandName = "speed"; // 本块独占的命令键
 
-        // 允许写入的基准倍速。三处视图只读这一份，不另存列表
+        // 编辑器与真机窗的倍速选项。三处视图只读这一份，不另存列表
         public static readonly float[] Presets = { 0.5f, 1f, 1.5f, 2f };
 
         // 文本解析值与预设视为同一档的绝对差上限
@@ -42,16 +42,13 @@ namespace Xease
         }
 
         /// <summary>
-        /// 命中 <see cref="Presets"/> 时，把该档写入 <see cref="ITickTimeService.SetGameSpeed"/>。
+        /// 把倍速写入 <see cref="ITickTimeService.SetGameSpeed"/>。不按 <see cref="Presets"/> 过滤。
         /// </summary>
-        /// <param name="speed">候选倍速，通常来自预设或命令参数。</param>
-        /// <returns>命中预设并已写入时为 true。</returns>
+        /// <param name="speed">要写入的基准倍速。</param>
+        /// <returns>已写入时为 true。</returns>
         public bool TrySet(float speed)
         {
-            if (!TryMatchPreset(speed, out var preset))
-                return false;
-
-            G.TickTime.SetGameSpeed(preset);
+            G.TickTime.SetGameSpeed(speed);
             OnSpeedApplied();
             return true;
         }
@@ -78,20 +75,5 @@ namespace Xease
 
         // 视图侧刷新标签；无视图实现时调用会被抹掉
         partial void OnSpeedApplied();
-
-        bool TryMatchPreset(float speed, out float preset)
-        {
-            for (int i = 0; i < Presets.Length; i++)
-            {
-                if (Math.Abs(Presets[i] - speed) <= PresetMatchEpsilon)
-                {
-                    preset = Presets[i];
-                    return true;
-                }
-            }
-
-            preset = 0f;
-            return false;
-        }
     }
 }
