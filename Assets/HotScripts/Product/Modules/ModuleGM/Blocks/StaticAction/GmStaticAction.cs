@@ -8,8 +8,6 @@ namespace Xease
     /// </summary>
     public partial class GmStaticAction : IGmBlock
     {
-        public const string BlockId = "static_action"; // 插装标识
-
         readonly List<Entry> _entries = new(); // Add 的顺序即按钮顺序
 
         /// <summary>一个已登记按钮：名字，以及点击时调用的函数。</summary>
@@ -29,7 +27,7 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         /// IGmBlock:
 
-        public string Id => BlockId;
+        public string Id => "GmStaticAction"; // 插装标识
 
         public string Title => "静态动作";
 

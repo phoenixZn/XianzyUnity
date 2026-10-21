@@ -9,19 +9,16 @@ namespace Xease
     /// </summary>
     public partial class GmGameSpeed : IGmBlock
     {
-        public const string BlockId = "game_speed"; // 插装标识
-        public const string CommandName = "speed"; // 本块独占的命令键
-
-        // 编辑器与真机窗的倍速选项。三处视图只读这一份，不另存列表
+        // 预设倍速选项
         public static readonly float[] Presets = {0.1f, 0.5f, 1f, 1.5f, 2f, 3f};
 
-        // 文本解析值与预设视为同一档的绝对差上限
+        // 与预设视为同一档的绝对差上限
         const float PresetMatchEpsilon = 0.001f;
 
         //////////////////////////////////////////////////////////////////////////
         /// IGmBlock:
 
-        public string Id => BlockId;
+        public string Id => "GmGameSpeed"; // IGmBlock插装标识
 
         public string Title => "修改游戏速度";
 

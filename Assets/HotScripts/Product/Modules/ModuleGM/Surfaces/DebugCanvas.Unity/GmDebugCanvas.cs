@@ -1,52 +1,12 @@
-using System;
-using System.Collections.Generic;
-using IngameDebugConsole;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+
 namespace Xease
 {
-
-    /// <summary>
-    /// 功能块的真机调试窗视图。只负责往滚动内容里加自己的一块。
-    /// </summary>
-    public interface IGmCanvasBlock
-    {
-        /// <summary>在调试窗滚动内容下追加本块。</summary>
-        /// <param name="content">滚动内容根节点。</param>
-        void AddToCanvas(RectTransform content);
-    }
-
-    public partial class ModuleGM
-    {
-        GmDebugCanvas _canvas; // 代码生成的调试窗，关闭模块时销毁
-
-        /// <summary>生成或重新显示运行时 GM 窗。窗体只搭一次，顶条切换当前页。</summary>
-        public void ShowCanvas()
-        {
-            if (_canvas == null || _canvas.Root == null)
-                _canvas = GmDebugCanvas.Create(this);
-
-            _canvas.Root.SetActive(true);
-        }
-
-        partial void BindRuntimeViews()
-        {
-            DebugLogConsole.AddCommand_Spec(ShowCanvasCommand, CommandGroup, "打开 GM 调试窗");
-        }
-        
-        partial void UnbindRuntimeViews()
-        {
-            DebugLogConsole.RemoveCommand_Spec(ShowCanvasCommand);
-            if (_canvas != null)
-            {
-                _canvas.Destroy();
-                _canvas = null;
-            }
-        }
-    }
-
+    //////////////////////////////////////////////////////////////////////////
     /// <summary>
     /// 运行时 GM 窗。代码生成全屏 Overlay，并按页签切换滚动内容。不经过 UI 服务，也不持有任何功能块的配置。
     /// </summary>
@@ -54,11 +14,6 @@ namespace Xease
     {
         const int CanvasSortOrder = 32000; // 高于界面最顶层，保证调试窗可点
         const string RootName = "GmDebugCanvas";
-
-        // 顶条当前页、其余页、按下时的底色。只影响显示
-        static readonly Color IdleTint = new Color(0.25f, 0.27f, 0.3f, 1f);
-        static readonly Color ActiveTint = new Color(0.22f, 0.48f, 0.32f, 1f);
-        static readonly Color PressedTint = new Color(0.15f, 0.16f, 0.18f, 1f);
 
         readonly List<string> _tabNames = new(); // 顶条顺序
         readonly List<RectTransform> _pages = new(); // 与 _tabNames 下标对齐
@@ -103,15 +58,17 @@ namespace Xease
             scaler.matchWidthOrHeight = 0.5f;
             root.AddComponent<GraphicRaycaster>();
 
+            var skin = GmDebugSkin.Current;
             var panel = GmRuntimeUi.CreateRect("Panel", root.transform);
             _panel = panel;
             GmRuntimeUi.Stretch(panel);
             var panelImage = panel.gameObject.AddComponent<Image>();
             panelImage.sprite = GmRuntimeUi.WhiteSprite;
-            panelImage.color = new Color(0.08f, 0.08f, 0.1f, 0.94f);
+            panelImage.color = skin.Panel;
             var panelLayout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(16, 16, 16, 16);
-            panelLayout.spacing = 12;
+            var panelPad = skin.PanelPadding;
+            panelLayout.padding = new RectOffset(panelPad, panelPad, panelPad, panelPad);
+            panelLayout.spacing = skin.PanelSpacing;
             panelLayout.childAlignment = TextAnchor.UpperCenter;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
@@ -120,20 +77,17 @@ namespace Xease
 
             var titleRow = GmRuntimeUi.CreateRect("TitleRow", panel);
             var titleLayout = titleRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            titleLayout.spacing = 12;
+            titleLayout.spacing = skin.RowSpacing;
             titleLayout.childAlignment = TextAnchor.MiddleLeft;
             titleLayout.childControlWidth = true;
             titleLayout.childControlHeight = true;
             titleLayout.childForceExpandWidth = false;
-            titleLayout.childForceExpandHeight = true;
+            titleLayout.childForceExpandHeight = false; // 不拉满行高，关闭按钮保持皮肤高度
             var titleRowElement = titleRow.gameObject.AddComponent<LayoutElement>();
-            titleRowElement.preferredHeight = GmRuntimeUi.ButtonHeight;
-            titleRowElement.minHeight = GmRuntimeUi.ButtonHeight;
-            GmRuntimeUi.CreateText("Title", "GM", titleRow, GmRuntimeUi.TitleFontSize, true);
-            var close = GmRuntimeUi.CreateButton("关闭", titleRow, () => root.SetActive(false));
-            var closeElement = close.GetComponent<LayoutElement>();
-            closeElement.flexibleWidth = 0;
-            closeElement.preferredWidth = 180;
+            titleRowElement.preferredHeight = skin.TitleRowHeight;
+            titleRowElement.minHeight = skin.TitleRowHeight;
+            GmRuntimeUi.CreateText("Title", "GM", titleRow, skin.WindowTitle, true);
+            GmRuntimeUi.CreateButton("关闭", titleRow, () => root.SetActive(false), skin.Close);
 
             CollectTabNames(module);
             if (_tabNames.Count > 0)
@@ -161,7 +115,7 @@ namespace Xease
             content.offsetMin = Vector2.zero;
             content.offsetMax = Vector2.zero;
             var contentLayout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            contentLayout.spacing = 12;
+            contentLayout.spacing = skin.PanelSpacing;
             contentLayout.childControlWidth = true;
             contentLayout.childControlHeight = true;
             contentLayout.childForceExpandWidth = true;
@@ -199,22 +153,24 @@ namespace Xease
 
         void BuildTabBar(Transform parent)
         {
+            var skin = GmDebugSkin.Current;
             var tabRow = GmRuntimeUi.CreateRect("TabBar", parent);
             var tabLayout = tabRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            tabLayout.spacing = 12;
+            tabLayout.spacing = skin.TabSpacing;
             tabLayout.childAlignment = TextAnchor.MiddleCenter;
             tabLayout.childControlWidth = true;
             tabLayout.childControlHeight = true;
             tabLayout.childForceExpandWidth = true;
-            tabLayout.childForceExpandHeight = true;
+            tabLayout.childForceExpandHeight = false;
             var tabRowElement = tabRow.gameObject.AddComponent<LayoutElement>();
-            tabRowElement.preferredHeight = GmRuntimeUi.ButtonHeight;
-            tabRowElement.minHeight = GmRuntimeUi.ButtonHeight;
+            tabRowElement.preferredHeight = skin.Tab.Height;
+            tabRowElement.minHeight = skin.Tab.Height;
+            tabRowElement.flexibleHeight = 0; // 锁住顶条高度，剩余高度留给滚动区
 
             for (int i = 0; i < _tabNames.Count; i++)
             {
                 var tab = _tabNames[i];
-                _tabButtons.Add(GmRuntimeUi.CreateButton(tab, tabRow, () => SelectTab(tab)));
+                _tabButtons.Add(GmRuntimeUi.CreateButton(tab, tabRow, () => SelectTab(tab), skin.Tab));
             }
         }
 
@@ -240,7 +196,7 @@ namespace Xease
         {
             var page = GmRuntimeUi.CreateRect("Page_" + tab, content);
             var layout = page.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 12;
+            layout.spacing = GmDebugSkin.Current.PanelSpacing;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
@@ -265,27 +221,16 @@ namespace Xease
                 return;
 
             _selectedTab = tab;
+            var skin = GmDebugSkin.Current;
             for (int i = 0; i < _tabNames.Count; i++)
             {
                 var on = _tabNames[i] == tab;
                 _pages[i].gameObject.SetActive(on);
-                ApplyTabTint(_tabButtons[i], on);
+                GmRuntimeUi.ApplyButtonStyle(_tabButtons[i], on ? skin.TabSelected : skin.Tab);
             }
 
             if (_panel != null)
                 LayoutRebuilder.ForceRebuildLayoutImmediate(_panel);
-        }
-
-        static void ApplyTabTint(Button button, bool selected)
-        {
-            var colors = button.colors;
-            var tint = selected ? ActiveTint : IdleTint;
-            colors.normalColor = tint;
-            colors.highlightedColor = tint;
-            colors.selectedColor = tint;
-            colors.pressedColor = PressedTint;
-            colors.fadeDuration = 0f;
-            button.colors = colors;
         }
 
         static void EnsureEventSystem()
@@ -307,14 +252,10 @@ namespace Xease
     }
 
     /// <summary>
-    /// 调试窗共用的运行时控件。只提供搭 UI 的手段，不保存功能块数据。
+    /// 调试窗共用的运行时控件。外观只读 <see cref="GmDebugSkin.Current"/>，不保存功能块数据。
     /// </summary>
     static class GmRuntimeUi
     {
-        internal const int TitleFontSize = 36; // 窗体标题字号
-        internal const int BodyFontSize = 28; // 块内正文与按钮字号
-        internal const int ButtonHeight = 72; // 预设按钮高度，像素
-
         static Font _font;
         static Sprite _white;
 
@@ -349,50 +290,106 @@ namespace Xease
             rect.offsetMax = Vector2.zero;
         }
 
-        internal static Text CreateText(string name, string text, Transform parent, int fontSize, bool flexibleWidth = false, bool ignoreLayout = false)
+        // 区块底色与留白来自当前皮肤
+        internal static RectTransform CreateSection(string name, Transform parent)
+        {
+            var skin = GmDebugSkin.Current;
+            var section = CreateRect(name, parent);
+            var image = section.gameObject.AddComponent<Image>();
+            image.sprite = WhiteSprite;
+            image.color = skin.Section;
+            var layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
+            var pad = skin.SectionPadding;
+            layout.padding = new RectOffset(pad, pad, pad, pad);
+            layout.spacing = skin.SectionSpacing;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            return section;
+        }
+
+        internal static Text CreateText(string name, string text, Transform parent, GmTextStyle style, bool flexibleWidth = false, bool ignoreLayout = false)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rect = go.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
             var label = go.AddComponent<Text>();
-            label.font = BuiltinFont;
+            label.font = ResolveFont();
             label.text = text;
-            label.fontSize = fontSize;
-            label.color = Color.white;
-            label.alignment = TextAnchor.MiddleLeft;
+            label.fontSize = style.FontSize;
+            label.color = style.Color;
+            label.alignment = style.Alignment;
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.verticalOverflow = VerticalWrapMode.Overflow;
             label.raycastTarget = false;
             var element = go.AddComponent<LayoutElement>();
-            element.minHeight = fontSize + 16;
-            element.preferredHeight = fontSize + 16;
+            var line = style.FontSize + GmDebugSkin.Current.TextLinePadding;
+            element.minHeight = line;
+            element.preferredHeight = line;
             element.flexibleWidth = flexibleWidth ? 1f : 0f;
             element.ignoreLayout = ignoreLayout;
             return label;
         }
 
-        internal static Button CreateButton(string label, Transform parent, UnityEngine.Events.UnityAction onClick)
+        internal static Button CreateButton(string label, Transform parent, UnityEngine.Events.UnityAction onClick, GmButtonStyle style)
         {
             var go = new GameObject("Btn_" + label, typeof(RectTransform));
             var rect = go.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
             var image = go.AddComponent<Image>();
             image.sprite = WhiteSprite;
-            image.color = Color.white;
+            image.color = Color.white; // 只做 ColorBlock 的相乘底，可见色来自样式
             var button = go.AddComponent<Button>();
             button.targetGraphic = image;
             if (onClick != null)
                 button.onClick.AddListener(onClick);
 
-            var text = CreateText("Text", label, go.transform, BodyFontSize, false, true);
-            text.alignment = TextAnchor.MiddleCenter;
+            var text = CreateText("Text", label, go.transform, style.Label, false, true);
             Stretch(text.rectTransform);
+            ApplyButtonStyle(button, style);
 
             var element = go.AddComponent<LayoutElement>();
-            element.minHeight = ButtonHeight;
-            element.preferredHeight = ButtonHeight;
-            element.flexibleWidth = 1f;
+            element.minHeight = style.Height;
+            element.preferredHeight = style.Height;
+            element.flexibleWidth = style.FlexibleWidth ? 1f : 0f;
+            if (!style.FlexibleWidth)
+                element.preferredWidth = style.PreferredWidth;
             return button;
+        }
+
+        // 高亮色等于普通色，避免悬停变成浅底后和亮字同色
+        internal static void ApplyButtonStyle(Button button, GmButtonStyle style)
+        {
+            if (button == null)
+                return;
+
+            var colors = button.colors;
+            colors.normalColor = style.Normal;
+            colors.highlightedColor = style.Normal;
+            colors.pressedColor = style.Pressed;
+            colors.selectedColor = style.Selected;
+            colors.disabledColor = style.Normal;
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0f;
+            button.colors = colors;
+
+            var label = button.GetComponentInChildren<Text>();
+            if (label == null)
+                return;
+
+            label.font = ResolveFont();
+            label.fontSize = style.Label.FontSize;
+            label.color = style.Label.Color;
+            label.alignment = style.Label.Alignment;
+        }
+
+        static Font ResolveFont()
+        {
+            var font = GmDebugSkin.Current.Font;
+            if (font != null)
+                return font;
+            return BuiltinFont;
         }
 
         static Font BuiltinFont

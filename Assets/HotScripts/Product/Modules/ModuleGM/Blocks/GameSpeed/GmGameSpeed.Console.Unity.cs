@@ -9,7 +9,9 @@ namespace Xease
     {
         const float ConsoleSpeedMin = 0f; // 命令行允许写入的倍速下界（含）
         const float ConsoleSpeedMax = 100f; // 命令行允许写入的倍速上界（含）
-
+        
+        public const string CommandName = "speed"; // 本块独占的命令键
+        
         //////////////////////////////////////////////////////////////////////////
         /// IGmConsoleBlock:
 
