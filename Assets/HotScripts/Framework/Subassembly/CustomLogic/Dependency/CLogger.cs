@@ -1,5 +1,3 @@
-using System;
-
 namespace Xease.CoreGame
 {
     
@@ -14,22 +12,22 @@ namespace Xease.CoreGame
 
         public static void Log(string info)
         {
-            Console.WriteLine($"[Info] {info}");
+            Xease.ConsoleHostBridge.Write($"[Info] {info}");
         }
 
         public static void LogInfo(string info)
         {
-            Console.WriteLine($"[Info] {info}");
+            Xease.ConsoleHostBridge.Write($"[Info] {info}");
         }
 
         public static void LogError(string info)
         {
-            Console.WriteLine($"[Error] {info}");
+            Xease.ConsoleHostBridge.Write($"[Error] {info}");
         }
 
         public static void LogDebug(string info)
         {
-            Console.WriteLine($"[Debug] {info}");
+            Xease.ConsoleHostBridge.Write($"[Debug] {info}");
         }
         
 #else

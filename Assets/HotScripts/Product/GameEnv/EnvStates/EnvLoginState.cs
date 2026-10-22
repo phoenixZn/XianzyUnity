@@ -140,7 +140,7 @@ namespace Xease
         public override void Enter(EnvStateBase fromState)
         {
             base.Enter(fromState);
-            System.Console.WriteLine("请输入任意非空字符串后回车以登入：");
+            ConsoleHostBridge.Write("请输入任意非空字符串后回车以登入：");
         }
 
         public override void Leave(EnvStateBase toState)
@@ -162,22 +162,21 @@ namespace Xease
         {
             if (_nextStateID != null)
                 return;
-            // 输入被重定向（无控制台）时 KeyAvailable 会抛异常；无头模式直接自动登入便于冒烟
-            if (System.Console.IsInputRedirected)
+            // 管道无键盘；与改造前一样直接登入，避免批处理卡住
+            if (ConsoleHostBridge.IsInputRedirected)
             {
                 _nextStateID = EnvStateID.ES_Main;
                 return;
             }
-            if (!System.Console.KeyAvailable)
+            if (!ConsoleHostBridge.TryTakeCommand(out var line))
                 return;
 
-            var line = System.Console.ReadLine();
             if (string.IsNullOrWhiteSpace(line))
             {
-                System.Console.WriteLine("输入不能为空，请重新输入：");
+                ConsoleHostBridge.Write("输入不能为空，请重新输入：");
                 return;
             }
-            System.Console.WriteLine($"执行 -> {G.GetI18N("common_login")}");
+            ConsoleHostBridge.Write($"执行 -> {G.GetI18N("common_login")}");
             _nextStateID = EnvStateID.ES_Main;
         }
     }

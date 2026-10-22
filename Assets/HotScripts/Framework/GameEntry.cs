@@ -73,12 +73,12 @@ namespace Xease
                 UnityHost = this,
             };
 #else
-            Console.WriteLine("初始化游戏环境 GEnv");
+            ConsoleHostBridge.Write("初始化游戏环境 GEnv");
             var param = new GEnvParam()
             {
-                LogInfo = Console.WriteLine,
-                LogWarning = msg => Console.WriteLine($"[Warning] {msg}"),
-                LogError = msg => Console.WriteLine($"[Error] {msg}"),
+                LogInfo = ConsoleHostBridge.Write,
+                LogWarning = msg => ConsoleHostBridge.Write($"[Warning] {msg}"),
+                LogError = msg => ConsoleHostBridge.Write($"[Error] {msg}"),
                 EnvBaseSeed = Environment.TickCount,
             };
 #endif
@@ -94,7 +94,7 @@ namespace Xease
 #if CONSOLE_CLIENT
             // CLI 无 PlayerLoop：任何 LMotion.Create 之前切到 Manual，并接管未处理异常
             MotionScheduler.DefaultScheduler = MotionScheduler.Manual;
-            MotionDispatcher.RegisterUnhandledExceptionHandler(ex => Console.WriteLine(ex));
+            MotionDispatcher.RegisterUnhandledExceptionHandler(ex => ConsoleHostBridge.Write(ex.ToString()));
 #endif
         }
 

@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Program.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)src\shim\**\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)src\**\*.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)..\..\Assets\HotScripts\Framework\**\*.cs">
       <Link>Framework\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
@@ -64,5 +64,9 @@
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\UniTask\UniTask.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\LitMotion\LitMotion.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Terminal.Gui" Version="1.17.1" />
   </ItemGroup>
 </Project>
