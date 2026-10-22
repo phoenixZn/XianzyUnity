@@ -5,70 +5,38 @@ using Object = UnityEngine.Object;
 
 namespace Xease.CoreGame
 {
-    /// <summary>
-    /// 异步Asset加载,ViewWrapper
-    /// </summary>
-    public class AsyncAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
+    public partial class AsyncAssetViewWrapper
     {
-        /*
-         异步 Asset 加载策略：持有 Instantiate 出的 GameObject，释放时 Destroy。
-         AssetLocation 属 IViewAssetLocatable，Instance 属 IViewGameObjectHolder，不进入 IViewAcquirable。
-         同实例连载时 last-wins：退订旧 handle 回调，仅当前 pending 落地并回调。
-        */
-        private string _assetLocation;
-        private GameObject _instance;
-        
-        // 当前关心的加载句柄；被 supersede 时仅退订，不 Release（留 Loader 缓存）
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+
+        // 持有 Instantiate 出的 GameObject，释放时 Destroy。句柄被 supersede 时只退订，不 Release
+        // 当前关心的加载句柄；留在 Loader 缓存
         private AssetHandle _pendingHandle;
-        
+
         // 仅当前 pending 的 Acquire 回调上下文
         private ViewAcquireContext _pendingCtx;
-        
-        // 实例级缓存，避免每次 BeginAcquire 分配闭包
-        private readonly Action<AssetHandle> _onAssetLoaded;
 
-        /// <summary>
-        /// 无参构造；资源路径经 SetAssetLocation 配置。
-        /// </summary>
-        public AsyncAssetViewWrapper()
+        // 实例级缓存，避免每次 BeginAcquire 分配闭包
+        private Action<AssetHandle> _onAssetLoaded;
+
+        partial void InitHost()
         {
             _onAssetLoaded = OnAssetLoaded;
+            LoadState = ViewLoadState.None;
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewAssetLocatable:
-        public string AssetLocation => _assetLocation;
-
-        public void SetAssetLocation(string assetLocation)
+        partial void OnRebindAssetLocation()
         {
-            // 换 location 时静默丢弃进行中的加载，避免旧资源落地
             CancelPendingAcquire(notifyFailure: false);
-            _assetLocation = assetLocation;
             SetLoadState(ViewLoadState.None);
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewGameObjectHolder:
-        public GameObject Instance => _instance;
-
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewWrapper:
-        public override bool IsReady => LoadState == ViewLoadState.Ready;
-
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewAcquirable:
-        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
-
-        public void SetLoadState(ViewLoadState loadState)
+        // 认领后共享 BeginAcquire 不再回调；同步完成时回调可能在返回前发生
+        partial void BeginAcquireHost(ViewAcquireContext ctx)
         {
-            LoadState = loadState;
-        }
+            _acquireHandled = true;
 
-        public bool HasPendingAcquire =>
-            LoadState == ViewLoadState.None && !string.IsNullOrEmpty(_assetLocation);
-
-        public void BeginAcquire(ViewAcquireContext ctx)
-        {
             if (IsDisposed)
             {
                 ctx.Complete(false);
@@ -91,6 +59,28 @@ namespace Xease.CoreGame
             var handle = G.Asset.LoadAssetAsync<GameObject>(_assetLocation, _onAssetLoaded);
             if (handle != null && !handle.IsDone)
                 _pendingHandle = handle;
+        }
+
+        partial void ReleaseOwnedInstance()
+        {
+            if (_instance == null)
+                return;
+
+            Object.Destroy(_instance);
+            _instance = null;
+        }
+
+        partial void OnDisposedHost()
+        {
+            CancelPendingAcquire(notifyFailure: true);
+            LoadState = ViewLoadState.None;
+        }
+
+        partial void ResetHost()
+        {
+            _pendingHandle = null;
+            _pendingCtx = default;
+            LoadState = ViewLoadState.None;
         }
 
         private void OnAssetLoaded(AssetHandle handle)
@@ -156,39 +146,6 @@ namespace Xease.CoreGame
             var ctx = _pendingCtx;
             _pendingCtx = default;
             ctx.Complete(false);
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-        /// ViewWrapperBase:
-        protected override void ReleaseOwnedAsset()
-        {
-            if (_instance == null)
-                return;
-
-            Object.Destroy(_instance);
-            _instance = null;
-        }
-
-        protected override void OnDisposed()
-        {
-            CancelPendingAcquire(notifyFailure: true);
-            LoadState = ViewLoadState.None;
-        }
-
-        // 按本类型归还 SharedPool
-        protected override void RecycleInstance()
-        {
-            G.SharedPool.Return(this);
-        }
-
-        // Reset 时清加载态与实例引用
-        protected override void OnReset()
-        {
-            _assetLocation = null;
-            _instance = null;
-            _pendingHandle = null;
-            _pendingCtx = default;
-            LoadState = ViewLoadState.None;
         }
     }
 }

@@ -5,79 +5,38 @@ using Object = UnityEngine.Object;
 
 namespace Xease.CoreGame
 {
-    /// <summary>
-    /// 经 Asset 回调加载预制体后 Rent Battle 池实例的 ViewWrapper；释放时 Return 而非 Destroy。
-    /// </summary>
-    public class PooledAssetViewWrapper : ViewWrapperBase, IViewAcquirable, IViewAssetLocatable, IViewGameObjectHolder
+    public partial class PooledAssetViewWrapper
     {
-        /*
-         加载策略：G.Asset.LoadAssetAsync 缓存回调，IsDone 时同步 Invoke 再 Rent；未完成才挂 Completed。
-         释放时 Return 到 GOPool。AssetLocation / Instance 不进入 IViewAcquirable。
-         同实例连载 last-wins：退订旧 handle，仅当前 pending 落地并回调。
-        */
-        private string _assetLocation;
-        private GameObject _instance;
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
 
-        // 当前关心的加载句柄；被 supersede 时仅退订，不 Release（留 Loader 缓存）
+        // LoadAssetAsync 缓存回调，IsDone 时同步 Invoke 再 Rent；释放时 Return 到 GOPool
+        // 句柄被 supersede 时只退订，不 Release（留 Loader 缓存）
         private AssetHandle _pendingHandle;
 
         // 仅当前 pending 的 Acquire 回调上下文
         private ViewAcquireContext _pendingCtx;
 
         // 实例级缓存，避免每次 BeginAcquire 分配闭包
-        private readonly Action<AssetHandle> _onPrefabLoaded;
+        private Action<AssetHandle> _onPrefabLoaded;
 
-        /// <summary>
-        /// 无参构造；资源路径经 SetAssetLocation 配置。
-        /// </summary>
-        public PooledAssetViewWrapper()
+        partial void InitHost()
         {
             _onPrefabLoaded = OnPrefabLoaded;
+            LoadState = ViewLoadState.None;
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewAssetLocatable:
-        public string AssetLocation => _assetLocation;
-
-        /// <summary>
-        /// 写入待获取的资源定位地址；换地址时静默丢弃进行中的加载。
-        /// </summary>
-        public void SetAssetLocation(string assetLocation)
+        partial void OnRebindAssetLocation()
         {
-            // 换 location 时静默丢弃进行中的加载，避免旧资源落地
             CancelPendingAcquire(notifyFailure: false);
-            _assetLocation = assetLocation;
             SetLoadState(ViewLoadState.None);
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewGameObjectHolder:
-        public GameObject Instance => _instance;
-
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewWrapper:
-        public override bool IsReady => LoadState == ViewLoadState.Ready;
-
-        //////////////////////////////////////////////////////////////////////////
-        /// IViewAcquirable:
-        public ViewLoadState LoadState { get; private set; } = ViewLoadState.None;
-
-        /// <summary>
-        /// 由 SysViewLoader 推进加载状态。
-        /// </summary>
-        public void SetLoadState(ViewLoadState loadState)
+        // 认领后共享 BeginAcquire 不再回调；同步完成时回调可能在返回前发生
+        partial void BeginAcquireHost(ViewAcquireContext ctx)
         {
-            LoadState = loadState;
-        }
+            _acquireHandled = true;
 
-        public bool HasPendingAcquire =>
-            LoadState == ViewLoadState.None && !string.IsNullOrEmpty(_assetLocation);
-
-        /// <summary>
-        /// 加载 location 对应预制体并租用 Battle 池实例；失败或无池则 Complete(false)。句柄已完成时同步回调，不走 UniTask。
-        /// </summary>
-        public void BeginAcquire(ViewAcquireContext ctx)
-        {
             if (IsDisposed)
             {
                 ctx.Complete(false);
@@ -115,6 +74,32 @@ namespace Xease.CoreGame
 
             if (!handle.IsDone)
                 _pendingHandle = handle;
+        }
+
+        partial void ReleaseOwnedInstance()
+        {
+            if (_instance == null)
+                return;
+
+            if (G.GOPool != null)
+                G.GOPool.Return(_instance);
+            else
+                Object.Destroy(_instance);
+
+            _instance = null;
+        }
+
+        partial void OnDisposedHost()
+        {
+            CancelPendingAcquire(notifyFailure: true);
+            LoadState = ViewLoadState.None;
+        }
+
+        partial void ResetHost()
+        {
+            _pendingHandle = null;
+            _pendingCtx = default;
+            LoadState = ViewLoadState.None;
         }
 
         // 预制体就绪后 Rent；陈旧回调丢弃。失败不租用，避免泄漏
@@ -196,44 +181,6 @@ namespace Xease.CoreGame
             var ctx = _pendingCtx;
             _pendingCtx = default;
             ctx.Complete(false);
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-        /// ViewWrapperBase:
-        protected override void ReleaseOwnedAsset()
-        {
-            if (_instance == null)
-                return;
-
-            if (G.GOPool != null)
-                G.GOPool.Return(_instance);
-            else
-                Object.Destroy(_instance);
-
-            _instance = null;
-        }
-
-        protected override void OnDisposed()
-        {
-            CancelPendingAcquire(notifyFailure: true);
-            LoadState = ViewLoadState.None;
-        }
-
-        // 按本类型归还 SharedPool
-        protected override void RecycleInstance()
-        {
-            //G.LogError($"G.SharedPool.Return {_assetLocation}");
-            G.SharedPool.Return(this);
-        }
-
-        // Reset 时清加载态、句柄与实例引用
-        protected override void OnReset()
-        {
-            _assetLocation = null;
-            _instance = null;
-            _pendingHandle = null;
-            _pendingCtx = default;
-            LoadState = ViewLoadState.None;
         }
     }
 }

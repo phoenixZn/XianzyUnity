@@ -37,7 +37,7 @@
 
 ## ViewWrapper 命令行占位
 
-`AsyncAssetViewWrapper` 与 `PooledAssetViewWrapper` 在 `Assets/HotScripts/Framework/Subassembly/ECWorld.LiteUnity/LogicComponent/ViewComponent/ViewWrapper/ViewWrapper.CLI`。整份实现包在 `CONSOLE_CLIENT` 里，与同名的 `ViewWrapper.Unity` 互斥：命令行工程排除 `.Unity` 目录并定义该宏，Unity 工程不定义该宏。它们满足 `RequestViewLoad` 的泛型约束，不加载真实资源。
+`AsyncAssetViewWrapper` 与 `PooledAssetViewWrapper` 在 `Assets/HotScripts/Framework/Subassembly/ECWorld.LiteUnity/LogicComponent/ViewComponent/ViewWrapper/`，各是一个 `partial class`。共享文件两边都编：命令行保持不进入 `SysViewLoader`。加载、实例化与还池在同目录 `*.Unity.cs`；PureGameEnv 排除该文件名后，未实现的 `partial void` 调用被编译器抹掉，不引用 YooAsset。它们满足 `RequestViewLoad` 的泛型约束，不加载真实资源。
 
 其余编译期 Shim 仍留在各自工程的 `src/shim/`（如 LitMotion），不写回 Assets。
 
