@@ -35,15 +35,11 @@
 
 
 
-## PureGameEnv 内 shim
+## ViewWrapper 命令行占位
 
-为在排除 `.Unity` 树后仍能编译，下列文件**仅存在于 PureGameEnv**，不向 Assets 拷贝。
+`AsyncAssetViewWrapper` 与 `PooledAssetViewWrapper` 在 `Assets/HotScripts/Framework/Subassembly/ECWorld.LiteUnity/LogicComponent/ViewComponent/ViewWrapper/ViewWrapper.CLI`。整份实现包在 `CONSOLE_CLIENT` 里，与同名的 `ViewWrapper.Unity` 互斥：命令行工程排除 `.Unity` 目录并定义该宏，Unity 工程不定义该宏。它们满足 `RequestViewLoad` 的泛型约束，不加载真实资源。
 
-
-| 文件                                        | 作用                                                            |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `src/shim/AsyncAssetViewWrapper.Shim.cs`  | 替代 `YooAssetView.Unity/AsyncAssetViewWrapper`，供 View 包装器编译通过  |
-| `src/shim/PooledAssetViewWrapper.Shim.cs` | 替代 `ViewWrapper.Unity/PooledAssetViewWrapper`，供 View 泛型约束编译通过 |
+其余编译期 Shim 仍留在各自工程的 `src/shim/`（如 LitMotion），不写回 Assets。
 
 
 

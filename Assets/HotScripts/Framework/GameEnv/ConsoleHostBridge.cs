@@ -5,13 +5,15 @@ using System.Collections.Generic;
 namespace Xease
 {
     /// <summary>
-    /// 命令行宿主与逻辑之间的日志、行指令、即时键接缝。
-    /// 由 PureGameEnv 在 GameEntryInit 之前安装；未安装时日志仍写到控制台。
+    /// 命令行宿主与逻辑之间的日志、事件、行指令、即时键接缝。
+    /// 由 PureGameEnv 在 GameEntryInit 之前安装；未安装时日志和事件仍写到控制台。
     /// </summary>
     public static class ConsoleHostBridge
     {
         // 宿主安装的日志出口；TUI 收进日志区，CLI 写 stdout
         static Action<string> sWrite;
+        // 宿主安装的事件出口；TUI 收进事件区，未安装时走日志出口
+        static Action<string> sPostEvent;
         // 本帧尚未被逻辑取走的行指令
         static readonly Queue<string> sCommands = new Queue<string>();
         // 本帧新投入、且尚未取走的行数；帧末仍剩余则视为无人识别
@@ -43,6 +45,30 @@ namespace Xease
                 sWrite(message);
             else
                 Console.WriteLine(message);
+        }
+
+        /// <summary>
+        /// 安装事件出口。传 null 则取消；未安装时 PostEvent 走 Write。
+        /// </summary>
+        public static void BindEvent(Action<string> post)
+        {
+            sPostEvent = post;
+        }
+
+        /// <summary>
+        /// 写一条重要事件。已安装事件出口时只走该出口；否则与日志相同。
+        /// </summary>
+        public static void PostEvent(string message)
+        {
+            if (message == null)
+                return;
+            if (sPostEvent != null)
+            {
+                sPostEvent(message);
+                return;
+            }
+
+            Write(message);
         }
 
         /// <summary>

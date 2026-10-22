@@ -8,7 +8,7 @@ Unity 工程编译依赖 Editor 管线、程序集定义与大量 Unity 特有 A
 
 - **源码仍留在 `Assets/HotScripts/`**，不在此目录复制业务代码，避免双份维护。
 - **筛选规则与 Unity 侧 UnityParting 约定一致**（排除 `.Unity` 目录与 `*.Unity.cs`），保证「纯 C# 视图」与主工程分层语义对齐。
-- **编译期 shim 与最小 Unity 引用**仅存在于本目录，不污染 Unity 源码树。
+- **最小 Unity 引用**放在本目录。编译期 Shim 默认留在各工程 `src/shim/`。
 
 当前已有子工程 `PureGameEnv/`（命令行宿主）、`UniTask/`（Cysharp UniTask 的 NetCore 子集）与 `LitMotion/`（数值 Tween 的 Manual + 托管更新核子集）。后续可按同样约定在此目录下继续添加其他纯 C# 验证工程。
 
@@ -27,7 +27,6 @@ PureCsproj/
 └── PureGameEnv/
     ├── PureGameEnv.csproj    # 主 csproj（ProjectReference UniTask / LitMotion）
     ├── Program.cs            # CLI 入口（冒烟编译 / 运行）
-    ├── src/shim/             # 仅本工程使用的编译期垫片（*.Shim.cs）
     └── refs/                 # 本机 Unity 托管 DLL（不进 git，需自行拷贝）
 ```
 
@@ -79,7 +78,6 @@ PureCsproj/
 
 - 命名建议 `*.Shim.cs`，放在 `src/shim/`，**不要**写回 `Assets/`
 - 在 csproj 中用 `<Compile Include="src\shim\**\*.cs" />` 纳入
-- `GameEntry` 与 `GEnvProduct` 已是 Assets 共享源码（`Framework/GameEntry.cs`、`Product/GameEnv/GEnvEx.Product.cs`），用 `CONSOLE_CLIENT` 分叉，不再放 `src/shim/`
 
 
 

@@ -156,7 +156,7 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         /// IEnvUpdate:
         /// <summary>
-        /// 有完整输入行且非空时设置下一状态为 ES_Main；空行则再提示并留下。
+        /// 有完整输入行且非空时记下登入事件并切到 ES_Main；空行则再提示并留下。管道输入则直接登入。
         /// </summary>
         public void EnvUpdate(float dt, float dt_unscaled)
         {
@@ -165,7 +165,7 @@ namespace Xease
             // 管道无键盘；与改造前一样直接登入，避免批处理卡住
             if (ConsoleHostBridge.IsInputRedirected)
             {
-                _nextStateID = EnvStateID.ES_Main;
+                FinishLogin();
                 return;
             }
             if (!ConsoleHostBridge.TryTakeCommand(out var line))
@@ -177,6 +177,15 @@ namespace Xease
                 return;
             }
             ConsoleHostBridge.Write($"执行 -> {G.GetI18N("common_login")}");
+            FinishLogin();
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        /// This：
+        // 登入成功：事件区记一笔，并切到主状态
+        void FinishLogin()
+        {
+            ConsoleHostBridge.PostEvent("登陆完成");
             _nextStateID = EnvStateID.ES_Main;
         }
     }
