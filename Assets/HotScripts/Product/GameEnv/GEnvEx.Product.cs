@@ -43,6 +43,7 @@ namespace Xease
 #if !CONSOLE_CLIENT
             // 实现位于 *.Unity，命令行工程不编入
             Services.AddService_GameObjectPools();
+            Services.AddService_FxPool(Services.GameObjectPoolSvc);
             Services.AddService_Input();
             Services.AddService_DeviceProfile();
             Services.AddService_Audio();
