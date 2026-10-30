@@ -138,6 +138,21 @@ namespace Xease
                 G.LogError($"GameObjectPoolService.Return already pooled: {instance.name}");
             }
 
+            // XPool.Return 会先入队再 OnReturn。先完成生命周期回调，防止 OnDisable
+            // 中 Rent 重租同一对象，随后又被本次归还覆盖父节点或播放状态。
+            pool.PrepareReturn(instance);
+            if (instance == null)
+            {
+                return;
+            }
+
+            // 失活/改父节点的回调也可能 Clear 该子池。
+            if (!IsLivePool(pool))
+            {
+                UnityObject.Destroy(instance);
+                return;
+            }
+
             pool.Return(instance);
         }
 
@@ -639,10 +654,18 @@ namespace Xease
                 instance.transform.SetParent(_rentedRoot, false);
             }
 
-            protected override void OnReturn(GameObject instance)
+            public void PrepareReturn(GameObject instance)
             {
                 instance.SetActive(false);
-                instance.transform.SetParent(_category, false);
+                if (instance != null && _category != null)
+                {
+                    instance.transform.SetParent(_category, false);
+                }
+            }
+
+            protected override void OnReturn(GameObject instance)
+            {
+                // 外层 Return 已在入队前完成 PrepareReturn；预热由 OnCreate 完成初始化。
             }
 
             protected override void OnRelease(GameObject instance)

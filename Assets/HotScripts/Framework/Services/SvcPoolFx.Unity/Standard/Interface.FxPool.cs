@@ -119,7 +119,7 @@ namespace Xease
         void ResetLifetime(FxHandle handle, float lifetimeSec);
 
         /// <summary>
-        /// 同时存活的真实实例上限。小于等于 0 表示不限制。只拒绝此后的新实例。
+        /// 同时存活的实例上限，包含生成中已预留的实例。小于等于 0 表示不限制。只拒绝此后的新实例。
         /// </summary>
         void SetGlobalCap(int maxLive);
 
@@ -144,12 +144,14 @@ namespace Xease
         UniTask PrewarmAsync(string assetLocation, int count, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 归还全部在播特效。GameObject 池里的闲置实例保留。
+        /// 归还调用时的全部在播特效，取消生成中的租约。回调中新生成的特效不在本次范围内。
+        /// 生成中的实例由原生成调用退出时归还。GameObject 池里的闲置实例保留。
         /// </summary>
         void StopAll();
 
         /// <summary>
-        /// 归还该预制体资产当前在播的实例。参数是预制体，不是已生成的实例。
+        /// 归还调用时该预制体资产的在播实例，并取消对应的生成中租约。回调中新生成的特效不在本次范围内。
+        /// 参数是预制体，不是已生成的实例；生成中的实例由原生成调用退出时归还。
         /// </summary>
         void StopByPrefab(GameObject prefab);
     }

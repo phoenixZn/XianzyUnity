@@ -1,5 +1,7 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -27,6 +29,9 @@ namespace Xease
         // 父节点失效时收回
         private const byte FlagAttached = 4;
 
+        // 生成事务尚未交出句柄；取消后由生成方归还实例并释放槽位
+        private const byte FlagSpawning = 8;
+
         // 租还实例的对象池
         private readonly IGameObjectPoolService _goPool;
 
@@ -39,13 +44,19 @@ namespace Xease
         // Shutdown 之后拒绝新的生成
         private bool _shutdown;
 
+        // 回调可能重入 Shutdown；最外层事务结束后才能拆根节点
+        private int _transactionDepth;
+
+        // 防止回调重入逐帧推进时覆盖本轮待终止列表
+        private bool _advancing;
+
         // 槽位；下标即句柄 Slot
         private FxSlot[] _slots;
 
-        // 在播槽下标，交换删除
+        // 在播与生成中租约的槽下标，交换删除
         private int[] _live;
 
-        // 在播数量
+        // 在播与生成中租约数量，预留阶段即占用限额
         private int _liveCount;
 
         // 空闲槽下标栈
@@ -94,21 +105,26 @@ namespace Xease
         //////////////////////////////////////////////////////////////////////////
         /// IService:
         /// <summary>
-        /// 归还全部在播特效并拆掉挂点。GameObject 池里的闲置实例保留。
+        /// 终止全部租约。若从生命周期回调中关闭，待最外层事务退出后拆掉挂点。
         /// </summary>
         public void Shutdown()
         {
-            _shutdown = true;
-            StopAll();
-            if (_root != null)
+            if (_shutdown)
             {
-                UnityObject.Destroy(_root.gameObject);
-                _root = null;
+                return;
             }
 
-            _capByName = null;
-            _resolvedCap = null;
-            _liveByPrefab = null;
+            _shutdown = true;
+            _transactionDepth++;
+            try
+            {
+                StopAll();
+            }
+            finally
+            {
+                _transactionDepth--;
+                FinishShutdown();
+            }
         }
 
         //////////////////////////////////////////////////////////////////////////
@@ -118,57 +134,73 @@ namespace Xease
         /// </summary>
         public void EnvLateUpdate(float dt, float dt_unscaled)
         {
-            if (_shutdown || _liveCount == 0)
+            if (_shutdown || _advancing || _liveCount == 0)
             {
                 return;
             }
 
-            int dyingCount = 0;
-            for (int i = 0; i < _liveCount; i++)
+            _advancing = true;
+            try
             {
-                int slotIndex = _live[i];
-                Transform trans = _slots[slotIndex].Trans;
-                byte flags = _slots[slotIndex].Flags;
-                bool parentLost = (flags & FlagAttached) != 0 && _slots[slotIndex].Parent == null;
-                if (trans == null || parentLost)
+                int dyingCount = 0;
+                for (int i = 0; i < _liveCount; i++)
                 {
-                    _dying[dyingCount] = slotIndex;
-                    _dyingIds[dyingCount] = _slots[slotIndex].CreateId;
-                    dyingCount++;
-                    continue;
+                    int slotIndex = _live[i];
+                    Transform trans = _slots[slotIndex].Trans;
+                    byte flags = _slots[slotIndex].Flags;
+                    if ((flags & FlagSpawning) != 0)
+                    {
+                        continue;
+                    }
+
+                    bool parentLost = (flags & FlagAttached) != 0 && _slots[slotIndex].Parent == null;
+                    if (trans == null || parentLost)
+                    {
+                        _dying[dyingCount] = slotIndex;
+                        _dyingIds[dyingCount] = _slots[slotIndex].CreateId;
+                        dyingCount++;
+                        continue;
+                    }
+
+                    if ((flags & FlagTimed) == 0)
+                    {
+                        continue;
+                    }
+
+                    float step = (flags & FlagUnscaled) != 0 ? dt_unscaled : dt;
+                    _slots[slotIndex].Remain -= step;
+                    if (_slots[slotIndex].Remain <= 0f)
+                    {
+                        _dying[dyingCount] = slotIndex;
+                        _dyingIds[dyingCount] = _slots[slotIndex].CreateId;
+                        dyingCount++;
+                    }
                 }
 
-                if ((flags & FlagTimed) == 0)
+                Exception failure = null;
+                for (int i = 0; i < dyingCount; i++)
                 {
-                    continue;
+                    int slotIndex = _dying[i];
+                    if (_slots[slotIndex].CreateId != _dyingIds[i])
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        StopSlot(slotIndex);
+                    }
+                    catch (Exception error)
+                    {
+                        failure = CombineFailures(failure, error);
+                    }
                 }
 
-                float step = (flags & FlagUnscaled) != 0 ? dt_unscaled : dt;
-                _slots[slotIndex].Remain -= step;
-                if (_slots[slotIndex].Remain <= 0f)
-                {
-                    _dying[dyingCount] = slotIndex;
-                    _dyingIds[dyingCount] = _slots[slotIndex].CreateId;
-                    dyingCount++;
-                }
+                Rethrow(failure);
             }
-
-            for (int i = 0; i < dyingCount; i++)
+            finally
             {
-                int slotIndex = _dying[i];
-                if (_slots[slotIndex].CreateId != _dyingIds[i])
-                {
-                    continue;
-                }
-
-                Transform trans = _slots[slotIndex].Trans;
-                if (trans != null && (_slots[slotIndex].Flags & FlagAttached) != 0 && _slots[slotIndex].Parent == null)
-                {
-                    // Unity 假 null：本帧已 Destroy。先摘离，避免帧末把池实例一起拆掉
-                    trans.SetParent(_root, true);
-                }
-
-                StopSlot(slotIndex);
+                _advancing = false;
             }
         }
 
@@ -366,7 +398,7 @@ namespace Xease
         }
 
         /// <summary>
-        /// 同时存活的真实实例上限。小于等于 0 表示不限制。只拒绝此后的新实例。
+        /// 同时存活与生成中预留实例的上限。小于等于 0 表示不限制。只拒绝此后的新实例。
         /// </summary>
         public void SetGlobalCap(int maxLive)
         {
@@ -461,20 +493,15 @@ namespace Xease
         }
 
         /// <summary>
-        /// 归还全部在播特效。GameObject 池里的闲置实例保留。
+        /// 终止调用时的全部租约；回调中新生成的特效不属于本次快照。
         /// </summary>
         public void StopAll()
         {
-            // 每次从末尾归还；次数用尽仍留在表里则停下，避免空转
-            int guard = _liveCount;
-            while (_liveCount > 0 && guard-- > 0)
-            {
-                StopSlot(_live[_liveCount - 1]);
-            }
+            StopMatchingPrefabs(false, 0);
         }
 
         /// <summary>
-        /// 归还该预制体资产当前在播的实例。
+        /// 终止调用时该预制体资产的租约；回调中新生成的特效不属于本次快照。
         /// </summary>
         public void StopByPrefab(GameObject prefab)
         {
@@ -483,22 +510,55 @@ namespace Xease
                 return;
             }
 
-            int prefabId = prefab.GetInstanceID();
-            int index = 0;
-            while (index < _liveCount)
+            StopMatchingPrefabs(true, prefab.GetInstanceID());
+        }
+
+        // 每次调用独占一份快照；嵌套停止、扩容和槽复用都不会覆盖外层快照。
+        private void StopMatchingPrefabs(bool filterPrefab, int prefabId)
+        {
+            int count = _liveCount;
+            if (count == 0)
             {
-                int slotIndex = _live[index];
-                if (_slots[slotIndex].PrefabId != prefabId)
+                return;
+            }
+
+            FxHandle[] snapshot = ArrayPool<FxHandle>.Shared.Rent(count);
+            try
+            {
+                int write = 0;
+                for (int i = count - 1; i >= 0; i--)
                 {
-                    index++;
-                    continue;
+                    int slotIndex = _live[i];
+                    if (!filterPrefab || _slots[slotIndex].PrefabId == prefabId)
+                    {
+                        snapshot[write++] = new FxHandle(_slots[slotIndex].CreateId, slotIndex);
+                    }
                 }
 
-                StopSlot(slotIndex);
-                if (index < _liveCount && _live[index] == slotIndex)
+                Exception failure = null;
+                for (int i = 0; i < write; i++)
                 {
-                    index++;
+                    FxHandle handle = snapshot[i];
+                    if (_slots[handle.Slot].CreateId != handle.CreateId)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        StopSlot(handle.Slot);
+                    }
+                    catch (Exception error)
+                    {
+                        failure = CombineFailures(failure, error);
+                    }
                 }
+
+                Rethrow(failure);
+            }
+            finally
+            {
+                ArrayPool<FxHandle>.Shared.Return(snapshot);
             }
         }
 
@@ -521,11 +581,14 @@ namespace Xease
             // 剩余寿命（秒）；未设限时不读取
             public float Remain;
 
-            // FlagTimed / FlagUnscaled / FlagAttached
+            // FlagTimed / FlagUnscaled / FlagAttached / FlagSpawning
             public byte Flags;
 
             // 实例变换；外部 Destroy 后为假 null
             public Transform Trans;
+
+            // 保留托管包装：Transform 已销毁时也能向底层池归还、清除租出记录
+            public GameObject Instance;
 
             // 调用方挂上的父节点；未挂接时为空
             public Transform Parent;
@@ -572,35 +635,70 @@ namespace Xease
                 return CulledHandle();
             }
 
-            GameObject instance = _goPool.Rent(prefab);
-            if (instance == null)
+            Vector3 scale = prefab.transform.localScale;
+            int slotIndex = ReserveSlot(prefabId, parent, localSpace, lifetimeSec, unscaledTime);
+            int createId = _slots[slotIndex].CreateId;
+            GameObject instance = null;
+            FxPlayback playback = null;
+            FxHandle result = default;
+            Exception failure = null;
+            _transactionDepth++;
+            try
             {
-                G.LogError("FxPoolService.Spawn Rent returned null");
-                return default;
+                // Rent 中的 Instantiate / Awake 也可能重入；此时租约和限额已经登记。
+                instance = _goPool.Rent(prefab);
+                if (instance == null)
+                {
+                    G.LogError("FxPoolService.Spawn Rent returned null");
+                }
+                else if (InitializeSpawn(slotIndex, createId, instance, parent, pos, rot, scale, localSpace, out playback))
+                {
+                    _slots[slotIndex].Flags = (byte)(_slots[slotIndex].Flags & ~FlagSpawning);
+                    result = new FxHandle(createId, slotIndex);
+                }
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
+            finally
+            {
+                try
+                {
+                    if (result.CreateId == 0)
+                    {
+                        // 取消后也不立即复用槽位，由本层统一归还物理实例。
+                        UnlinkSlot(slotIndex);
+                        try
+                        {
+                            ReleaseInstance(instance, playback, localSpace && parent == null);
+                        }
+                        finally
+                        {
+                            FreeSlot(slotIndex);
+                        }
+                    }
+                }
+                catch (Exception error)
+                {
+                    failure = CombineFailures(failure, error);
+                }
+                finally
+                {
+                    _transactionDepth--;
+                    FinishShutdown();
+                }
             }
 
-            Transform trans = instance.transform;
-            if (localSpace)
-            {
-                trans.SetParent(parent, false);
-                trans.localPosition = pos;
-                trans.localRotation = rot;
-            }
-            else
-            {
-                trans.SetParent(_root, false);
-                trans.SetPositionAndRotation(pos, rot);
-            }
+            Rethrow(failure);
+            return result;
+        }
 
-            // 写回预制体根缩放，清掉上一轮对根节点的缩放
-            trans.localScale = prefab.transform.localScale;
-            FxPlayback playback = GetOrAddPlayback(instance);
-            playback.Prepare();
-            instance.SetActive(true);
-            playback.Play();
-
+        // 预留的租约也占用限额，直到生成调用退出才允许复用槽位。
+        private int ReserveSlot(int prefabId, Transform parent, bool localSpace, float lifetimeSec, bool unscaledTime)
+        {
             int slotIndex = RentSlot();
-            byte flags = 0;
+            byte flags = FlagSpawning;
             if (lifetimeSec > 0f)
             {
                 flags |= FlagTimed;
@@ -616,20 +714,74 @@ namespace Xease
                 flags |= FlagAttached;
             }
 
-            int createId = NextCreateId();
-            _slots[slotIndex].CreateId = createId;
+            _slots[slotIndex].CreateId = NextCreateId();
             _slots[slotIndex].PrefabId = prefabId;
             _slots[slotIndex].Remain = lifetimeSec;
             _slots[slotIndex].Flags = flags;
-            _slots[slotIndex].Trans = trans;
             _slots[slotIndex].Parent = localSpace ? parent : null;
-            _slots[slotIndex].Playback = playback;
-
-            int liveIndex = _liveCount;
+            _slots[slotIndex].LiveIndex = _liveCount;
             _live[_liveCount++] = slotIndex;
-            _slots[slotIndex].LiveIndex = liveIndex;
             NoteLivePrefab(prefabId);
-            return new FxHandle(createId, slotIndex);
+            return slotIndex;
+        }
+
+        private bool InitializeSpawn(int slotIndex, int createId, GameObject instance, Transform parent,
+            Vector3 pos, Quaternion rot, Vector3 scale, bool localSpace, out FxPlayback playback)
+        {
+            playback = null;
+            if (!CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace))
+            {
+                return false;
+            }
+
+            Transform trans = instance.transform;
+            _slots[slotIndex].Instance = instance;
+            _slots[slotIndex].Trans = trans;
+            trans.SetParent(localSpace ? parent : _root, false);
+            if (!CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace))
+            {
+                return false;
+            }
+
+            if (localSpace)
+            {
+                trans.localPosition = pos;
+                trans.localRotation = rot;
+            }
+            else
+            {
+                trans.SetPositionAndRotation(pos, rot);
+            }
+
+            trans.localScale = scale;
+            playback = GetOrAddPlayback(instance);
+            if (!CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace))
+            {
+                return false;
+            }
+
+            _slots[slotIndex].Playback = playback;
+            playback.Prepare();
+            if (!CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace))
+            {
+                return false;
+            }
+
+            // 保留 LOD 的 OnEnable 先于播放执行的顺序。
+            instance.SetActive(true);
+            if (!CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace) || playback == null)
+            {
+                return false;
+            }
+
+            playback.Play();
+            return CanCompleteSpawn(slotIndex, createId, instance, parent, localSpace);
+        }
+
+        private bool CanCompleteSpawn(int slotIndex, int createId, GameObject instance, Transform parent, bool localSpace)
+        {
+            return !_shutdown && _root != null && instance != null
+                && (!localSpace || parent != null) && _slots[slotIndex].CreateId == createId;
         }
 
         // 地址已完成时直接 Spawn，不进入异步状态机
@@ -881,12 +1033,12 @@ namespace Xease
                 return true;
             }
 
-            // 外部 Destroy 后只清槽，避免再 Return
+            // 外部 Destroy 后仍通过保留的 GameObject 包装清理底层租出记录。
             StopSlot(slotIndex);
             return false;
         }
 
-        // 先作废创建号，再归还。归还触发的 OnDisable 里再次 Stop 会直接返回。
+        // 先完成逻辑摘除，再进入 Unity / 对象池回调；回调退出前不复用槽位。
         private void StopSlot(int slotIndex)
         {
             if ((uint)slotIndex >= (uint)_slots.Length || _slots[slotIndex].CreateId == 0)
@@ -894,24 +1046,37 @@ namespace Xease
                 return;
             }
 
-            Transform trans = _slots[slotIndex].Trans;
-            int prefabId = _slots[slotIndex].PrefabId;
-            FxPlayback playback = _slots[slotIndex].Playback;
-            _slots[slotIndex].CreateId = 0;
-
-            if (trans != null)
+            FxSlot slot = _slots[slotIndex];
+            UnlinkSlot(slotIndex);
+            if ((slot.Flags & FlagSpawning) != 0)
             {
-                if (playback != null)
-                {
-                    playback.StopAndClear();
-                }
-
-                if (_goPool != null)
-                {
-                    _goPool.Return(trans.gameObject);
-                }
+                // 生成方可能仍在 Rent / SetParent / OnEnable 栈内，由它负责回滚。
+                return;
             }
 
+            _transactionDepth++;
+            try
+            {
+                ReleaseInstance(slot.Instance, slot.Playback,
+                    (slot.Flags & FlagAttached) != 0 && slot.Parent == null);
+            }
+            finally
+            {
+                FreeSlot(slotIndex);
+                _transactionDepth--;
+                FinishShutdown();
+            }
+        }
+
+        private void UnlinkSlot(int slotIndex)
+        {
+            if (_slots[slotIndex].CreateId == 0)
+            {
+                return;
+            }
+
+            int prefabId = _slots[slotIndex].PrefabId;
+            _slots[slotIndex].CreateId = 0;
             int liveIndex = _slots[slotIndex].LiveIndex;
             if ((uint)liveIndex >= (uint)_liveCount || _live[liveIndex] != slotIndex)
             {
@@ -924,7 +1089,78 @@ namespace Xease
                 RemoveLiveAt(liveIndex);
             }
 
-            FreeSlot(slotIndex);
+            _slots[slotIndex].LiveIndex = -1;
+        }
+
+        // 停止失败也尝试归还；不重试 Return，避免部分归还后的二次入池。
+        private void ReleaseInstance(GameObject instance, FxPlayback playback, bool detach)
+        {
+            Exception failure = null;
+            try
+            {
+                if (instance != null)
+                {
+                    if (detach)
+                    {
+                        instance.transform.SetParent(_root, true);
+                    }
+
+                    if (playback != null)
+                    {
+                        playback.StopAndClear();
+                    }
+                }
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
+
+            try
+            {
+                // 假 null 仍是有效的托管包装，底层 Return 会删除其租出记录。
+                if (!ReferenceEquals(instance, null) && _goPool != null)
+                {
+                    _goPool.Return(instance);
+                }
+            }
+            catch (Exception error)
+            {
+                failure = CombineFailures(failure, error);
+            }
+
+            Rethrow(failure);
+        }
+
+        private static Exception CombineFailures(Exception first, Exception next)
+        {
+            return first == null ? next : new AggregateException(first, next);
+        }
+
+        private static void Rethrow(Exception failure)
+        {
+            if (failure != null)
+            {
+                ExceptionDispatchInfo.Capture(failure).Throw();
+            }
+        }
+
+        private void FinishShutdown()
+        {
+            if (!_shutdown || _transactionDepth != 0)
+            {
+                return;
+            }
+
+            Transform root = _root;
+            _root = null;
+            _capByName = null;
+            _resolvedCap = null;
+            _liveByPrefab = null;
+            if (root != null)
+            {
+                UnityObject.Destroy(root.gameObject);
+            }
         }
 
         private int IndexOfLive(int slotIndex)
@@ -951,14 +1187,8 @@ namespace Xease
 
         private void FreeSlot(int slotIndex)
         {
-            _slots[slotIndex].CreateId = 0;
+            _slots[slotIndex] = default;
             _slots[slotIndex].LiveIndex = -1;
-            _slots[slotIndex].PrefabId = 0;
-            _slots[slotIndex].Remain = 0f;
-            _slots[slotIndex].Flags = 0;
-            _slots[slotIndex].Trans = null;
-            _slots[slotIndex].Parent = null;
-            _slots[slotIndex].Playback = null;
             _free[_freeCount++] = slotIndex;
         }
 

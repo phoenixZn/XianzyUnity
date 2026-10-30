@@ -21,6 +21,7 @@ namespace Xease
         
         /// <summary>
         /// 归还实例；先失活再挂回二级节点。重复归还或未租出则告警并 Destroy。所属子池已被 Clear 时 Destroy 实例，不报未租出。
+        /// 实例原生对象已销毁时，仍应传入保留的 GameObject 托管包装，以删除租出记录。
         /// </summary>
         void Return(GameObject instance);
 
