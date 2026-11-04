@@ -4,9 +4,14 @@
 
 [CmdletBinding()]
 param(
-    [string]$CoreRepo = 'E:\WorkGitHubZn\XianzyUnity',
-    [string]$GameRepo = 'E:\KaboomZnWork\ka0_client\ka02_trunk\main\XDefense\td_trunk'
+    [string]$CoreRepo,
+    [string]$GameRepo
 )
+
+if ([string]::IsNullOrWhiteSpace($CoreRepo) -or [string]::IsNullOrWhiteSpace($GameRepo)) {
+    Write-Output 'ERROR CoreRepo and GameRepo are required'
+    exit 1
+}
 
 $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
