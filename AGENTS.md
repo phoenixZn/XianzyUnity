@@ -4,7 +4,7 @@
 
 ## 共享配置
 
-- 项目技能统一维护在 `.agents/skills/`，现有技能为 `analyze-code`、`reorganize-code`；技能所需的模板和示例保留在对应技能目录内。
+- 项目技能统一维护在 `.agents/skills/`，现有技能为 `analyze-code`、`reorganize-code`、`port-framework`；技能所需的模板和示例保留在对应技能目录内。
 - 通用工程规则统一维护在根目录 `AGENTS.md`。更新技能或规则时直接修改共享源文件，不再向 `.cursor/skills/`、`.cursor/rules/` 或 `.codex/skills/` 复制正文。
 - Cursor 与 Codex 的 MCP 连接配置分别留在各自工具的配置文件中。
 
