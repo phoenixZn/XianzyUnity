@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -49,3 +50,4 @@ namespace Xease.Audio.Editor
         }
     }
 }
+#endif

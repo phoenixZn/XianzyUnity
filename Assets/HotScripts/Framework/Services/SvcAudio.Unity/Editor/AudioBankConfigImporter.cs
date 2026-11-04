@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor.AssetImporters;
 using UnityEngine;
@@ -26,3 +27,4 @@ namespace Xease.Audio.Editor
         }
     }
 }
+#endif
