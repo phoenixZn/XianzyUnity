@@ -17,6 +17,7 @@ namespace Xease.CoreGame
         protected override void AddMetaComponents()
         {
             G.Log("SysGameplayInitialize_Main AddMetaComponents");
+            SetupSubobjects();
             AddMeta_GameMode();
         }
 
@@ -40,6 +41,14 @@ namespace Xease.CoreGame
             genInfo.ConfigContainerName = LogicContainerKey.LogicConfigs_GameMode;
             //genInfo.PreEnv = varEnv;
             _metaWorld.SetComUniGameMode(genInfo);
+        }
+
+        // 子物体仓库由先于本系统初始化的 SysSubobject 创建，这里只补项目侧配置
+        protected void SetupSubobjects()
+        {
+            if (!_metaWorld.hasComUniSubobjects)
+                return;
+            _metaWorld.comUniSubobjects.DefaultLogicContainer = LogicContainerKey.LogicConfigs_Subobject;
         }
     }
 }

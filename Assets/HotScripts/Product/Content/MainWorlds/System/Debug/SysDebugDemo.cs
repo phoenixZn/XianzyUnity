@@ -32,7 +32,10 @@ namespace Xease.CoreGame.Debug
                 TestCoroutineSuite();
                 TestLubanConfig();
                 TestLubanDrop();
+                SubobjectSmokeBegin();
             }
+
+            SubobjectSmokeTick();
         }
         
         public void TearDown()
@@ -45,6 +48,12 @@ namespace Xease.CoreGame.Debug
 
         // 实现见 SysDebugDemo.Config；校验掉落表嵌套池与池引用
         partial void TestLubanDrop();
+
+        // 实现见 SysDebugDemo.Subobject；生成各类子物体用例
+        partial void SubobjectSmokeBegin();
+
+        // 实现见 SysDebugDemo.Subobject；逐帧采样，到时校验并清理
+        partial void SubobjectSmokeTick();
 
         // Yield 走线程池 / SynchronizationContext（CLI）或 PlayerLoop（Unity），不阻塞 Execute
         private void SmokeUniTaskYield()
