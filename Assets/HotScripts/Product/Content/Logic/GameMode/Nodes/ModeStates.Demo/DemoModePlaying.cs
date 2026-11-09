@@ -57,7 +57,7 @@ namespace Xease.CoreGame
         {
         }
 
-        // 与原 CreateDemoEntity_Enemys 相同：挂 OwnerPlayer + EntityFSM 3900001
+        // 为 Demo 单位装配归属、血量、受击体与主状态机。
         private void CreateDemoEnemies(int count)
         {
             InGamePlayerInfo playerInfo = null;
@@ -70,6 +70,7 @@ namespace Xease.CoreGame
             {
                 LogicEntity entity = this.GetLogicWorld().CreateEntity();
                 entity.AddComOwnerPlayer(playerInfo);
+                DemoSubobject.InitializeEntity(entity);
 
                 var svc = G.CustomLogic;
                 var genInfo = MainFsmGenInfo.New(svc,

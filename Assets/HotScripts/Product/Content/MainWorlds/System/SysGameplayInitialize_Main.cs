@@ -49,6 +49,7 @@ namespace Xease.CoreGame
             if (!_metaWorld.hasComUniSubobjects)
                 return;
             _metaWorld.comUniSubobjects.DefaultLogicContainer = LogicContainerKey.LogicConfigs_Subobject;
+            DemoSubobject.InstallHitSink(_metaWorld.comUniSubobjects);
         }
     }
 }

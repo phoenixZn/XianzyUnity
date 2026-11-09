@@ -56,9 +56,11 @@ namespace Xease.CoreGame
                     return;
                 }
 
+                // 弹体一并预热，进入 Playing 后可直接从现有 GO 池取得表现。
                 await UniTask.WhenAll(
                     pool.PrewarmAsync(DemoStateBorn.DemoViewAssetBody, PrewarmCount, ct),
-                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetOrnament, PrewarmCount, ct));
+                    pool.PrewarmAsync(DemoStateBorn.DemoViewAssetOrnament, PrewarmCount, ct),
+                    pool.PrewarmAsync(DemoSubobject.BulletViewAsset, PrewarmCount, ct));
             }
             catch (System.OperationCanceledException)
             {
