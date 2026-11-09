@@ -9,19 +9,13 @@ namespace Xease.CoreGame
     internal static partial class DemoSubobject
     {
         // Idle 状态两次发射之间的间隔，秒。
-        internal const float FireInterval = 1f / 5f;
-        // Demo 单位出生时的当前血量与上限。
-        private const long InitialHp = 10L;
-        // Demo 单位的球形受击范围，世界单位。
-        private const float TargetRadius = 0.5f;
-        // 独立于冒烟测试受击层，只让示例子弹查询 Demo 单位。
-        private const uint TargetLayer = 1u << 0;
+        internal const float FireInterval = 1f / 10f;
         // YooAsset 按文件名收集的球体资源地址，Loading 预热与发射时共用。
-        internal const string BulletViewAsset = "DemoSubobjectBullet";
+        internal const string BulletViewAsset = "DemoSubobjectBullet2D";
         // 弹体的飞行速度，世界单位/秒。
         private const float BulletSpeed = 8f;
         // 记录寿命，秒；到期后关联实体和 View 一同回收。
-        private const float BulletLife = 4f;
+        private const float BulletLife = 2.5f;
         // 弹体的逻辑查询半径，与球体 Prefab 的视觉范围配合。
         private const float BulletRadius = 0.15f;
         // 命中一次扣除的整数血量。
@@ -40,6 +34,13 @@ namespace Xease.CoreGame
             subobjects.HitSink = new DemoHitSink();
         }
 
+        
+        // Demo 单位出生时的当前血量与上限。
+        private const long InitialHp = 20L;
+        // Demo 单位的球形受击范围，世界单位。
+        private const float TargetRadius = 0.5f;
+        // 独立于冒烟测试受击层，只让示例子弹查询 Demo 单位。
+        private const uint TargetLayer = 1u << 0;
         // 在创建主状态机前提供血量和受击能力，Born 设置位置后即可进入目标快照。
         internal static void InitializeEntity(LogicEntity entity)
         {
@@ -50,7 +51,9 @@ namespace Xease.CoreGame
         // 随机角度只决定初始方向，不读取受击目标；后续位姿完全交给关联记录。
         internal static void Fire(LogicEntity owner, UniSubobjectsComponent subobjects)
         {
-            if (owner == null || !owner.isEnabled || owner.hasComDeath || !owner.hasComTransform || subobjects == null)
+            if (owner == null || subobjects == null)
+                return;
+            if (!owner.isEnabled || !owner.hasComTransform)
                 return;
 
             var angle = G.Random.RandFloat(0f, Mathf.PI * 2f);

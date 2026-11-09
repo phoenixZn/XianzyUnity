@@ -7,9 +7,9 @@ namespace Xease.CoreGame
         //////////////////////////////////////////////////////////////////////////
         /// This：
 
-        // YooAsset location，死亡烟雾。
+        // YooAsset location，死亡特效。
         private const string DeathFxLocation = "FireNinja_Smoke";
-        // 自动回收时长，秒；覆盖烟雾和火花的粒子尾迹。
+        // 死亡特效自动回收时长，秒；
         private const float DeathFxLifetimeSec = 1.2f;
 
         // 世界坐标生成，不挂到即将销毁的 View
