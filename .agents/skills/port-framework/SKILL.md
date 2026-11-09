@@ -1,140 +1,76 @@
 ---
 name: port-framework
 description: >-
-  列出游戏库相对核心库在 Assets/HotScripts/Framework 与
-  Assets/AOTScripts 下的改动，供人工审核后再回写。在用户要求回写框架、
-  审核游戏库框架改动、同步 Framework 或同步 AOTScripts 到核心库时使用。
-version: "1.0"
+  审核游戏库相对核心库的框架改动，确认后回写核心库并合并回游戏库。
+  用于回写框架、审核待回写改动，或将 Framework、AOTScripts 改动同步到核心库的任务。
 ---
 
 # 框架改动回写
 
-把游戏库里的框架改动先列给用户审核，确认后再写入核心库，并合并回游戏库。只读脚本不做提交。
+默认范围为 `Assets/HotScripts/Framework` 与 `Assets/AOTScripts`。用户点名的额外路径只加入本次任务。只要求审核时列出后停止；已有针对清单的明确回写授权，或用户要求直接回写时，可以继续，但不跳过检查和备份。
 
-## 何时使用
+## 仓库与预检
 
-- 回写框架、审核游戏库框架改动、同步 Framework、同步 AOTScripts
-- 用户只说「审核」：列出后停止
-- 用户已看过清单并回复「确认回写」：执行写入
-- 同一条消息写明「不用再确认，直接回写」：列出之后可以接着执行
+从当前工作区和本次任务已明确指定的 `core_repo`、`game_repo` 解析路径，每次重新核对远程配置，不搜索磁盘或套用其他任务的路径。
 
-未出现上述意图时，不要运行本技能的写入步骤。
+- 当前仓库有 `upstream` 且 push 地址为 `DISABLED` 时，视为游戏库，核心库取其 fetch 地址；否则视为核心库，游戏库须由用户明确指定。
+- 核心库必须是可访问的本地工作区，游戏库的 `upstream` 必须指向它；本地地址按实际 Git 目录核对，无法确认映射则停止。
+- 写入前两库均须在 `master`，且没有进行中的 merge、rebase、cherry-pick 或 revert。核心库须干净，不自动切换分支或清理文件。
+- 先在游戏库执行 `git fetch upstream`，失败即停止。核心库 `HEAD` 须为游戏库 `HEAD` 的祖先，且 `upstream/master` 须等于核心库 `HEAD`。
 
-## 仓库与范围
-
-从当前工作区 `git rev-parse --show-toplevel` 判定，不搜索磁盘，也不沿用旧对话里的路径。
-
-- 当前仓库存在远程 `upstream`，且 `git remote get-url --push upstream` 等于 `DISABLED`：当前仓库是游戏库。核心库取 `git remote get-url upstream`。
-- 否则当前仓库是核心库。游戏库路径必须来自用户这条消息；没有就追问一次并停止。
-- 用户写了 `core_repo` 或 `game_repo` 时，以用户写的为准。
-
-`upstream` 和 `backup` 只是远程别名。游戏库没有 `backup` 时，合并仍然做，不为它新建远程，推送跳过并在结果里说明。
-
-默认范围只有 `Assets/HotScripts/Framework` 与 `Assets/AOTScripts`。比较基准是核心库当前 `HEAD`。用户确认时点名的额外路径只加入这一次。
-
-## 只读列举
-
-在任何写入之前，用本次解析出的路径运行：
+运行随附的只读脚本，额外路径以数组传入；路径是仓库相对的字面路径，不使用通配符：
 
 ```powershell
-powershell -NoProfile -File <核心库>/.agents/skills/port-framework/scripts/list-framework-diff.ps1 -CoreRepo <核心库> -GameRepo <游戏库>
+& '<本技能目录>/scripts/list-framework-diff.ps1' -CoreRepo '<核心库>' -GameRepo '<游戏库>'
+# 有额外路径时，在同一个 PowerShell 会话中追加参数，例如：
+& '<本技能目录>/scripts/list-framework-diff.ps1' -CoreRepo '<核心库>' -GameRepo '<游戏库>' -ExtraPath @('额外目录/文件')
 ```
 
-脚本只执行 `rev-parse`、`status`、`diff`、`remote`、`merge-base`、`cat-file`。退出码 `0` 表示范围内有改动，`3` 表示没有，`1` 表示仓库检查失败。脚本若报告核心库 `HEAD` 不在游戏库，先在游戏库执行 `git fetch upstream`（不改工作区），再重跑脚本。
+脚本不 fetch 或写入，只查询状态、读取文件并计算哈希。退出码 `1` 表示检查失败，`3` 表示没有待回写差异，`0` 表示有差异；`BLOCKED=yes` 时仍不得写入。
 
-## 审核清单
+## 审核快照
 
-用简体中文输出，然后停止，等待用户回复：
+用简体中文展示两库路径、分支及完整 `HEAD`、`UPSTREAM_HEAD`、远程地址、`ROOTS`、`BLOCKERS`、待回写路径和统计、范围外未提交改动，以及拟定提交说明。重命名以删除和新增分别列出，两个路径都属于审核集合。
 
-```markdown
-## 框架回写审核
+保存完整脚本输出和 `REVIEW_SHA256`。它绑定仓库、基线、范围、状态、暂存差异及待回写文件字节；不能只凭文件名沿用确认。额外路径也经过相同检查，新增或删减范围后重新生成清单。
 
-- 核心库：`<本次解析的路径>` `<HEAD>`，工作区干净 / 不干净；该提交是否为游戏库 HEAD 的祖先
-- 游戏库：`<本次解析的路径>` `<HEAD>`，upstream/master 是否已指向核心库 HEAD
-- upstream 推送地址：（须为 DISABLED 才允许之后写入）
+以下任一项阻断写入：预检不通过、二进制文件、未跟踪文件在核心库存在同名目标、特殊文件或不安全路径、补丁无法应用。没有差异时不创建空提交。
 
-### 将回写（N）
-- `M` / `A` / `D` / `R` / `??` 路径
+需要确认时，说明将只提交审核路径、备份后清理游戏库相应改动、合并核心库新提交；存在 `backup` 远程时再备份推送，不推 GitHub。用户确认针对这份快照生效。
 
-### 留下不回写（N）
-- 范围外改动，含 ProjectSettings 与产品目录
+## 写入与合并
 
-### 范围内统计
-（脚本 STAT 段）
+每条命令检查退出码；失败即进入 [恢复流程](references/recovery.md)，不能继续后续步骤。下文 `<已确认路径>` 指清单中的完整文件集合，包含删除路径，不把整个目录直接当作暂存或清理范围。
 
-### 拟定提交说明
-一句话说明框架缺陷的目的。
-
-确认回写后将：核心库只提交这些路径，游戏库只还原这些路径，fetch，merge upstream/master --no-edit。存在 backup 远程时再 push backup。不推 GitHub。
-回复「确认回写」后执行。要加入范围外路径，请在回复里点名。
-```
-
-范围内没有改动时，说明游戏库这两棵目录与核心库 `HEAD` 一致，不要创建空提交。
-
-## 停止，不要写入
-
-出现任一情况就只报告：
-
-- 核心库工作区不干净
-- 核心库 `HEAD` 不是游戏库 `HEAD` 的祖先（游戏库尚未并入核心库最新提交）
-- 游戏库 `upstream` 的 push 地址不是 `DISABLED`
-- 范围内没有改动，且用户没有点名额外路径
-- 已确认集合里有二进制文件（脚本 `BINARY_IN_SCOPE`，或补丁含 `GIT binary patch`）
-- `git apply --check` 失败
-- 未跟踪文件的目标路径在核心库已经存在
-- `fetch` 之后 `HEAD..upstream/master` 里除刚提交的那一笔之外还有别的提交，或列表为空
-
-## 确认后的写入
-
-先重新核对 `upstream` 的 push 地址是 `DISABLED`，并再跑一次只读脚本。已确认路径以用户看到的清单为准；用户点名的额外路径并入这一次。
-
-1. 已跟踪差异用补丁。不要用 PowerShell 的 `>` 重定向补丁。
+1. 再 fetch 并重跑只读脚本，确认无阻断，且 `REVIEW_SHA256` 与已审核值一致。变化则重新审核。
+2. 按 [恢复流程中的备份约定](references/recovery.md#执行前备份)创建独立备份，保存游戏库所选路径的原始文件字节、存在状态及暂存补丁，并记录两库基线和范围。备份失败不得修改核心库。备份后再核对快照，防止复制期间源内容变化。
+3. 对已跟踪差异生成补丁并在核心库检查、应用。所有路径参数使用 Git 全局选项 `--literal-pathspecs`；不用 PowerShell 的 `>` 重定向补丁：
 
 ```powershell
-git -C <游戏库> diff --output=<临时补丁> <核心库HEAD> -- <已确认的已跟踪路径>
-git -C <核心库> apply --check <临时补丁>
-git -C <核心库> apply <临时补丁>
+git --literal-pathspecs -C <游戏库> diff --no-ext-diff --no-textconv --no-renames --output=<补丁> <已审核CORE_HEAD> -- <已确认的已跟踪路径>
+git -C <核心库> apply --check <补丁>
+git -C <核心库> apply <补丁>
 ```
 
-没有已跟踪差异就跳过补丁。用完删除临时补丁，不要把它提交进仓库。
+没有已跟踪差异则跳过补丁。未跟踪文件按原相对路径复制，目标须不存在；先在核心库内创建所需父目录，补丁可能已经删除原来的空目录。创建、复制与删除前核对绝对路径位于指定仓库内，且路径链中不存在重解析点；保留原始字节。
 
-2. 未跟踪文件按相同相对路径复制到核心库。复制前目标必须不存在。用文件复制，不要用 `Get-Content | Set-Content`。
-
-3. 核心库里 `git diff --name-only` 与 `git status --porcelain -uall` 出现的路径都必须属于已确认路径。然后只暂存这些路径：
+4. 核心库所有工作区与暂存变化必须属于审核集合，暂存区应恰好包含实际回写差异且不能为空。只 `git --literal-pathspecs add -- <已确认路径>`，审阅暂存补丁，按仓库既有换行与过滤规则核对内容对应已审核来源，再使用审核中的说明提交。记录新提交 `PORT_COMMIT`，验证其父提交为已审核 `CORE_HEAD`、改动未越界、提交后核心库干净；验证或钩子失败均停止，不跳过钩子。
+5. **清理游戏库前**再 fetch，要求 `upstream/master` 等于 `PORT_COMMIT`，且 `git log --format=%H <已审核GAME_HEAD>..upstream/master` 只包含这一笔。再次确认两库分支、游戏库 `HEAD`、游戏库所选文件字节和暂存状态未变。此阶段失败，游戏库尚未清理，保留核心库提交和备份并报告。
+6. 记录清理阶段开始，只还原已确认的已跟踪路径：
 
 ```powershell
-git add -- <已确认路径>
+git --literal-pathspecs -C <游戏库> restore --source=<已审核GAME_HEAD> --staged --worktree -- <已确认的已跟踪路径>
 ```
 
-`git diff --cached --name-only` 必须是已确认路径的子集，且不能为空。否则不要提交。
+只删除清单中已备份的未跟踪文件，不删除父目录。清理前逐个核对当前文件与备份相同；发现新修改立即停止，不覆盖。记录清理后的路径状态和哈希，供失败恢复时确认没有后续编辑。
 
-4. 提交说明用审核清单里的那一句；用户在确认时另给了说明则用用户的。提交后核对 `git status`，暂存区里不得残留范围外文件。
+7. 再核对游戏库仍在审核的 `master` 基线、核心库仍在 `PORT_COMMIT`，且 `upstream/master` 未变，然后执行 `git merge upstream/master --no-edit`。若 Git 因范围外脏文件拒绝合并，不 stash 或清理它们，按恢复流程恢复已清理的路径。
+8. 合并成功后核对 `PORT_COMMIT` 已成为游戏库 `HEAD` 的祖先、所选文件符合审核内容、范围外未提交改动与暂存状态保持原样。成功后不执行失败回滚。存在 `backup` 时核对其所有推送目标均为本地备份地址，再执行 `git push backup master`；缺失则跳过，不创建远程。推送失败仅报告备份失败，不撤回已完成合并。
 
-5. 回到游戏库，只还原已跟踪的已确认路径：
+完成后报告两库提交、各阶段结果、`git status -sb` 和备份目录。确认本地合并及备份均成功、原始状态不再需要恢复后，才删除本次临时备份；失败时保留。
 
-```powershell
-git restore --source=HEAD --staged --worktree -- <已跟踪路径>
-```
+## 边界
 
-6. 核心库提交成功后，只删除游戏库里那些已复制走的未跟踪文件。不要 `git clean`，不要删除父目录。
-
-7. 合并并备份：
-
-```powershell
-git fetch upstream
-git log --oneline HEAD..upstream/master
-git merge upstream/master --no-edit
-```
-
-`HEAD..upstream/master` 在合并前应只含刚提交的那一笔。合并失败时执行 `git merge --abort`，报告冲突路径，不要把范围外文件放进合并结果。合并成功后，若 `git remote get-url backup` 有地址，再执行 `git push backup master`。没有这个远程就跳过，不要创建。
-
-8. 把上述命令的退出结果、新的提交哈希、`git status -sb` 发回对话。范围外改动保持原样。
-
-## 禁止
-
-- `git add -A`、`git add .`、`git restore .`、`git clean`
-- `git push origin`、`git push upstream`、向 GitHub 或核心库推送
-- `--no-verify`、`--force`、改写历史
-- 修改 git config
-- 把游戏库 `master` 合并进核心库
-- 把补丁、`ProjectSettings` 或未点名的产品文件提交进核心库
+- 不使用 `git add -A`、`git add .`、`git restore .`、`git clean`、`git stash`。
+- 不 push origin/upstream，不向 GitHub 或核心库推送；不使用 `--no-verify`、`--force` 或改写历史。
+- 不修改 Git 配置，不把游戏库 `master` 合入核心库，不提交补丁、备份或未审核路径。
