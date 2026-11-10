@@ -1020,9 +1020,20 @@ namespace Xease.UI
             public GameObject root;
             public List<UIPanelBase> list = new List<UIPanelBase>();
 
+            /// <summary>
+            /// 按预制体名返回首个仍存活的面板；未找到时返回 null。
+            /// </summary>
             public UIPanelBase Find(string name)
             {
-                return list.Find(ui => ui.gameObject != null && name == ui.gameObject.name);
+                // 索引遍历避免捕获 name；uiName 在实例化时已保存，查找无需读取 Unity 对象名。
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var ui = list[i];
+                    if (ui.gameObject != null && name == ui.uiName)
+                        return ui;
+                }
+
+                return null;
             }
         }
     }

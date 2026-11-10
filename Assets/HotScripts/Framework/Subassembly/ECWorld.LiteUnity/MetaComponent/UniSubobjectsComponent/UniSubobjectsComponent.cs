@@ -152,7 +152,7 @@ namespace Xease.CoreGame
 
             var component = entity.comSubobject;
             if (routine != null)
-                component.LinkRoutine(this, routine.Add(in args, entity));
+                component.LinkRoutine(routine.Add(in args, entity));
             if (options.LogicConfigId != 0)
                 component.SetLogic(CreateLogic(entity, in args, in options));
             if (routine == null && args.Motion.LifeLeft > 0f)
@@ -209,7 +209,7 @@ namespace Xease.CoreGame
             return true;
         }
 
-        // SubobjectComponent 卸载时调用：回收其关联记录，不再访问实体
+        // SysSubobject 在组件移除通知中调用：回收旧组件的关联记录，不再访问实体
         internal void ReleaseLinkedRecord(SubobjectHandle handle)
         {
             if (!TryResolve(handle, out var routine, out var dense))

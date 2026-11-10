@@ -84,20 +84,27 @@ namespace Xease.Audio
 
         private void UpdateController()
         {
-            _audioControllers.RemoveAll(audioController =>
+            // 按原顺序更新并原地压缩存活项，避免每帧创建捕获实例的筛选委托。
+            var activeCount = 0;
+            for (var i = 0; i < _audioControllers.Count; i++)
             {
+                var audioController = _audioControllers[i];
                 if (audioController.GameObject == null)
                 {
-                    return true;
+                    continue;
                 }
-                if (audioController.IsActive)
+                if (!audioController.IsActive)
                 {
-                    audioController.Update();
-                    return false;
+                    _freeAudioControllers.Enqueue(audioController);
+                    continue;
                 }
-                _freeAudioControllers.Enqueue(audioController);
-                return true;
-            });
+                audioController.Update();
+                _audioControllers[activeCount++] = audioController;
+            }
+            if (activeCount < _audioControllers.Count)
+            {
+                _audioControllers.RemoveRange(activeCount, _audioControllers.Count - activeCount);
+            }
             if (_freeAudioControllers.Count > _audioSourceInitCount)
             {
                 RemoveController(_freeAudioControllers.Count + _audioControllers.Count - _audioSourceInitCount);

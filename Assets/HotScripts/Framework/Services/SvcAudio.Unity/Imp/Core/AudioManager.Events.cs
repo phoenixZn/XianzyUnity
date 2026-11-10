@@ -9,6 +9,8 @@ namespace Xease.Audio
     {
         // 存活事件：运行时 Id → 实例
         private readonly Dictionary<int, AudioEvent> _audioEvents = new();
+        // 跨帧复用更新快照；回调可以增删事件，更新结束后清除引用并保留容量
+        private readonly List<AudioEvent> _updatingAudioEvents = new();
         // 按事件名/Tag 统计并发与最小间隔
         private readonly Dictionary<string, AudioEventGroup> _audioEventGroups = new();
         // 下一枚事件 Id 种子；实际 Id 避开已占用键
@@ -146,25 +148,32 @@ namespace Xease.Audio
         }
 #endif
 
-        // 推进存活事件；失活或异常则销毁
+        // 通过快照推进存活事件；失活或异常则销毁
         private void UpdateEvent()
         {
-            var audioEventList = _audioEvents.Values.ToList();
-            foreach (var audioEvent in audioEventList)
+            _updatingAudioEvents.AddRange(_audioEvents.Values);
+            try
             {
-                try
+                foreach (var audioEvent in _updatingAudioEvents)
                 {
-                    audioEvent?.Update();
-                    if (audioEvent is null || !audioEvent.IsActive)
+                    try
                     {
+                        audioEvent?.Update();
+                        if (audioEvent is null || !audioEvent.IsActive)
+                        {
+                            DestroyEvent(audioEvent);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Audio.LogError(e);
                         DestroyEvent(audioEvent);
                     }
                 }
-                catch (Exception e)
-                {
-                    Audio.LogError(e);
-                    DestroyEvent(audioEvent);
-                }
+            }
+            finally
+            {
+                _updatingAudioEvents.Clear();
             }
             foreach (var kv in _audioEventGroups)
             {
