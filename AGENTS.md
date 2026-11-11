@@ -17,11 +17,9 @@
 
 ## 文件编码与安全编辑
 
-- 源码优先使用当前 Agent 支持的精确补丁或文本编辑工具；Shell 主要用于编译、Git 和搜索。
-- 禁止用 `Get-Content | ... | Set-Content` 或未显式指定编码的 `Set-Content` 改写 UTF-8 源文件。
-- 确需通过 Shell 写入时，使用 `Set-Content -Encoding utf8NoBOM`，或 `[IO.File]::WriteAllText($p, $c, [Text.UTF8Encoding]::new($false))`；读取文本时显式使用 UTF-8。
+- 改源码使用当前 Agent 支持的精确补丁或文本编辑工具，不通过 Shell 重写；Shell 主要用于编译、Git 和搜索。
 - 大段搬迁或拆分采用多次精确补丁，或读取 Git 中的原文后合并；禁止用 Shell 正则删块后整文件写回。
-- 编辑后检查差异及异常字符（例如新增的连续问号或 Unicode 替换字符 U+FFFD）。发现乱码时停止继续修改，只撤回本轮导致乱码的编辑并重新操作，保留用户原有修改；不得直接用 `git checkout -- <file>` 等整文件恢复方式覆盖未提交内容。
+- 编辑后检查差异及异常字符（例如新增的连续问号或 Unicode 替换字符 U+FFFD）。发现乱码时停止继续修改，只撤回本轮导致乱码的编辑并重新操作，保留用户原有修改；不得用 `git checkout -- <file>` 等整文件恢复方式覆盖未提交内容。
 
 ## C# 注释规范
 
