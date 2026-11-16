@@ -32,7 +32,7 @@ namespace Xease.CoreGame
         }
 
         /// <summary>
-        /// 登记一个 Buff 配置（产出 <see cref="BuffCfg"/>，满足 BuffCenterComponent 的 IEntityBuffCfg 校验）。
+        /// 登记一个 Buff 配置。
         /// 返回的 cfg 可继续链式 WithBuffTag / WithTargetChecker / WithMergeRule。
         /// </summary>
         protected BuffCfg AddBuff(int id, Nodes nodes, string desc = null)

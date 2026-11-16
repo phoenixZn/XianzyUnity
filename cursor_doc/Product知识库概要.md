@@ -58,7 +58,7 @@
 | `Skill` | `CCN_EntitySkill` | 4000000 | `SkillLogic` | 技能 |
 | `AI` | `CCN_EntityAI` | 5000000 | `AILogic` | 实体 AI |
 | `Subobject` | `CCN_EntitySubobject` | 6000000 | `SubobjectLogic` | 子物体 |
-| `Buff` | `CCN_Buff` | 7000000 | `BuffLogic` | Buff 配置、节点、附着策略（`Policies`） |
+| `Buff` | `CCN_Buff` | 7000000 | `BuffLogic` | Buff 配置、节点、上身策略；不驱动框架 `BuffComponent` |
 | `Supply` | `CCN_Supply` | 8000000 | `SupplyLogic` | 补给 |
 
 `GameMode` 的节点子目录：`ModeStates.Game`、`ModeStates.Demo`、`Bhv.Demo`。Demo 加载态含资源预热 `DemoModeLoading.PrewarmRes`。
@@ -71,17 +71,18 @@
 |------|--------|
 | `Configs` | `WorldsConfig` 世界条目；`EntityConfigs` 实体配置位 |
 | `CreationInfo` | `MainWorldCreationInfo`；玩家信息 `InGamePlayerInfo`、`PlayerFeaturesContext` |
+| `CreationInfo/PlayerInfo` | `StdPropertySnapshot`、`CategoryStatsVolume` |
 | `System` | `SysGameplayInitialize_Main` 元组件与模式初始化；`SysDebugDemo` 调试 |
 | `System/Profiler.Unity` | `SysDebugProfiler`、计时 |
-| `LogicComponent/AttributesEx` | 属性分类体积、属性快照 |
+| `LogicComponent/ModifyValuesEx` | 冷改值读写扩展（`GetAttribute*` / `ModifyAttribute`） |
 | `LogicComponent/CommandEx` | 产品指令类型、指令前置处理 |
-| `LogicComponent/ImmuneComponent` | 免疫：布尔、万分比、Buff、Buff 标签 |
-| `LogicComponent/ImmuneEx` | 具体免疫种类 |
 | `MetaComponent` | 玩家组件、时间缩放的产品侧扩展 |
 | `Extension` | `EntityExtension`、`WorldExtension` |
-| `Debug.Unity` | 实体调试：AI、Buff、主状态机、变量黑板 |
+| `Debug.Unity` | 实体调试：AI、主状态机、变量黑板 |
 
-`MainWorldTest` 当前接上的系统关键词：基础包与 LiteUnity 包初始化、指令收发、模式更新、主状态机、Buff、视图加载与变换同步、生命与死亡、调试，以及 `SysGameplayInitialize_Main`。
+`MainWorldTest` 当前接上的系统关键词：基础包与 LiteUnity 包初始化、指令收发、模式更新、主状态机、子物体、视图加载与变换同步、生命与死亡、调试，以及 `SysGameplayInitialize_Main`。`SysBuff` 已去掉。`UnitTestSystems_Base`（含 Stat/Buff 断言）当前未接入。
+
+`ImmuneComponent` / `ImmuneEx` 已移除。面板数值走框架 `StatComponent`，冷改值走 `ModifyValuesComponent`。
 
 ### UIScripts
 

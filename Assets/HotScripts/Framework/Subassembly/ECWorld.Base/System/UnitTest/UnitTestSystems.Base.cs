@@ -7,6 +7,7 @@ namespace Xease.CoreGame
         public UnitTestSystems_Base(ECWorlds worlds)
         {
             Add(new UnitTestSystem_Tag(worlds));
+            Add(new UnitTestSystem_StatBuff(worlds));
         }
     }
 }

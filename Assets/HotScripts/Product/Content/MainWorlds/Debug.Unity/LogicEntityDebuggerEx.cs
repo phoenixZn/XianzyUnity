@@ -50,7 +50,6 @@ namespace Xease.CoreGame.Debug
         {
             UpdateComData_ComTransform();
             // UpdateComData_ComAI();
-            UpdateComData_ComBuffCenter();
             // UpdateComData_ComFSM();
         }
         
@@ -70,7 +69,7 @@ namespace Xease.CoreGame.Debug
             ComPos = _entity.comTransform.position;
             lastPos = ComPos;
         }
-
+        
         //////////////////////////////////////////////////////////////////////////
         // Gizmos:
         //////////////////////////////////////////////////////////////////////////
