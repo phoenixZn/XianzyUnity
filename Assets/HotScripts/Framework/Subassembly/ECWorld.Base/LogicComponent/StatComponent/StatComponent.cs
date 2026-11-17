@@ -89,6 +89,7 @@ namespace Xease.CoreGame
         /// <summary>
         /// 划定属性编号区间。不能缩小。
         /// 组件从池里复用时会清掉上一任在该区间内的基础值和最终值。
+        /// 钳制已启用时，新开放编号初始化为无界，不沿用池中残留上下限。
         /// </summary>
         public void EnsureStats(int statCount)
         {
@@ -121,6 +122,12 @@ namespace Xease.CoreGame
             {
                 _base[i] = 0;
                 _final[i] = 0;
+                // 池复用后数组可能已经够长，EnsureClampStorage 不会清掉新开放编号
+                if (_useClamp)
+                {
+                    _clampMin[i] = UnboundedMin;
+                    _clampMax[i] = UnboundedMax;
+                }
             }
         }
 
@@ -147,6 +154,7 @@ namespace Xease.CoreGame
         /// <summary>
         /// 无条件修饰符合成并钳制后的最终值。
         /// 写入批次尚未结束时，会先重算被读的这一条，其余属性仍等到 <see cref="EndChanges"/>。
+        /// 批次内读取只更新属性缓存，不提交绑定计量的上限变化。
         /// </summary>
         public long Get(int statId)
         {
@@ -280,6 +288,7 @@ namespace Xease.CoreGame
 
         /// <summary>
         /// 开始一段连续写入。期间修改不逐条重算；<see cref="Get"/> 仍会重算被读到的属性。
+        /// 绑定计量在最外层结束时对齐上限；期间调用 <see cref="ApplyMeterDelta"/> 会先结算该上限。
         /// 必须配对 <see cref="EndChanges"/>，或改用 <see cref="BeginScope"/>。
         /// </summary>
         public void BeginChanges()
@@ -287,7 +296,7 @@ namespace Xease.CoreGame
             _batch++;
         }
 
-        /// <summary>结束一段连续写入。最外层结束时重算全部最终值。</summary>
+        /// <summary>结束一段连续写入。最外层结束时重算全部最终值，再对齐绑定计量的上限。</summary>
         public void EndChanges()
         {
             if (_batch <= 0)
@@ -304,6 +313,7 @@ namespace Xease.CoreGame
             int count = _statCount;
             for (int i = 0; i < count; i++)
                 Recalc(i);
+            SyncMetersAfterChanges();
         }
 
         /// <summary>BeginChanges / EndChanges 的范围。组件卸下后，这个范围不再改批次计数。</summary>
@@ -341,7 +351,7 @@ namespace Xease.CoreGame
             }
         }
 
-        // 无条件结果：该属性没有无条件修饰符时直接取基础值
+        // 只更新属性缓存；计量由写入边界结算，批次内读取不会改变计量状态
         private void Recalc(int statId)
         {
             long value = _plainByStat == null || _plainByStat[statId] <= 0
@@ -357,7 +367,10 @@ namespace Xease.CoreGame
                 _deferred = true;
                 return;
             }
+            long before = _final[statId];
             Recalc(statId);
+            if (_final[statId] != before)
+                SyncMetersForStat(statId, _final[statId]);
         }
 
         // includeConditional 为 false 时跳过带条件的修饰符，结果写入缓存
@@ -463,6 +476,7 @@ namespace Xease.CoreGame
             }
         }
 
+        // 缓存可能由批次内读取刷新，不在这里提交计量的上限变化
         private void WriteFinal(int statId, long value)
         {
             if (_final[statId] == value)

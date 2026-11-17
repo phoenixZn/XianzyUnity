@@ -19,10 +19,10 @@ namespace Xease.CoreGame
 
         private MeterSlot[] _meters;
 
-        // 当前值或绑定方式变化时递增，不跟最终值版本混用
+        // 已结算的上限、当前值或绑定方式变化时递增，不跟最终值版本混用
         private int _meterVersion;
 
-        /// <summary>计量当前值或绑定方式变化时递增。</summary>
+        /// <summary>计量已结算的上限、当前值或绑定方式变化时递增，批次内只读不会更新。</summary>
         public int MeterVersion => _meterVersion;
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Xease.CoreGame
             _meterVersion++;
         }
 
-        /// <summary>当前值。读取时先按绑定的上限对齐。</summary>
+        /// <summary>已结算的当前值。批次内待提交的上限变化不影响本次读取，读取不会改计量状态。</summary>
         public long GetMeter(int meterId)
         {
             if (!IsMeter(meterId))
@@ -74,23 +74,22 @@ namespace Xease.CoreGame
                 return 0;
             }
 
-            SyncMeter(meterId);
             return _meters[meterId].Current;
         }
 
-        /// <summary>对齐后的上限。计量未绑定时返回 0。</summary>
+        /// <summary>已结算的上限。计量未绑定时返回 0。</summary>
         public long GetMeterMax(int meterId)
         {
             if (!IsMeter(meterId))
                 return 0;
 
-            SyncMeter(meterId);
             return _meters[meterId].SeenMax;
         }
 
         /// <summary>
         /// 改当前值，返回实际加上的量（被区间截断后的差值）。
         /// 伤害传负值，治疗传正值。
+        /// 批次内先按最新上限对齐绑定该属性的全部计量；返回量不含此次上限对齐造成的变化。
         /// </summary>
         public long ApplyMeterDelta(int meterId, long delta)
         {
@@ -100,7 +99,11 @@ namespace Xease.CoreGame
                 return 0;
             }
 
-            SyncMeter(meterId);
+            // 扣血、治疗是显式结算点，不能依赖此前是否读取过上限属性
+            int maxStatId = _meters[meterId].MaxStatId;
+            if (maxStatId >= 0 && _deferred)
+                SyncMetersForStat(maxStatId, Get(maxStatId));
+
             ref var meter = ref _meters[meterId];
             long before = meter.Current;
             meter.Current = ClampCurrent(AddSaturating(before, delta), meter.SeenMax);
@@ -130,6 +133,7 @@ namespace Xease.CoreGame
                 _meters[i].Used = false;
         }
 
+        // 首次只按所需编号分配，之后按 2 倍扩容，不超过 MeterIdLimit
         private bool PrepareMeter(int meterId)
         {
             if ((uint)meterId >= MeterIdLimit)
@@ -137,10 +141,18 @@ namespace Xease.CoreGame
                 WLogger.LogError($"Stat.BindMeter 计量编号非法 {meterId}");
                 return false;
             }
-            if (_meters != null && _meters.Length > meterId)
+
+            int needed = meterId + 1;
+            if (_meters != null && _meters.Length >= needed)
                 return true;
 
-            var next = new MeterSlot[MeterIdLimit];
+            int size = _meters == null ? needed : _meters.Length * 2;
+            if (size < needed)
+                size = needed;
+            if (size > MeterIdLimit)
+                size = MeterIdLimit;
+
+            var next = new MeterSlot[size];
             if (_meters != null)
                 Array.Copy(_meters, next, _meters.Length);
             _meters = next;
@@ -152,13 +164,40 @@ namespace Xease.CoreGame
             return _meters != null && (uint)meterId < (uint)_meters.Length && _meters[meterId].Used;
         }
 
-        private void SyncMeter(int meterId)
+        // 批次结束时只遍历计量存储一次，也处理此前已被 Get 刷新缓存的属性
+        private void SyncMetersAfterChanges()
         {
-            long max = _meters[meterId].MaxStatId < 0
-                ? _meters[meterId].FixedMax
-                : NonNegative(Get(_meters[meterId].MaxStatId));
+            if (_meters == null)
+                return;
 
-            ref var meter = ref _meters[meterId];
+            for (int i = 0; i < _meters.Length; i++)
+            {
+                ref var meter = ref _meters[i];
+                if (!meter.Used || meter.MaxStatId < 0)
+                    continue;
+                ApplyMeterMax(ref meter, NonNegative(_final[meter.MaxStatId]));
+            }
+        }
+
+        // 非批次属性写入或显式计量操作只结算绑定该属性的计量
+        private void SyncMetersForStat(int statId, long max)
+        {
+            if (_meters == null)
+                return;
+
+            long cap = NonNegative(max);
+            int count = _meters.Length;
+            for (int i = 0; i < count; i++)
+            {
+                ref var meter = ref _meters[i];
+                if (!meter.Used || meter.MaxStatId != statId)
+                    continue;
+                ApplyMeterMax(ref meter, cap);
+            }
+        }
+
+        private void ApplyMeterMax(ref MeterSlot meter, long max)
+        {
             if (meter.SeenMax != max)
             {
                 if (meter.Resize == MeterResize.AddDelta)
